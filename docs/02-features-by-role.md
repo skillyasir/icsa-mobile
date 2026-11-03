@@ -13,6 +13,8 @@ Roles come from `/api/auth/me` (primary role + overlay roles). A screen appears 
 |---|---|---|
 | Staff sign-in (+ captcha in a WebView) | `POST /api/auth/login` | 🟡 captcha page for the WebView (S1) |
 | Student sign-in (student code + password) | `POST /api/auth/student-login` | 🟡 same |
+| Sign in with Google (native) | `POST /api/auth/google` | 🟡 accept the app's Google client IDs (S12) |
+| Sign in with Apple (iPhone/iPad) | — | 🆕 S12 |
 | Forgot / reset password | `POST /api/auth/forgot-password`, `POST /api/auth/reset-password` | ✅ |
 | Who am I, roles, session settings | `GET /api/auth/me`, `POST /api/auth/refresh` | ✅ (device session 🆕 S2) |
 | Change password / my photo | `PUT /api/auth/change-password`, `PATCH /api/auth/me`, `POST /api/upload/user` | ✅ |

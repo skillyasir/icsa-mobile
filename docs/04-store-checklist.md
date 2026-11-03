@@ -32,7 +32,7 @@ Written 3 Nov 2026. Re-check every rule at release time — both stores change t
 - [ ] **Photos:** "To attach a payment proof or assignment from your photos."
 - [ ] **Notifications:** asked in context ("Get a reminder 30 minutes before class?"), never on first launch.
 - [ ] **Face ID:** "To unlock ICSA quickly and keep your account safe."
-- [ ] No background location in v1 → no Play background-location declaration needed.
+- [ ] **Background location is in v1** (student arrival reminders, Yasir ruled 3 Nov 2026) → Play **background-location declaration** with a short video of the reminder, a **prominent in-app disclosure** before the "Always" prompt, and an App Review note explaining the reminder.
 
 ## Privacy forms
 

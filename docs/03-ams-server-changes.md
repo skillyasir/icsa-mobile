@@ -90,6 +90,17 @@ Order = the order the app needs them.
 
 - iPhones shoot **HEIC**. The app converts to JPEG before upload (`expo-image-manipulator`), so the AMS upload filters need no change. Keep it that way: one format on the server.
 
+## S12 — Google and Apple sign-in from the app (Yasir ruled, 3 Nov 2026: in v1)
+
+- **Today (read at AMS `43b55d0`):** `POST /api/auth/google` takes a Google ID token (`credential`), verifies it with `google-auth-library` against **one audience, `GOOGLE_CLIENT_ID`** (the web client), and signs in only an **existing, active** user whose `users.email` matches — no account is ever created. It has **no Turnstile**, so the app's Google path needs no captcha. Students arrive here too (`resolveSoleStudent` refuses an ambiguous one).
+- **Google, add:** iOS and Android OAuth client IDs in the Google Cloud project. The native SDK may issue tokens whose audience is the app's client ID rather than the web one — **verify on a real device**, and if so pass `verifyIdToken` an **array of audiences** (web + iOS + Android, from `.env`). Additive: the web keeps its audience.
+- **Apple, add:** `POST /api/auth/apple` — verify Apple's identity token (Apple's public keys, audience = the app's bundle id), then sign in the **linked** AMS user. **Email matching is not enough:** Apple can hide the address behind a private relay. So:
+  - table `user_apple_ids` (`user_id`, `apple_sub` unique, `linked_at`, `revoked_at`);
+  - a signed-in user links Apple once (**Me › Sign-in methods**); after that, the Apple button signs them in;
+  - first-time Apple with a **real, verified** email matching exactly one active user may link automatically — the same match-only rule as Google; a relay address is refused with "Sign in with your ICSA password once, then link Apple in Me".
+- **Both:** session = the device session (S2); audit the sign-in and every link/unlink (credentials tier — fail the request if the audit fails); add the paths to the student firewall where students use them.
+- **App Review:** the Apple button must be at least as prominent as Google's, on the same screen.
+
 ---
 
 ## Not needed (already fine)

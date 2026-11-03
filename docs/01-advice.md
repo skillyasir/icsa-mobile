@@ -61,7 +61,7 @@ Written 3 Nov 2026. Platform facts were checked that day (sources at the end); r
 - **The AMS login requires a Cloudflare Turnstile token** (both `/api/auth/login` and `/api/auth/student-login`). Turnstile does not run natively in apps; **Cloudflare's documented route is the widget inside a WebView**. Plan: a tiny captcha page served from `app.icsasystem.com`, opened in an invisible/compact WebView, posting the token back to the native login form. Later, replace it with **App Attest (iOS) / Play Integrity (Android)**.
 - **Today's tokens live ~12 minutes** (the Settings idle timeout, 10 minutes by default, + 2 minutes grace) and are renewed on activity. Right for a shared reception PC; wrong for a personal phone.
 - **Recommended for the app:** a **device session** — after login the server issues a long-lived, revocable **refresh token bound to this device**; the app keeps it in the Keychain/Keystore and gets short access tokens with it. The phone is **locked with Face ID / fingerprint** after the idle time instead of being signed out. A manager can **sign out a lost phone** from the user's page. (Server work: `03-ams-server-changes.md` S2.)
-- **Google sign-in:** the AMS has it (`/api/auth/google`). If the app offers it on the login screen, Apple's guideline 4.8 may require **Sign in with Apple** too (exceptions exist for an app's own account system and for education/enterprise accounts). **v1: AMS username/student code + password only.**
+- **Google sign-in:** the AMS has it (`/api/auth/google`). If the app offers it on the login screen, Apple's guideline 4.8 may require **Sign in with Apple** too (exceptions exist for an app's own account system and for education/enterprise accounts). **Yasir ruled, 3 Nov 2026: Google sign-in is in v1, so Sign in with Apple is in v1 too** (server work S12).
 
 ## 7. Push notifications
 
@@ -81,8 +81,8 @@ Written 3 Nov 2026. Platform facts were checked that day (sources at the end); r
 
 - **Check-in is already geofenced on the server:** `POST /api/attendance/check-in` takes the phone's coordinates and accuracy; the server measures the distance to each branch (`branches.latitude/longitude/gps_radius_m`, falling back to the `attendance_gps_radius_m` setting), caps how much a claimed accuracy may widen the radius, and records `check_in_lat/lng` and `check_in_distance_m`. Batch students only inside the session window; individual students any day.
 - **The app adds:** a precise, fresh fix (high accuracy, < 30 s old), a clear map card ("You are 42 m from ICSA City — inside"), and the **mock-location flag** Android reports, sent with the check-in so the server can flag it.
-- **Permission:** "**While using the app**" only. That is all check-in needs, and it keeps App Review and Play's background-location declaration out of v1.
-- **Later, optional:** arrival reminders ("You've arrived at ICSA Mahboula — tap to check in") with OS geofencing — needs "Always" permission, a review justification, and Play's background-location declaration with a video. **Never an automatic check-in** — the student taps.
+- **Permission:** "**While using the app**" first — that is all check-in needs. "**Always**" is asked only when a student turns on arrival reminders, with a sentence saying why.
+- **Arrival reminders — in v1 (Yasir ruled, 3 Nov 2026):** "You've arrived at ICSA Mahboula — tap to check in", by the OS geofence around each branch (`expo-location` geofencing + `expo-task-manager`). Students only; shown only on a day they have a class; nothing leaves the phone until they tap. Needs a review justification and Play's background-location declaration with a video. **Never an automatic check-in** — the student taps.
 - **No staff tracking.** Location is used for the student's own check-in, nothing else.
 
 ## 9. Money, safely
