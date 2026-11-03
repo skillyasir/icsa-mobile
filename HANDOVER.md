@@ -76,6 +76,7 @@ Rough sizes for one developer working with Claude; they move with the decisions 
    - **Run on Mac:** `xcode-select -p && xcodebuild -version` (Xcode 26 or later is needed to build for the App Store since 28 Apr 2026)
    - **Run on Mac:** `node -v && npm -v` (Node 22 LTS)
    - **Run on Mac:** `cd ~/Projects/icsa-system && git pull --ff-only && git --no-pager log --oneline -1` (the Mac copy was at `6479ae5` on 3 Nov 2026, well behind GitHub)
+   - ✅ **Checked 3 Nov 2026:** macOS **26.6.2** (Apple silicon), **148 GB** free, **Xcode 27.2** (27B52) installed and selected, **Node 24.19.0** / npm 11.17.0, AMS Mac copy pulled to **`43b55d0`** (same as GitHub). Xcode 27.2 is newer than the 27.1 that Expo's SDK 58 build image uses — the first Simulator build confirms it.
 4. **Mockup review** — show `mockups/`, collect changes, get approval before building screens (his rule: audit → mockups → build).
 5. **Scaffold Phase 1** in this folder (`npx create-expo-app@latest` with TypeScript), commit by explicit path, and give Yasir the Simulator/phone run steps as **Run on Mac**.
 
