@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Student check-in</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0D47A1}a:hover{color:#0A3A85}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; background: #F5F7FB; font-family: Nunito, system-ui, sans-serif; color: #0F172A;">
+  <div style="padding: 54px 16px 0; display: flex; align-items: center; gap: 4px;">
+    <a href="Main.dc.html" style="display: flex; align-items: center; gap: 2px; height: 44px; padding-right: 8px; font-size: 16px; font-weight: 700; text-decoration: none;">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0D47A1" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>Home</a>
+  </div>
+  <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 14px;">
+    <h1 style="margin: 0; font-size: 30px; font-weight: 800;">Check in</h1>
+
+    <div aria-label="Map: you are inside the ICSA City check-in area" role="img" style="position: relative; height: 200px; border-radius: 22px; overflow: hidden; background: #E9EEF5; border: 1px solid #DCE3EE;">
+      <div style="position: absolute; left: -20px; top: 70px; width: 440px; height: 14px; background: #FFFFFF; transform: rotate(-8deg);"></div>
+      <div style="position: absolute; left: -20px; top: 168px; width: 440px; height: 10px; background: #FFFFFF; transform: rotate(4deg);"></div>
+      <div style="position: absolute; left: 120px; top: -20px; width: 12px; height: 280px; background: #FFFFFF; transform: rotate(10deg);"></div>
+      <div style="position: absolute; left: 262px; top: -20px; width: 9px; height: 280px; background: #FFFFFF; transform: rotate(-6deg);"></div>
+      <div style="position: absolute; left: 24px; top: 104px; width: 70px; height: 44px; border-radius: 6px; background: #DDE6D5;"></div>
+      <div style="position: absolute; left: 286px; top: 22px; width: 52px; height: 40px; border-radius: 6px; background: #DDE6D5;"></div>
+      <div style="position: absolute; left: 97px; top: 14px; width: 170px; height: 170px; border-radius: 85px; background: rgba(13,71,161,0.10); border: 2px dashed #0D47A1; box-sizing: border-box;"></div>
+      <div style="position: absolute; left: 166px; top: 70px; width: 34px; height: 34px; border-radius: 10px; background: #0D47A1; color: #FFFFFF; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(13,71,161,0.35);">ICSA</div>
+      <div style="position: absolute; left: 204px; top: 116px; width: 34px; height: 34px; border-radius: 17px; background: rgba(22,163,74,0.22);"></div>
+      <div style="position: absolute; left: 213px; top: 125px; width: 16px; height: 16px; border-radius: 8px; background: #16A34A; border: 3px solid #FFFFFF; box-sizing: border-box;"></div>
+      <div style="position: absolute; left: 12px; bottom: 12px; background: #FFFFFF; border-radius: 12px; padding: 6px 10px; font-size: 12px; font-weight: 700; color: #334155;">ICSA City · check-in area 150 m</div>
+    </div>
+
+    <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="width: 48px; height: 48px; border-radius: 24px; background: #DCFCE7; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+          <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#15803D" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>
+        </div>
+        <div>
+          <div style="font-size: 20px; font-weight: 800;">You're checked in</div>
+          <div style="font-size: 14px; color: #475569;">3:41 PM · 42 m from ICSA City · ±8 m</div>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px; font-size: 15px;">
+        <div style="display: flex; justify-content: space-between; gap: 12px;"><span style="color: #64748B; font-weight: 600;">Class</span><span style="font-weight: 700; text-align: right;">Computer Secretarial with AI</span></div>
+        <div style="display: flex; justify-content: space-between; gap: 12px; align-items: center;"><span style="color: #64748B; font-weight: 600;">Teacher</span><span style="font-weight: 700;">Ms. Sara Khan</span></div>
+        <a href="#" style="align-self: flex-end; font-size: 14px; font-weight: 700;">Wrong teacher? Change</a>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px; background: #FEF3C7; color: #854D0E; border-radius: 12px; padding: 10px 12px; font-size: 14px; font-weight: 700;">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#854D0E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        Waiting for Ms. Sara Khan to confirm
+      </div>
+      <button type="button" style="height: 50px; border-radius: 16px; border: 1.5px solid #CBD5E1; background: #FFFFFF; color: #0F172A; font-family: inherit; font-size: 16px; font-weight: 800; cursor: pointer;">Check out when class ends</button>
+    </div>
+
+    <p style="margin: 0; font-size: 13px; color: #64748B; line-height: 1.45;">ICSA reads your location only when you tap Check in, to confirm you are at a branch. It is never tracked in the background.</p>
+  </div>
+
+  <nav aria-label="Main" style="position: absolute; left: 0; right: 0; bottom: 0; height: 84px; background: #FFFFFF; border-top: 1px solid #E2E8F0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding-top: 8px; box-sizing: border-box;">
+    <a href="Main.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #64748B; text-decoration: none;">
+      <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Home</a>
+    <a href="StudentLearn.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #64748B; text-decoration: none;">
+      <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z"/><path d="M4 17a3 3 0 0 1 3-3h11"/></svg>Learn</a>
+    <a href="#" aria-current="page" style="display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 800; color: #0D47A1; text-decoration: none;">
+      <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0D47A1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 9h18M9 15l2 2 4-4"/></svg>Attendance</a>
+    <a href="StudentFees.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #64748B; text-decoration: none;">
+      <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M3 10h18M16 15h2"/></svg>Fees</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #64748B; text-decoration: none;">
+      <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Me</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
