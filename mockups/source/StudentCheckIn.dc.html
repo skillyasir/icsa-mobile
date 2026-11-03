@@ -59,7 +59,13 @@ a{color:#0D47A1}a:hover{color:#0A3A85}
       <button type="button" style="height: 50px; border-radius: 16px; border: 1.5px solid #CBD5E1; background: #FFFFFF; color: #0F172A; font-family: inherit; font-size: 16px; font-weight: 800; cursor: pointer;">Check out when class ends</button>
     </div>
 
-    <p style="margin: 0; font-size: 13px; color: #64748B; line-height: 1.45;">ICSA reads your location only when you tap Check in, to confirm you are at a branch. It is never tracked in the background.</p>
+    <label for="arrive" style="display: flex; align-items: center; gap: 12px; background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 18px; padding: 12px 14px;">
+      <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0D47A1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"></path><circle cx="12" cy="9.5" r="2.5"></circle></svg>
+      <span style="flex-grow: 1;"><span style="display: block; font-size: 15px; font-weight: 800;">Arrival reminders</span><span style="display: block; font-size: 13px; color: #64748B;">Remind me to check in when I reach ICSA on a class day</span></span>
+      <input id="arrive" type="checkbox" checked="" style="width: 22px; height: 22px; accent-color: #0D47A1;">
+    </label>
+
+    <p style="margin: 0; font-size: 13px; color: #64748B; line-height: 1.45;">Your phone notices when you reach a branch on a class day. Nothing is sent to ICSA until you tap Check in, and ICSA never checks you in by itself.</p>
   </div>
 
   <nav aria-label="Main" style="position: absolute; left: 0; right: 0; bottom: 0; height: 84px; background: #FFFFFF; border-top: 1px solid #E2E8F0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding-top: 8px; box-sizing: border-box;">

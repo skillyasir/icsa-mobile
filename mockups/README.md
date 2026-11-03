@@ -33,7 +33,7 @@ Money in KD with 3 decimals (`90.000`). Dates as `3 Nov 2026`, everywhere.
 | 15 | `screens/15-manager-approvals.png` | Manager | Today across branches; refunds, discounts and certificates to approve |
 | 16 | `screens/16-sign-in.png` | Everyone | Sign in, security check, unlock with Face ID |
 | 17 | `screens/17-push-lock-screen.png` | Everyone | What push notifications look like on a locked phone |
-| 18 | `screens/18-ipad-mac-student-profile.png` | Staff | iPad / Mac: student list beside the student's profile |
+| 18 | `screens/18-ipad-mac-student-profile.png` | Staff | iPad: student list beside the student's profile (file name kept from before the iPad-only ruling) |
 
 `overview-phone-screens.png` is all 17 phone screens on one sheet.
 
@@ -42,7 +42,24 @@ Money in KD with 3 decimals (`90.000`). Dates as `3 Nov 2026`, everywhere.
 `source/*.dc.html` and `source/canvas.json` are the canvas files. Edit them on
 the canvas (link above), not here; these copies are for reference and diffing.
 
-## Not yet decided
+## Approved — 3 Nov 2026
 
-These are for review. Nothing has been built from them. Changes go on the
-canvas first, then into the app.
+**Yasir approved all 18 screens on 3 Nov 2026**, with four changes that his
+rulings of the same day required, applied on the canvas that day:
+
+1. **16 Sign in** — "Sign in with Apple" and "Sign in with Google", side by side
+   and equally prominent, under the password sign-in. In the app these are the
+   official Apple and Google buttons from their SDKs, not drawn ones.
+2. **02 Check in** — an **Arrival reminders** switch; the small print now says
+   the phone notices arrival on a class day, nothing is sent until the student
+   taps, and ICSA never checks anyone in by itself.
+3. **17 Lock screen** — the arrival reminder ("You've arrived at ICSA City",
+   *Open check-in* / *Not now*) on top.
+4. **18** — iPad only (the Mac uses the AMS web app).
+
+**The canvas is the current version.** `source/` matches it. The PNGs for
+**02, 16, 17, 18** and `overview-phone-screens.png` were rendered before these
+four changes and still show the old screens — re-export them from the canvas
+if a fresh sheet is needed.
+
+Changes go on the canvas first, then into the app.

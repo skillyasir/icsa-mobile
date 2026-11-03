@@ -22,7 +22,7 @@
     "ManagerApprovals.dc.html":   { "x": 940,  "y": 4092, "w": 390,  "h": 844, "title": "Manager — Approvals", "radius": 44 },
     "SignIn.dc.html":             { "x": 0,    "y": 5356, "w": 390,  "h": 844, "title": "Sign in", "radius": 44 },
     "PushLockScreen.dc.html":     { "x": 470,  "y": 5356, "w": 390,  "h": 844, "title": "Push notifications (lock screen)", "radius": 44 },
-    "TabletProfile.dc.html":      { "x": 940,  "y": 5356, "w": 1180, "h": 820, "title": "iPad and Mac — Student profile", "radius": 24 }
+    "TabletProfile.dc.html":      { "x": 940,  "y": 5356, "w": 1180, "h": 820, "title": "iPad — Student profile", "radius": 24 }
   },
   "order": [
     "Main.dc.html", "StudentCheckIn.dc.html", "StudentLearn.dc.html", "StudentFees.dc.html",
@@ -36,7 +36,7 @@
     "rowTeachers":  { "x": 0, "y": 1284, "text": "Teachers", "kind": "title1", "maxW": 1330 },
     "rowReception": { "x": 0, "y": 2548, "text": "Reception and supervisors", "kind": "title1", "maxW": 2270 },
     "rowField":     { "x": 0, "y": 3812, "text": "Marketers and managers", "kind": "title1", "maxW": 1330 },
-    "rowPlatform":  { "x": 0, "y": 5076, "text": "Sign in, push, iPad and Mac", "kind": "title1", "maxW": 2120 }
+    "rowPlatform":  { "x": 0, "y": 5076, "text": "Sign in, push, iPad", "kind": "title1", "maxW": 2120 }
   },
   "designSystems": []
 }
