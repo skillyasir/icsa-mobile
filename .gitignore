@@ -16,3 +16,13 @@ android/
 .DS_Store
 npm-debug.*
 yarn-error.*
+
+# from the Expo SDK 58 template (3 Nov 2026)
+expo-env.d.ts
+.kotlin/
+.metro-health-check*
+yarn-debug.*
+*.pem
+.env*.local
+*.tsbuildinfo
+example

@@ -2,7 +2,7 @@
 
 The ICSA app — **iPhone, iPad, Mac and Android** — for students, teachers, reception, marketers and managers, built on the ICSA AMS (`app.icsasystem.com`).
 
-**Status (3 Nov 2026): planning.** Advice, feature map, server plan and mockups are ready; no app code yet.
+**Status (3 Nov 2026): scaffolded.** Decisions ruled, mockups approved, Expo SDK 58 + TypeScript project created (still the Expo demo screens — Phase 1 replaces them).
 
 | Start with | |
 |---|---|

@@ -78,7 +78,10 @@ Rough sizes for one developer working with Claude; they move with the decisions 
    - **Run on Mac:** `cd ~/Projects/icsa-system && git pull --ff-only && git --no-pager log --oneline -1` (the Mac copy was at `6479ae5` on 3 Nov 2026, well behind GitHub)
    - ✅ **Checked 3 Nov 2026:** macOS **26.6.2** (Apple silicon), **148 GB** free, **Xcode 27.2** (27B52) installed and selected, **Node 24.19.0** / npm 11.17.0, AMS Mac copy pulled to **`43b55d0`** (same as GitHub). Xcode 27.2 is newer than the 27.1 that Expo's SDK 58 build image uses — the first Simulator build confirms it.
 4. **Mockup review** — show `mockups/`, collect changes, get approval before building screens (his rule: audit → mockups → build).
+   - ✅ **Yasir approved all 18 on 3 Nov 2026**, with the 4 fixes his rulings required (applied on the canvas that day — see `mockups/README.md`).
 5. **Scaffold Phase 1** in this folder (`npx create-expo-app@latest` with TypeScript), commit by explicit path, and give Yasir the Simulator/phone run steps as **Run on Mac**.
+   - ✅ **Scaffolded 3 Nov 2026** — `create-expo-app` 5.0.0, template `default`: **Expo 58.0.22, React Native 0.88.1, React 19.3, TypeScript 6.0 (strict), Expo Router**. `app.json`: name **ICSA**, `us.icsa.app` on both platforms, iPad supported, encryption-exempt, ICSA blue splash. Still the **Expo demo screens** (Home/Explore) — Phase 1 replaces them.
+   - **Tested** (in a copy byte-identical to this folder, md5 over all 49 files): `npm install` OK (562 packages); `expo config` resolves ICSA / us.icsa.app / SDK 58.0.0; `expo-doctor` 18/20 — the 2 misses needed Expo's servers, which that sandbox cannot reach; `tsc` shows **1 error, in Expo's own web-only demo file** `src/components/app-tabs.web.tsx` (we do not ship web; Phase 1 deletes it). **Not tested yet:** a Simulator build — that needs Xcode on the Mac.
 
 ## 6. Where things are
 
