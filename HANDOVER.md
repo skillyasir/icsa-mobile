@@ -61,6 +61,7 @@ Rough sizes for one developer working with Claude; they move with the decisions 
 | Phase | What | Rough size |
 |---|---|---|
 | **0. Accounts** (Yasir, can start today) | D-U-N-S number for the company; Apple Developer Program **organization**; Google Play **organization** account; GitHub repo `skillyasir/icsa-mobile`. | Apple/D-U-N-S can take 1–3 weeks — start first |
+|  | ✅ **3 Nov 2026 (Yasir): both developer accounts already exist and are approved** — Apple **Individual**, Google Play **Personal** (opened after 13 Nov 2023). So: the store shows **Yasir's name**, not ICSA, as the seller/developer; and Google requires a **closed test with 12 testers for 14 days** before production — start it as soon as Phase 2 has something staff can use. D-U-N-S is needed only if the accounts move to an organization later. |
 | **1. Foundation** | Expo app, design system (ICSA tokens, Nunito, light/dark, RTL-ready), navigation by role, login (+ captcha in a WebView; Google and Sign in with Apple), secure token storage, Face ID / fingerprint lock, API client, error/offline banners, app version gate. **Server:** device sessions, app config, Google/Apple sign-in (S12). | 2–3 weeks |
 | **2. Teachers + Students** | Student home, geofenced check-in/out, attendance history, notifications inbox, lessons/quizzes/assignments (interactive pages in a WebView), progress, fees + payment proof. Teacher today, confirm check-ins, session marking, check assignments, my classes. **Server:** push devices + sender, student allowlist lines. | 3–4 weeks |
 | **3. Reception / Supervisors** | Search, student profile, register + Civil ID scan, enrol + instalments (the AMS's own `enrollmentFlow`), record payment + proof photo, receipt share/WhatsApp, follow-ups worklist and logging, payment-proof approvals. **Server:** idempotency keys, receipt PDF. | 3–4 weeks |
@@ -92,6 +93,7 @@ Rough sizes for one developer working with Claude; they move with the decisions 
 ## 7. For You (Yasir)
 
 - **Start the accounts now** — they are the slowest part and none of the code waits on them until release:
+  - ✅ **Done before this chat (Yasir, 3 Nov 2026):** Apple Developer (**Individual**) and Google Play (**Personal**, after 13 Nov 2023) are approved. The lines below are kept for the record — they only matter if the accounts move to an organization.
   - a **D-U-N-S number** for the legal entity that owns ICSA (free from Dun & Bradstreet; Apple has a lookup tool);
   - **Apple Developer Program as an organization** (yearly fee);
   - **Google Play Console as an organization** (one-time fee). A *personal* Play account created after 13 Nov 2023 must run a closed test with **12 testers for 14 days** before it can publish.

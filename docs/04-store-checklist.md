@@ -4,6 +4,7 @@ Written 3 Nov 2026. Re-check every rule at release time — both stores change t
 
 ## Accounts — start now (Yasir)
 
+- [x] **Accounts exist (Yasir, 3 Nov 2026):** Apple Developer **Individual** and Google Play **Personal** (opened after 13 Nov 2023), both approved. Consequences: the seller/developer name is Yasir's, not ICSA's; Google's **12 testers × 14 days closed test** applies before the first production release — plan it into Phase 2. The organization items below apply only if ICSA moves the apps to an organization account later (decide before the first public release).
 - [ ] **D-U-N-S number** for the legal entity that owns ICSA (free; Apple has a D-U-N-S lookup in its enrolment flow).
 - [ ] **Apple Developer Program — Organization** enrolment (yearly fee). Needs the D-U-N-S, the legal entity name, a website, and the authority to sign for the company.
 - [ ] **Google Play Console — Organization** account (one-time fee), verified with the same D-U-N-S. *A personal account created after 13 Nov 2023 must run a closed test with **12 testers for 14 days** before production.*
