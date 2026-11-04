@@ -84,6 +84,11 @@ Rough sizes for one developer working with Claude; they move with the decisions 
    - ✅ **Scaffolded 3 Nov 2026** — `create-expo-app` 5.0.0, template `default`: **Expo 58.0.22, React Native 0.88.1, React 19.3, TypeScript 6.0 (strict), Expo Router**. `app.json`: name **ICSA**, `us.icsa.app` on both platforms, iPad supported, encryption-exempt, ICSA blue splash. Still the **Expo demo screens** (Home/Explore) — Phase 1 replaces them.
    - **Tested** (in a copy byte-identical to this folder, md5 over all 49 files): `npm install` OK (562 packages); `expo config` resolves ICSA / us.icsa.app / SDK 58.0.0; `expo-doctor` 18/20 — the 2 misses needed Expo's servers, which that sandbox cannot reach; `tsc` shows **1 error, in Expo's own web-only demo file** `src/components/app-tabs.web.tsx` (we do not ship web; Phase 1 deletes it). **Simulator build ✅ 3 Nov 2026** (Yasir's Mac, Xcode 27.2): `npx expo run:ios` — CocoaPods 1.17.0 installed via Homebrew (the gem route failed), iOS Simulator runtime downloaded with `xcodebuild -downloadPlatform iOS`, **Build Succeeded, 0 errors, 1 warning** (Expo's own `CoreModule` access-level notice), installed and opened on **iPhone 18 Pro**, JS bundle loaded (1687 modules). So Xcode 27.2 works with SDK 58.
 
+### Platform order — Yasir ruled, 4 Nov 2026
+
+- **One codebase builds both** — neither iPhone nor Android comes first.
+- **Testing:** iPhone Simulator now; **set up Android Studio and an Android emulator right after Phase 1 piece 1 (the app shell)**, then check every piece on both.
+
 ## 6. Where things are
 
 - **This folder:** `~/Projects/icsa-mobile` on Yasir's MacBook Pro (Apple silicon). Local git repo once §5 step 0 has run; **no GitHub remote yet** (he creates it — see §7).
