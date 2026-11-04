@@ -96,6 +96,9 @@ Rough sizes for one developer working with Claude; they move with the decisions 
   - **Checks:** `npm run checks` (each check self-tests, and both rule checks were mutation-proved), `npm run typecheck` (icon names are type-checked), `npm run lint`.
 - ✅ **Yasir confirmed 4 Nov 2026:** the shell works in the Simulator; **accountant and invoice encoder stay web-only**; **CAP coordinator screens are the last phase (6)**.
 - ✅ **Android checked 4 Nov 2026** (Yasir's Mac): Zulu JDK 17 + Android Studio 2026.2.2 (brew), SDK Platform **API 37** (what SDK 58 compiles against — `compileSdk 37`, `targetSdk 36`, build-tools 37.0.0), emulator **Medium Phone API 37.0**. `npx expo run:android`: **BUILD SUCCESSFUL in 14m 30s**, installed and opened, bundle loaded; Yasir confirmed the shell works. The Kotlin/Gradle warnings are deprecations inside Expo's own code.
+- **Piece 2 — real sign-in, in progress:**
+  - **S1 built 4 Nov 2026** — AMS commit `002f5ba` (Mac copy; Yasir pushes and deploys): `client/public/mobile/captcha.html` + `client/src/lib/__checks__/mobile-captcha.check.js`. Protocol tested against a stand-in for Cloudflare's script; **real Cloudflare to be checked after deploy** at `https://app.icsasystem.com/mobile/captcha.html`.
+  - Then **S2** (device sessions), then the app's sign-in wired to them.
 - **Next pieces:** sign-in for real (AMS S1 captcha page, S2 device sessions, then S12 Apple/Google), the API client, Face ID lock, the app version gate.
 
 ### Platform order — Yasir ruled, 4 Nov 2026
