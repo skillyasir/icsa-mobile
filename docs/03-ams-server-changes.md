@@ -15,7 +15,7 @@ Order = the order the app needs them.
 
 ## S1 — Sign-in from the app (the captcha)
 
-- ✅ **Built 4 Nov 2026**, AMS commit `002f5ba`: `client/public/mobile/captcha.html`, held by `client/src/lib/__checks__/mobile-captcha.check.js`. Messages to the app: JSON `{ source: 'icsa-captcha', v: 1, type: 'ready' | 'token' | 'expired' | 'timeout' | 'error', token?, code? }`; the app calls `icsaCaptchaReset()` after a failed sign-in. Query `?theme=dark|light`, plus `?v=` to step past caching.
+- ✅ **Built and live 4 Nov 2026** (Cloudflare "Success!" confirmed in Safari), AMS commit `002f5ba`: `client/public/mobile/captcha.html`, held by `client/src/lib/__checks__/mobile-captcha.check.js`. Messages to the app: JSON `{ source: 'icsa-captcha', v: 1, type: 'ready' | 'token' | 'expired' | 'timeout' | 'error', token?, code? }`; the app calls `icsaCaptchaReset()` after a failed sign-in. Query `?theme=dark|light`, plus `?v=` to step past caching.
 
 - **Today:** `POST /api/auth/login` and `POST /api/auth/student-login` refuse without a Cloudflare **Turnstile** token. Turnstile has no native SDK; Cloudflare's route for apps is the widget in a WebView.
 - **Add:** a small page on `app.icsasystem.com` (e.g. `/mobile/captcha`) that renders the widget with the AMS site key and hands the token to the app (`window.ReactNativeWebView.postMessage`). Put it in **`client/public/`** so it ships with every client build — `deploy-client.sh` wipes `server/public` on each deploy.
