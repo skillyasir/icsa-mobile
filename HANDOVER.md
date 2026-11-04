@@ -84,6 +84,17 @@ Rough sizes for one developer working with Claude; they move with the decisions 
    - ✅ **Scaffolded 3 Nov 2026** — `create-expo-app` 5.0.0, template `default`: **Expo 58.0.22, React Native 0.88.1, React 19.3, TypeScript 6.0 (strict), Expo Router**. `app.json`: name **ICSA**, `us.icsa.app` on both platforms, iPad supported, encryption-exempt, ICSA blue splash. Still the **Expo demo screens** (Home/Explore) — Phase 1 replaces them.
    - **Tested** (in a copy byte-identical to this folder, md5 over all 49 files): `npm install` OK (562 packages); `expo config` resolves ICSA / us.icsa.app / SDK 58.0.0; `expo-doctor` 18/20 — the 2 misses needed Expo's servers, which that sandbox cannot reach; `tsc` shows **1 error, in Expo's own web-only demo file** `src/components/app-tabs.web.tsx` (we do not ship web; Phase 1 deletes it). **Simulator build ✅ 3 Nov 2026** (Yasir's Mac, Xcode 27.2): `npx expo run:ios` — CocoaPods 1.17.0 installed via Homebrew (the gem route failed), iOS Simulator runtime downloaded with `xcodebuild -downloadPlatform iOS`, **Build Succeeded, 0 errors, 1 warning** (Expo's own `CoreModule` access-level notice), installed and opened on **iPhone 18 Pro**, JS bundle loaded (1687 modules). So Xcode 27.2 works with SDK 58.
 
+### Phase 1 progress
+
+- **Piece 1 — the app shell ✅ built 4 Nov 2026.** Expo's demo screens are gone. In their place:
+  - **Theme** (`src/theme/`): ICSA colours, Nunito (4 weights), light and dark, every text colour ≥ 4.5:1 (held by `tokens.check.ts`).
+  - **Sign-in screen** (`src/app/sign-in.tsx`) per mockup 16 — **design only**: Sign in, Apple and Google say "not connected yet" rather than pretend. Apple shows on iPhone only. "Forgot password?" opens the AMS web page.
+  - **Five tab sets** (`src/app/<student|teacher|reception|marketer|manager>/`) with placeholder screens saying what comes and in which phase; **Me** shows the person, a view switcher for mixed roles, and Sign out.
+  - **Role → tabs** (`src/lib/roles.ts`, held by `roles.check.ts`): from the AMS's own role model. Accountant, CAP coordinator and invoice encoder have **no app screens** — sent to the AMS on the web.
+  - **Developer preview** on the sign-in screen (development builds only, `__DEV__`): open any tab set as a made-up person. Not in a store build — confirmed by a production web export, where it is absent.
+  - **Checks:** `npm run checks` (each check self-tests, and both rule checks were mutation-proved), `npm run typecheck` (icon names are type-checked), `npm run lint`.
+- **Next pieces:** sign-in for real (AMS S1 captcha page, S2 device sessions, then S12 Apple/Google), the API client, Face ID lock, the app version gate.
+
 ### Platform order — Yasir ruled, 4 Nov 2026
 
 - **One codebase builds both** — neither iPhone nor Android comes first.

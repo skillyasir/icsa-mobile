@@ -49,7 +49,8 @@ The ICSA app for iPhone, iPad, Mac and Android, on top of the ICSA AMS. Written 
 
 ## Rules for this app
 
-- **Read `AGENTS.md` too** — Expo's own rules for this SDK (it came with the template on 3 Nov 2026): add packages with **`npx expo install`**, never `npm install <pkg>`; check the **versioned Expo docs** for SDK 58, not memory; never hand-edit `ios/` or `android/` (they are generated — configure in `app.json`). Before calling anything done: `npm run typecheck` and `npx expo lint`.
+- **Read `AGENTS.md` too** — Expo's own rules for this SDK (it came with the template on 3 Nov 2026): add packages with **`npx expo install`**, never `npm install <pkg>`; check the **versioned Expo docs** for SDK 58, not memory; never hand-edit `ios/` or `android/` (they are generated — configure in `app.json`). Before calling anything done: `npm run typecheck`, `npm run lint` and `npm run checks` — all three exit 0.
+- **Checks** are `*.check.ts` files beside the code (Node runs them with types stripped). Each starts with the harness self-test; a rule you add gets a check, and you prove it bites by planting the defect once.
 
 - **The server decides; the app displays.** An old app version stays on phones for months — far longer than a stale web bundle — so **any rule that must hold lives in the API**. The app's checks are convenience only.
 - **One owner for each rule.** Business logic already in the AMS's pure `client/src/lib/*.js` (enrolment sequence, instalments, phone prefixes, WhatsApp links, referrals, dates…) is **reused, not rewritten** — vendored by `scripts/` and verified against the AMS on every check run. A hand-made copy is a second copy, and second copies drift.

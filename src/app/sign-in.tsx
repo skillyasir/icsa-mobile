@@ -1,0 +1,251 @@
+import { useRouter } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
+import { useState } from 'react';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { AppText } from '@/components/AppText';
+import { Button } from '@/components/Button';
+import { Notice } from '@/components/Notice';
+import { TextField } from '@/components/TextField';
+import { FORGOT_PASSWORD_URL } from '@/config';
+import { useSession, type SessionUser } from '@/session/SessionContext';
+import { brand, minTouch } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/useAppTheme';
+
+// Mockup 16, approved 3 Nov 2026. PIECE 1 draws the screen only: the Sign in,
+// Apple and Google buttons say so instead of pretending. The AMS login, the
+// Cloudflare check, Sign in with Apple and Google arrive in the sign-in pieces
+// (docs/03-ams-server-changes.md S1, S2, S12). Apple and Google are drawn as
+// plain buttons for now; the app will use their official buttons.
+
+const NOT_YET = 'Sign-in is not connected to the AMS yet — it arrives in the next step.';
+
+// Developer preview: made-up people, one per experience, plus mixed roles.
+// Shown in development builds only (__DEV__) — never in a store build.
+const PREVIEW: { label: string; user: Omit<SessionUser, 'preview'> }[] = [
+  { label: 'Student', user: { full_name: 'Maria Santos', role: 'student', overlay_roles: [] } },
+  { label: 'Teacher', user: { full_name: 'Sara Khan', role: 'teacher', overlay_roles: [] } },
+  { label: 'Reception', user: { full_name: 'Fatima Noor', role: 'supervisor', overlay_roles: [] } },
+  { label: 'Marketer', user: { full_name: 'Layla Hassan', role: 'marketer', overlay_roles: [] } },
+  { label: 'Manager', user: { full_name: 'Yousef Karim', role: 'manager', overlay_roles: [] } },
+  { label: 'Manager + Teacher', user: { full_name: 'Yousef Karim', role: 'manager', overlay_roles: ['teacher'] } },
+  { label: 'Reception + Marketer', user: { full_name: 'Aisha Rahman', role: 'supervisor', overlay_roles: ['marketer'] } },
+  { label: 'Accountant (web only)', user: { full_name: 'Hana Ali', role: 'accountant', overlay_roles: [] } },
+];
+
+export default function SignIn() {
+  const t = useAppTheme();
+  const router = useRouter();
+  const { previewSignIn } = useSession();
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
+  const [biometric, setBiometric] = useState(true);
+  const [message, setMessage] = useState<string | null>(null);
+
+  const biometricName = Platform.OS === 'ios' ? 'Face ID' : 'fingerprint';
+
+  return (
+    <View style={[styles.fill, { backgroundColor: t.colors.surface }]}>
+      <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.scroll}>
+          <View style={[styles.hero, { backgroundColor: t.colors.hero }]}>
+            <View
+              style={styles.decor}
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+            >
+              <View style={styles.ring} />
+              <View style={[styles.dot, styles.dotYellow]} />
+              <View style={[styles.dot, styles.dotGreen]} />
+            </View>
+            <SafeAreaView edges={['top']} style={styles.heroInner}>
+              <View style={styles.logoTile}>
+                <AppText variant="headline" style={styles.logoText}>
+                  ICSA
+                </AppText>
+              </View>
+              <AppText variant="largeTitle" color="onHero" accessibilityRole="header">
+                Welcome to ICSA
+              </AppText>
+              <AppText color="onHeroMuted">Staff and students sign in with their ICSA account</AppText>
+            </SafeAreaView>
+          </View>
+
+          <View style={[styles.form, { padding: t.space.xxl, gap: t.space.lg }]}>
+            <TextField
+              label="Username, email or student code"
+              value={identifier}
+              onChangeText={setIdentifier}
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="username"
+              textContentType="username"
+              returnKeyType="next"
+            />
+            <TextField
+              label="Password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              autoComplete="current-password"
+              textContentType="password"
+              returnKeyType="go"
+            />
+            <Pressable
+              accessibilityRole="link"
+              onPress={() => WebBrowser.openBrowserAsync(FORGOT_PASSWORD_URL)}
+              style={styles.forgot}
+            >
+              <AppText variant="bodyStrong" color="link">
+                Forgot password?
+              </AppText>
+            </Pressable>
+
+            <View style={[styles.check, { borderColor: t.colors.border, backgroundColor: t.colors.surfaceMuted }]}>
+              <AppText variant="caption" color="textMuted" style={styles.flex}>
+                Security check
+              </AppText>
+              <AppText variant="caption" color="textSubtle">
+                Connects in the next step
+              </AppText>
+            </View>
+
+            {message ? <Notice tone="info">{message}</Notice> : null}
+
+            <Button title="Sign in" onPress={() => setMessage(NOT_YET)} />
+
+            <View style={styles.orRow} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+              <View style={[styles.rule, { backgroundColor: t.colors.border }]} />
+              <AppText variant="caption" color="textSubtle">
+                or
+              </AppText>
+              <View style={[styles.rule, { backgroundColor: t.colors.border }]} />
+            </View>
+
+            <View style={styles.social}>
+              {Platform.OS === 'ios' ? (
+                <View style={styles.flex}>
+                  <Button title="Sign in with Apple" variant="apple" onPress={() => setMessage(NOT_YET)} />
+                </View>
+              ) : null}
+              <View style={styles.flex}>
+                <Button title="Sign in with Google" variant="outline" onPress={() => setMessage(NOT_YET)} />
+              </View>
+            </View>
+
+            <View style={styles.bioRow}>
+              <View style={styles.flex}>
+                <AppText variant="bodyStrong">Unlock with {biometricName}</AppText>
+                <AppText variant="caption" color="textSubtle">
+                  Stay signed in on this phone
+                </AppText>
+              </View>
+              <Switch
+                accessibilityLabel={`Unlock with ${biometricName}`}
+                value={biometric}
+                onValueChange={setBiometric}
+                trackColor={{ true: t.colors.primary }}
+              />
+            </View>
+
+            {__DEV__ ? (
+              <View style={[styles.preview, { borderColor: t.colors.borderStrong, gap: t.space.sm }]}>
+                <AppText variant="label" color="textMuted">
+                  DEVELOPER PREVIEW — NOT IN THE STORE APP
+                </AppText>
+                <AppText variant="caption" color="textSubtle">
+                  Open the tabs as a made-up person. Nothing comes from the AMS.
+                </AppText>
+                <View style={styles.chips}>
+                  {PREVIEW.map((p) => (
+                    <Pressable
+                      key={p.label}
+                      accessibilityRole="button"
+                      onPress={() => {
+                        previewSignIn(p.user);
+                        router.replace('/');
+                      }}
+                      style={({ pressed }) => [
+                        styles.chip,
+                        {
+                          borderColor: t.colors.borderStrong,
+                          backgroundColor: pressed ? t.colors.surfaceMuted : t.colors.surface,
+                        },
+                      ]}
+                    >
+                      <AppText variant="caption">{p.label}</AppText>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+            ) : null}
+
+            <AppText variant="caption" color="textSubtle" style={styles.footer}>
+              ICSA — Your Partner in Success
+            </AppText>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  fill: { flex: 1 },
+  flex: { flex: 1 },
+  scroll: { flexGrow: 1 },
+  hero: { overflow: 'hidden' },
+  heroInner: { paddingHorizontal: 24, paddingTop: 36, paddingBottom: 30, gap: 6 },
+  decor: { position: 'absolute', top: 0, bottom: 0, start: 0, end: 0 },
+  ring: {
+    position: 'absolute',
+    end: -60,
+    top: -40,
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    borderWidth: 36,
+    borderColor: 'rgba(255,255,255,0.06)',
+  },
+  dot: { position: 'absolute', borderRadius: 11 },
+  dotYellow: { end: 44, top: 70, width: 22, height: 22, backgroundColor: brand.yellow },
+  dotGreen: { end: 86, top: 112, width: 10, height: 10, backgroundColor: brand.green },
+  logoTile: {
+    width: 64,
+    height: 64,
+    borderRadius: 18,
+    backgroundColor: brand.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  logoText: { color: brand.blue },
+  form: {},
+  forgot: { alignSelf: 'flex-end', minHeight: minTouch, justifyContent: 'center' },
+  check: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  orRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  rule: { flex: 1, height: StyleSheet.hairlineWidth * 2 },
+  social: { flexDirection: 'row', gap: 10 },
+  bioRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: minTouch },
+  preview: { borderWidth: 1, borderStyle: 'dashed', borderRadius: 14, padding: 12 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: { minHeight: minTouch, justifyContent: 'center', paddingHorizontal: 14, borderRadius: 999, borderWidth: 1 },
+  footer: { textAlign: 'center', marginTop: 8 },
+});

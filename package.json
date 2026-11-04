@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "dependencies": {
+    "@expo-google-fonts/nunito": "^0.4.2",
     "@expo/ui": "~58.0.26",
     "expo": "~58.0.22",
     "expo-constants": "~58.0.14",
@@ -28,17 +29,19 @@
     "react-native-worklets": "0.13.0"
   },
   "devDependencies": {
+    "@types/node": "^24.19.2",
     "@types/react": "~19.3.0",
+    "eslint": "^9.39.5",
+    "eslint-config-expo": "~58.0.4",
     "typescript": "~6.0.3"
   },
   "scripts": {
     "start": "expo start",
-    "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web",
     "lint": "expo lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.checks.json",
+    "checks": "node scripts/run-checks.mjs"
   },
   "private": true
 }
