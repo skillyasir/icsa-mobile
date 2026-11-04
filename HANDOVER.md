@@ -101,6 +101,10 @@ Rough sizes for one developer working with Claude; they move with the decisions 
   - Then **S2** (device sessions), then the app's sign-in wired to them.
 - **Next pieces:** sign-in for real (AMS S1 captcha page, S2 device sessions, then S12 Apple/Google), the API client, Face ID lock, the app version gate.
 
+### Deferred — raise when the current piece is done
+
+- **Staff attendance module (Yasir, 4 Nov 2026):** ICSA staff will clock in their **own** working day. It does not exist in the AMS today (attendance there is students only, marked by teachers and supervisors). It needs a new AMS module first, then app screens. Daily clock-in works with the 30-day sign-in (no daily sign-in). Open questions for then: location at clock-in only, like students (arrival reminders are students-only today); who sees and corrects staff records.
+
 ### Platform order — Yasir ruled, 4 Nov 2026
 
 - **One codebase builds both** — neither iPhone nor Android comes first.
