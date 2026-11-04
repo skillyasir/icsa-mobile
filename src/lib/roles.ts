@@ -17,7 +17,9 @@
 //   for the wider scope.
 //
 // Roles with no app experience in v1 (accountant, cap_coordinator,
-// invoice_encoder) get none — they are sent to the AMS on the web.
+// invoice_encoder) get none — they are sent to the AMS on the web. Yasir,
+// 4 Nov 2026: accountant and invoice encoder stay web-only; the CAP
+// coordinator's screens are the last phase (HANDOVER Phase 6).
 
 export type Experience = 'student' | 'teacher' | 'reception' | 'marketer' | 'manager';
 

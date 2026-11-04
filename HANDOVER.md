@@ -67,6 +67,7 @@ Rough sizes for one developer working with Claude; they move with the decisions 
 | **3. Reception / Supervisors** | Search, student profile, register + Civil ID scan, enrol + instalments (the AMS's own `enrollmentFlow`), record payment + proof photo, receipt share/WhatsApp, follow-ups worklist and logging, payment-proof approvals. **Server:** idempotency keys, receipt PDF. | 3–4 weeks |
 | **4. Marketers + Managers** | Leads, lead detail with call/WhatsApp, follow-ups, links share, referrals, coupons, targets; manager dashboard and approvals. | 2–3 weeks |
 | **5. Polish + release** | iPad layouts (and so Mac), widgets (today's classes), accessibility, Arabic, TestFlight + Play internal testing with staff, store listings, review. | 2 weeks + review time |
+| **6. CAP College** (Yasir ruled, 4 Nov 2026: the last phase) | Screens for the **CAP coordinator** — the CAP students, enrolments, charges and refunds stack (`/api/cap/*`). Until then a CAP coordinator is sent to the AMS on the web. | after release |
 
 ## 5. The first session — do these in order
 
@@ -93,6 +94,7 @@ Rough sizes for one developer working with Claude; they move with the decisions 
   - **Role → tabs** (`src/lib/roles.ts`, held by `roles.check.ts`): from the AMS's own role model. Accountant, CAP coordinator and invoice encoder have **no app screens** — sent to the AMS on the web.
   - **Developer preview** on the sign-in screen (development builds only, `__DEV__`): open any tab set as a made-up person. Not in a store build — confirmed by a production web export, where it is absent.
   - **Checks:** `npm run checks` (each check self-tests, and both rule checks were mutation-proved), `npm run typecheck` (icon names are type-checked), `npm run lint`.
+- ✅ **Yasir confirmed 4 Nov 2026:** the shell works in the Simulator; **accountant and invoice encoder stay web-only**; **CAP coordinator screens are the last phase (6)**.
 - **Next pieces:** sign-in for real (AMS S1 captcha page, S2 device sessions, then S12 Apple/Google), the API client, Face ID lock, the app version gate.
 
 ### Platform order — Yasir ruled, 4 Nov 2026
