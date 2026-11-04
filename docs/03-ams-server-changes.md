@@ -32,6 +32,7 @@ Order = the order the app needs them.
   - `GET /api/users/:id/devices` + `POST /api/users/:id/devices/:deviceId/revoke` — manager signs out a lost phone.
   - Settings page: **Mobile app** section — session length in days, require biometric unlock.
 - **The app** locks behind Face ID / fingerprint after the idle time instead of signing out.
+- ✅ **Yasir ruled, 4 Nov 2026: 30 days, reset by every use** (a sliding window, the Settings default). His condition, which this meets: students and staff who use the app daily never sign in again — they unlock with Face ID / fingerprint and check in. A full sign-in only after 30 days unused, or after a manager revokes the phone.
 - **Student firewall:** add the three `/api/mobile/session*` paths.
 - **Audit:** session created / revoked (credentials tier — fail the request if the audit fails).
 
