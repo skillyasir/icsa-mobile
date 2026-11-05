@@ -79,3 +79,26 @@ export function captchaLoadDecision(r: { url: string; isTopFrame?: boolean }): b
   if (r.isTopFrame === false) return true;
   return isAllowedCaptchaUrl(r.url);
 }
+
+/** The AMS security-check page (S1). */
+export const CAPTCHA_PAGE_URL = 'https://app.icsasystem.com/mobile/captcha.html';
+const AMS_ORIGIN = CAPTCHA_ORIGINS[0];
+
+/**
+ * Is a message from the security-check page? `from` is what the WebView says
+ * sent it, and the two platforms say different things:
+ *
+ *   iOS (and Android's old bridge)   the page's own URL, query and all
+ *   Android's message listener       only the sender's ORIGIN — and it listens
+ *                                    to EVERY frame, Cloudflare's included
+ *
+ * Until 5 Nov 2026 the view accepted only the page URL, so on Android every
+ * message — the token included — was thrown away and Sign in never woke up.
+ * The AMS origin can only be the page itself here: captchaLoadDecision keeps
+ * the window on the AMS page or Cloudflare, and Cloudflare's frames report
+ * Cloudflare's origin, which is refused.
+ */
+export function isCaptchaMessageSource(from: string): boolean {
+  if (from === CAPTCHA_PAGE_URL || from.startsWith(CAPTCHA_PAGE_URL + '?')) return true;
+  return from === AMS_ORIGIN || from === AMS_ORIGIN + '/';
+}

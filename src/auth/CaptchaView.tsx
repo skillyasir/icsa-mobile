@@ -3,11 +3,10 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 
 import { AppText } from '@/components/AppText';
-import { AMS_WEB_URL } from '@/config';
 import { minTouch } from '@/theme/tokens';
 import { useAppTheme } from '@/theme/useAppTheme';
 
-import { captchaLoadDecision, parseCaptchaMessage } from './captchaMessage';
+import { CAPTCHA_PAGE_URL, captchaLoadDecision, isCaptchaMessageSource, parseCaptchaMessage } from './captchaMessage';
 
 // The Cloudflare check, in a small WebView on the AMS's own page (S1, live
 // 4 Nov 2026): Turnstile has no native SDK, and its site key admits
@@ -17,7 +16,8 @@ import { captchaLoadDecision, parseCaptchaMessage } from './captchaMessage';
 //
 // The WebView's own page may only be the AMS page or Cloudflare; Cloudflare's
 // inner frames are left alone (captchaLoadDecision says why). A message from
-// any page but the AMS's is ignored.
+// anything but the AMS page is ignored (isCaptchaMessageSource — iOS and
+// Android name the sender differently).
 //
 // The library's origin list is opened to everything on purpose and the
 // decision is made in one place, captchaLoadDecision. That list cannot tell a
@@ -25,7 +25,7 @@ import { captchaLoadDecision, parseCaptchaMessage } from './captchaMessage';
 // refuses it also tries to open in Safari. A narrow list there is what left
 // the check on "Verifying…" in the first Simulator run (5 Nov 2026).
 
-export const CAPTCHA_URL = `${AMS_WEB_URL}/mobile/captcha.html`;
+export const CAPTCHA_URL = CAPTCHA_PAGE_URL;
 
 // react-native-webview 14 types its class as WebView<P = undefined> over
 // WebViewProps & P, and under strict TypeScript 6 "& undefined" is never — no
@@ -53,8 +53,7 @@ export const CaptchaView = forwardRef<CaptchaHandle, Props>(function CaptchaView
   }));
 
   const onMessage = (e: WebViewMessageEvent) => {
-    const from = e.nativeEvent.url;
-    if (from !== CAPTCHA_URL && !from.startsWith(CAPTCHA_URL + '?')) return;
+    if (!isCaptchaMessageSource(e.nativeEvent.url)) return;
     const m = parseCaptchaMessage(e.nativeEvent.data);
     if (!m) return;
     if (m.type === 'ready') setState('ready');

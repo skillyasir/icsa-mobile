@@ -1,14 +1,18 @@
 import { readFileSync } from 'node:fs';
 
 import { readAmsFile } from '../../scripts/ams.ts';
+import { AMS_WEB_URL } from '../config.ts';
 import { run } from '../../scripts/check-harness.ts';
 
 import {
+  CAPTCHA_ORIGINS,
+  CAPTCHA_PAGE_URL,
   CAPTCHA_SOURCE,
   CAPTCHA_TYPES,
   CAPTCHA_VERSION,
   captchaLoadDecision,
   isAllowedCaptchaUrl,
+  isCaptchaMessageSource,
   parseCaptchaMessage,
 } from './captchaMessage.ts';
 
@@ -72,6 +76,17 @@ run('captchaMessage.check — the security-check page and the app agree', (h) =>
   const guards = view.match(/onShouldStartLoadWithRequest=\{[^\n]*\}/g) ?? [];
   h.check('§5 every load is asked of captchaLoadDecision, with the whole request',
     guards.length === 1 && guards[0] === 'onShouldStartLoadWithRequest={(r) => captchaLoadDecision(r)}', guards.join(' | '));
-  h.check('§5 the view takes messages from the AMS page only',
-    /if \(from !== CAPTCHA_URL && !from\.startsWith\(CAPTCHA_URL \+ '\?'\)\) return;/.test(view));
+  h.check('§5 the view takes messages only through isCaptchaMessageSource',
+    /if \(!isCaptchaMessageSource\(e\.nativeEvent\.url\)\) return;/.test(view));
+  h.check('§5 the view loads the page this file names', /source=\{\{ uri: `\$\{CAPTCHA_URL\}\?theme=/.test(view) && /export const CAPTCHA_URL = CAPTCHA_PAGE_URL;/.test(view));
+
+  // §6 who a message is from — iOS gives the page URL, Android's listener only
+  // the ORIGIN, for every frame. Until 5 Nov 2026 Android's were all refused.
+  h.check('§6 iOS: the page URL with its query', isCaptchaMessageSource(CAPTCHA_PAGE_URL + '?theme=dark&v=1') && isCaptchaMessageSource(CAPTCHA_PAGE_URL));
+  h.check('§6 Android: the AMS origin, as the listener reports it', isCaptchaMessageSource('https://app.icsasystem.com') && isCaptchaMessageSource('https://app.icsasystem.com/'));
+  h.check("§6 NOT Cloudflare's frames, which Android's listener also hears", !isCaptchaMessageSource('https://challenges.cloudflare.com') && !isCaptchaMessageSource('https://challenges.cloudflare.com/cdn-cgi/x'));
+  h.check('§6 NOT another AMS page (iOS form)', !isCaptchaMessageSource('https://app.icsasystem.com/login'));
+  h.check('§6 NOT a look-alike, NOT http, NOT empty', ['https://app.icsasystem.com.evil.example', 'http://app.icsasystem.com', '', 'null'].every((f) => !isCaptchaMessageSource(f)));
+  h.check('§6 the addresses here are config.ts\'s AMS address — one place, held to it',
+    CAPTCHA_ORIGINS[0] === AMS_WEB_URL && CAPTCHA_PAGE_URL === `${AMS_WEB_URL}/mobile/captcha.html`, `${CAPTCHA_ORIGINS[0]} / ${AMS_WEB_URL}`);
 });
