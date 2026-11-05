@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+
 import { readAmsFile } from '../../scripts/ams.ts';
 import { run } from '../../scripts/check-harness.ts';
 
@@ -5,6 +7,7 @@ import {
   CAPTCHA_SOURCE,
   CAPTCHA_TYPES,
   CAPTCHA_VERSION,
+  captchaLoadDecision,
   isAllowedCaptchaUrl,
   parseCaptchaMessage,
 } from './captchaMessage.ts';
@@ -50,4 +53,25 @@ run('captchaMessage.check — the security-check page and the app agree', (h) =>
   h.check('§3 NOT a look-alike with a user part', !isAllowedCaptchaUrl('https://app.icsasystem.com@evil.example/'));
   h.check('§3 NOT plain http', !isAllowedCaptchaUrl('http://app.icsasystem.com/mobile/captcha.html'));
   h.check('§3 NOT another site', !isAllowedCaptchaUrl('https://example.com/') && !isAllowedCaptchaUrl('about:evil'));
+
+  // §4 which loads the WebView makes — the first Simulator run (5 Nov 2026)
+  // sat on "Verifying…" because Cloudflare's inner frames were refused
+  const inner = ['about:srcdoc', 'about:blank', 'blob:https://challenges.cloudflare.com/5b1f', 'https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/ov2'];
+  h.check('§4 Cloudflare\'s inner frames load (about:srcdoc, blob:, the challenge)', inner.every((url) => captchaLoadDecision({ url, isTopFrame: false })));
+  h.check('§4 the page itself may be the AMS page', captchaLoadDecision({ url: 'https://app.icsasystem.com/mobile/captcha.html?theme=light&v=1', isTopFrame: true }));
+  h.check('§4 the page itself may NOT become another site', !captchaLoadDecision({ url: 'https://example.com/', isTopFrame: true }));
+  h.check('§4 …nor a look-alike of the AMS', !captchaLoadDecision({ url: 'https://app.icsasystem.com.evil.example/', isTopFrame: true }));
+  h.check('§4 with no frame flag, it is treated as the page (the strict answer)', !captchaLoadDecision({ url: 'https://example.com/' }));
+
+  // §5 the view makes its decisions through §4 and only there
+  const view = readFileSync(new URL('./CaptchaView.tsx', import.meta.url), 'utf8');
+  h.check('§5 extraction floor: CaptchaView.tsx read', view.length > 2000, String(view.length));
+  const lists = view.match(/originWhitelist=\{[^}]*\}/g) ?? [];
+  h.check("§5 one origin list, opened to everything — a narrow one is asked about every frame and refuses Cloudflare's",
+    lists.length === 1 && lists[0] === "originWhitelist={['*']}", lists.join(' | '));
+  const guards = view.match(/onShouldStartLoadWithRequest=\{[^\n]*\}/g) ?? [];
+  h.check('§5 every load is asked of captchaLoadDecision, with the whole request',
+    guards.length === 1 && guards[0] === 'onShouldStartLoadWithRequest={(r) => captchaLoadDecision(r)}', guards.join(' | '));
+  h.check('§5 the view takes messages from the AMS page only',
+    /if \(from !== CAPTCHA_URL && !from\.startsWith\(CAPTCHA_URL \+ '\?'\)\) return;/.test(view));
 });

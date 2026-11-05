@@ -7,7 +7,7 @@ import { AMS_WEB_URL } from '@/config';
 import { minTouch } from '@/theme/tokens';
 import { useAppTheme } from '@/theme/useAppTheme';
 
-import { CAPTCHA_ORIGINS, isAllowedCaptchaUrl, parseCaptchaMessage } from './captchaMessage';
+import { captchaLoadDecision, parseCaptchaMessage } from './captchaMessage';
 
 // The Cloudflare check, in a small WebView on the AMS's own page (S1, live
 // 4 Nov 2026): Turnstile has no native SDK, and its site key admits
@@ -15,8 +15,15 @@ import { CAPTCHA_ORIGINS, isAllowedCaptchaUrl, parseCaptchaMessage } from './cap
 // token up and can reset the widget after a failed sign-in (a token is
 // single-use).
 //
-// The WebView may only show the AMS page and Cloudflare's challenge. A message
-// from any other page is ignored.
+// The WebView's own page may only be the AMS page or Cloudflare; Cloudflare's
+// inner frames are left alone (captchaLoadDecision says why). A message from
+// any page but the AMS's is ignored.
+//
+// The library's origin list is opened to everything on purpose and the
+// decision is made in one place, captchaLoadDecision. That list cannot tell a
+// frame from the page: on iOS it is asked about EVERY frame, and anything it
+// refuses it also tries to open in Safari. A narrow list there is what left
+// the check on "Verifying…" in the first Simulator run (5 Nov 2026).
 
 export const CAPTCHA_URL = `${AMS_WEB_URL}/mobile/captcha.html`;
 
@@ -75,8 +82,8 @@ export const CaptchaView = forwardRef<CaptchaHandle, Props>(function CaptchaView
         key={`${t.scheme}-${attempt}`}
         ref={web}
         source={{ uri: `${CAPTCHA_URL}?theme=${t.scheme === 'dark' ? 'dark' : 'light'}&v=1` }}
-        originWhitelist={[...CAPTCHA_ORIGINS]}
-        onShouldStartLoadWithRequest={(r) => isAllowedCaptchaUrl(r.url)}
+        originWhitelist={['*']}
+        onShouldStartLoadWithRequest={(r) => captchaLoadDecision(r)}
         onMessage={onMessage}
         onError={() => {
           setState('failed');

@@ -60,3 +60,22 @@ export function isAllowedCaptchaUrl(url: string): boolean {
   if (/^about:(blank|srcdoc)$/.test(url)) return true;
   return CAPTCHA_ORIGINS.some((o) => url === o || url.startsWith(o + '/') || url.startsWith(o + '?'));
 }
+
+/**
+ * May the security-check WebView make this load? The WebView asks about every
+ * load, Cloudflare's own inner frames included.
+ *
+ *   the page itself (top frame)  → only the AMS page or Cloudflare
+ *   an inner frame                → yes. These are Turnstile's working frames
+ *                                   (about:srcdoc, blob:…, its challenge);
+ *                                   refusing them leaves the widget on
+ *                                   "Verifying…" for ever (5 Nov 2026, the first
+ *                                   Simulator run). They cannot reach the app:
+ *                                   only the top frame has the message bridge,
+ *                                   and a message from any other page is
+ *                                   ignored by the view.
+ */
+export function captchaLoadDecision(r: { url: string; isTopFrame?: boolean }): boolean {
+  if (r.isTopFrame === false) return true;
+  return isAllowedCaptchaUrl(r.url);
+}
