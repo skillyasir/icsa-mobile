@@ -113,7 +113,7 @@ Rough sizes for one developer working with Claude; they move with the decisions 
     - ✅ **iPhone Simulator, 5 Nov 2026:** Yasir signed in with his own account and reached the manager Dashboard.
     - **Android emulator, 5 Nov 2026: Cloudflare said Success! but Sign in never woke up.** Android's message listener reports the sender's ORIGIN only (`https://app.icsasystem.com`), not the page URL iOS gives, and it hears every frame. The view accepted only the page URL, so every Android message was dropped. Fixed: `isCaptchaMessageSource` accepts the page URL or the AMS origin and refuses Cloudflare's; `captchaMessage.check.ts` §6 holds it, and holds the addresses in `captchaMessage.ts` equal to `config.ts`'s (4 planted defects caught).
     - ✅ **Android emulator, 5 Nov 2026, after `cbe9a2c`:** Yasir: "yes it's working" — signed in with his own account to the manager Dashboard. **Piece 2 (real sign-in) is done on both platforms.**
-    - Noticed on Android: the tab bar shows only the SELECTED tab's label (Material's default); iOS shows all five. Not changed — raise with Yasir.
+    - ✅ **Tab names on Android (Yasir, 5 Nov 2026: show all names):** Android showed only the selected tab's name (Material's default). Now every tab shows its name, as on iOS — `labelVisibilityMode="labeled"`, held by `tabs.check.ts` §5.
     - New packages (SDK 58 versions from Expo's own list): `expo-secure-store ~58.0.2`, `react-native-webview 14.0.1` — **native, so the app must be rebuilt** (`npx expo run:ios` / `run:android`), not just reloaded.
 - **Next pieces:** sign-in for real (AMS S1 captcha page, S2 device sessions, then S12 Apple/Google), the API client, Face ID lock, the app version gate.
 

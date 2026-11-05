@@ -24,6 +24,10 @@ export function ExperienceTabs({ experience }: { experience: Experience }) {
     <NativeTabs
       tintColor={t.colors.link}
       labelStyle={{ fontFamily: font.bold }}
+      // Android shows only the selected tab's name by default; iOS shows all.
+      // Every name, on both (Yasir, 5 Nov 2026): students and staff learn the
+      // tabs by their names.
+      labelVisibilityMode="labeled"
     >
       {TABS[experience].map((tab) => (
         <NativeTabs.Trigger key={tab.name} name={tab.name}>

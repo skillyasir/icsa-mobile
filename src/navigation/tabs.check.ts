@@ -38,4 +38,10 @@ run('tabs.check — every tab has its screen, every screen its tab', (h) => {
       h.check(`§4 ${exp}/${t.name}: a placeholder says what is coming`, t.name === 'me' || t.soon.length > 20);
     }
   }
+
+  // §5 every tab shows its name on Android too (Yasir, 5 Nov 2026) — Android's
+  // own default shows only the selected one
+  const bar = readFileSync(new URL('./ExperienceTabs.tsx', import.meta.url), 'utf8');
+  const modes = bar.match(/labelVisibilityMode="[a-z]+"/g) ?? [];
+  h.check('§5 the tab bar sets one label mode, "labeled"', modes.length === 1 && modes[0] === 'labelVisibilityMode="labeled"', modes.join(' | ') || 'none');
 });
