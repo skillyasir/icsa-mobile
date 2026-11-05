@@ -7,12 +7,14 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  Switch,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/AppText';
 import { CaptchaView, type CaptchaHandle } from '@/auth/CaptchaView';
+import { useLock } from '@/lock/LockProvider';
 import { Button } from '@/components/Button';
 import { Notice } from '@/components/Notice';
 import { TextField } from '@/components/TextField';
@@ -26,8 +28,8 @@ import { useAppTheme } from '@/theme/useAppTheme';
 // phone stays signed in. Which AMS endpoint is asked is the web login's own
 // rule (auth/signInRoute.ts). Sign in with Apple and Google arrive with S12;
 // their buttons say so instead of pretending. The "Unlock with Face ID" switch
-// returns with the Face ID lock (S4): a switch that changed nothing would be a
-// promise the app does not keep.
+// came back with the lock itself (S4, 5 Nov 2026), and shows only on a phone
+// that can lock.
 
 const NOT_YET = 'Sign in with Apple and Google arrive in a later step. Use your ICSA username, email or student code for now.';
 
@@ -48,6 +50,8 @@ export default function SignIn() {
   const t = useAppTheme();
   const router = useRouter();
   const { previewSignIn, signIn, notice } = useSession();
+  const lock = useLock();
+  const [lockOn, setLockOn] = useState(true);
   const captcha = useRef<CaptchaHandle>(null);
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -64,6 +68,8 @@ export default function SignIn() {
     const r = await signIn(identifier, password, captchaToken);
     setBusy(false);
     if (r.ok) {
+      // The person's choice, without a second prompt: the lock asks the next time.
+      if (lock.ability.available) await lock.setWanted(lockOn, { confirm: false });
       setPassword('');
       router.replace('/');
       return;
@@ -157,9 +163,21 @@ export default function SignIn() {
               </View>
             </View>
 
-            <AppText variant="caption" color="textSubtle" style={styles.centred}>
-              This phone stays signed in while you keep using the app.
-            </AppText>
+            {lock.ability.available ? (
+              <View style={styles.lockRow}>
+                <Switch value={lockOn} onValueChange={setLockOn} accessibilityLabel={`Unlock with ${lock.ability.method}`} />
+                <View style={styles.flex}>
+                  <AppText variant="bodyStrong">Unlock with {lock.ability.method}</AppText>
+                  <AppText variant="caption" color="textSubtle">
+                    This phone stays signed in; {lock.ability.method} keeps it yours.
+                  </AppText>
+                </View>
+              </View>
+            ) : (
+              <AppText variant="caption" color="textSubtle" style={styles.centred}>
+                This phone stays signed in while you keep using the app.
+              </AppText>
+            )}
 
             {__DEV__ ? (
               <View style={[styles.preview, { borderColor: t.colors.borderStrong, gap: t.space.sm }]}>
@@ -239,6 +257,7 @@ const styles = StyleSheet.create({
   rule: { flex: 1, height: StyleSheet.hairlineWidth * 2 },
   social: { flexDirection: 'row', gap: 10 },
   centred: { textAlign: 'center' },
+  lockRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: minTouch },
   preview: { borderWidth: 1, borderStyle: 'dashed', borderRadius: 14, padding: 12 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { minHeight: minTouch, justifyContent: 'center', paddingHorizontal: 14, borderRadius: 999, borderWidth: 1 },

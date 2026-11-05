@@ -8,6 +8,8 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
+import { AppGate } from '@/gate/AppGate';
+import { LockProvider } from '@/lock/LockProvider';
 import { SessionProvider } from '@/session/SessionContext';
 import { useAppTheme } from '@/theme/useAppTheme';
 
@@ -44,11 +46,17 @@ export default function RootLayout() {
   };
 
   return (
+    // The update check sits above the lock: an Update screen shows nobody's
+    // data, so it needs no Face ID.
     <SessionProvider>
-      <ThemeProvider value={navTheme}>
-        <StatusBar style={t.scheme === 'dark' ? 'light' : 'dark'} />
-        <Stack screenOptions={{ headerShown: false }} />
-      </ThemeProvider>
+      <AppGate>
+        <LockProvider>
+          <ThemeProvider value={navTheme}>
+            <StatusBar style={t.scheme === 'dark' ? 'light' : 'dark'} />
+            <Stack screenOptions={{ headerShown: false }} />
+          </ThemeProvider>
+        </LockProvider>
+      </AppGate>
     </SessionProvider>
   );
 }

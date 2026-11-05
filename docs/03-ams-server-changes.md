@@ -61,6 +61,7 @@ Order = the order the app needs them.
 - `GET /api/mobile/config` (no login needed) → `{ min_version: { ios, android }, latest_version, features: {…}, support: { whatsapp, phone } }`, read from `settings` with code defaults.
 - The app refuses to run below `min_version` with an **Update** button — the phone equivalent of the AMS's "a tab on a deleted bundle gets a loud error and reloads".
 - `middleware/accessLog.js` logs `X-App-Version` and `X-App-Platform` (which app version a user ran is the fact you will need first when something goes wrong — the same reason the access log records which `main.<hash>.js` a browser fetched).
+- ✅ **Built and committed 5 Nov 2026 — AMS `f927c12`.** `GET /api/mobile/config` returns `{ min_version: { ios, android } }` only (the rest is not needed yet; new fields are added beside it, never renamed). The minimums are text boxes in Settings › Security (Yasir); unset, empty or a typo is `null` — the endpoint and the app both FAIL OPEN. **The access-log line was dropped:** `access-log.check.js` requires `:instance` to stay the last field of every line, and `mobile_devices.app_version` (S2) already records each phone's version on every refresh.
 
 ## S5 — Idempotent creation and money writes
 

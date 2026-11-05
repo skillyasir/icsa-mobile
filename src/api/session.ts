@@ -23,6 +23,8 @@
 
 export const REFRESH_TOKEN_KEY = 'icsa.refresh_token';
 export const REQUEST_TIMEOUT_MS = 20_000;
+/** The app's config is asked on every open: it must never hold the app up for long. */
+export const PUBLIC_TIMEOUT_MS = 8_000;
 /** Ask for a new access token when less than this is left on the old one. */
 export const REFRESH_MARGIN_MS = 60_000;
 /** The AMS's token grace on top of the idle minutes (authController TOKEN_GRACE_SECONDS). */
@@ -145,7 +147,7 @@ export class SessionClient {
 
   // ---------------------------------------------------------------------------
   // The wire. Every call goes through here: one timeout, one JSON rule.
-  private async call(method: string, path: string, body?: unknown, bearer?: string): Promise<Answer> {
+  private async call(method: string, path: string, body?: unknown, bearer?: string, timeoutMs = this.d.timeoutMs): Promise<Answer> {
     const headers: Record<string, string> = { Accept: 'application/json' };
     if (body !== undefined) headers['Content-Type'] = 'application/json';
     if (bearer) headers.Authorization = `Bearer ${bearer}`;
@@ -155,7 +157,7 @@ export class SessionClient {
       timer = setTimeout(() => {
         ac?.abort();
         resolve('timeout');
-      }, this.d.timeoutMs);
+      }, timeoutMs);
     });
     try {
       const res = await Promise.race([
@@ -327,6 +329,13 @@ export class SessionClient {
     }
     if (a.status >= 200 && a.status < 300) return ok(a.json as T);
     return fail(failureOf(a, 'refused'));
+  }
+
+  /** An AMS call that needs no sign-in (the app's config, S4). Never sends a token. */
+  async publicGet<T = Record<string, unknown>>(path: string): Promise<Outcome<T>> {
+    const a = await this.call('GET', path, undefined, undefined, Math.min(PUBLIC_TIMEOUT_MS, this.d.timeoutMs));
+    if (a.status >= 200 && a.status < 300) return ok(a.json as T);
+    return fail(failureOf(a, 'server'));
   }
 
   /** Forget this phone's sign-in, then tell the server. Works offline. */

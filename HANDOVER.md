@@ -115,7 +115,13 @@ Rough sizes for one developer working with Claude; they move with the decisions 
     - ✅ **Android emulator, 5 Nov 2026, after `cbe9a2c`:** Yasir: "yes it's working" — signed in with his own account to the manager Dashboard. **Piece 2 (real sign-in) is done on both platforms.**
     - ✅ **Tab names on Android (Yasir, 5 Nov 2026: show all names):** Android showed only the selected tab's name (Material's default). Now every tab shows its name, as on iOS — `labelVisibilityMode="labeled"`, held by `tabs.check.ts` §5.
     - New packages (SDK 58 versions from Expo's own list): `expo-secure-store ~58.0.2`, `react-native-webview 14.0.1` — **native, so the app must be rebuilt** (`npx expo run:ios` / `run:android`), not just reloaded.
-- **Next pieces:** sign-in for real (AMS S1 captcha page, S2 device sessions, then S12 Apple/Google), the API client, Face ID lock, the app version gate.
+- **Piece 3 — the Face ID lock and the update check (S4), built 5 Nov 2026.** Yasir's rulings that day:
+  - ✅ **Lock after 5 minutes away**; ✅ **on for everyone** whose phone can lock, **each person may switch it off** (Me); ✅ **Face ID / fingerprint, then the phone's passcode**, else "Sign in again"; ✅ **the lowest allowed app versions are set on the AMS Settings page**, every version allowed until set.
+  - **AMS (server half): commit `f927c12`** — `GET /api/mobile/config`, no sign-in, FAILS OPEN (unset, empty or a typo = every version); two text boxes in Settings › Security. No migration. The access log does NOT record the app version (its check keeps `:instance` the last field; `mobile_devices.app_version` already records it per phone).
+  - **App:** `src/gate/AppGate.tsx` + `src/lib/version.ts` (the Update screen, asked on open and on return at most hourly, fails open); `src/lock/LockProvider.tsx` + `lockRule.ts` (the lock; the screen is covered for the app switcher; only time in the BACKGROUND counts as away — the Face ID prompt itself makes iOS "inactive", and treating that as a return would re-lock and ask again for ever, so Cancel could never reach "Sign in again"; signing out resets the choice to on). The sign-in screen's "Unlock with …" switch is back, shown only on a phone that can lock; Me has "Lock with …" and the app version.
+  - **New native package:** `expo-local-authentication ~58.0.2` with its Face ID permission text ("To unlock ICSA quickly and keep your account safe.") — **rebuild needed** (`npx expo prebuild --clean`).
+  - **Checks:** `version.check.ts` 18, `lockRule.check.ts` 26 (it reads the package's own numbers, so it COULD NOT RUN until `npm install`), `session.check.ts` 53; 9 planted defects caught, among them the gate failing closed, versions compared as text, the Face ID loop and a token on the public call.
+- **Next pieces:** S12 Apple/Google sign-in; then Phase 2 (Teachers + Students).
 
 ### Deferred — raise when the current piece is done
 

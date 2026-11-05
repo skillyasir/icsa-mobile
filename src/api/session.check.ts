@@ -387,6 +387,20 @@ async function main(h: Harness) {
     const r = await client.request('GET', '/probe');
     h.check('§15 the server signs the phone out; the app forgets and says so', !r.ok && r.failure.kind === 'signed_out' && store.data.size === 0 && ended.length === 1 && ams.devices[0].revoked === 'token_reuse');
   }
+
+  // §16 the public call (the app's config, S4): no token, and no answer is
+  // just a failure — the gate reading it fails open (version.check.ts)
+  {
+    const { client, ams, store, ended } = setup();
+    await client.signIn(staff);
+    ams.fetch = async (url, init) => ({ status: 200, text: async () => JSON.stringify({ min_version: { ios: '1.0.0', android: null }, seen_auth: init.headers.Authorization ?? null }) });
+    const r = await client.publicGet<{ min_version: { ios: string | null }; seen_auth: string | null }>('/mobile/config');
+    h.check('§16 a public call returns the answer, and sends no token even when signed in', r.ok && r.value.min_version.ios === '1.0.0' && r.value.seen_auth === null);
+    ams.fetch = async () => new Promise<never>(() => {});
+    const t0 = Date.now();
+    const off = await client.publicGet('/mobile/config');
+    h.check('§16 no answer → offline, quickly, and the sign-in is untouched', !off.ok && off.failure.kind === 'offline' && Date.now() - t0 < 1000 && store.data.size === 1 && ended.length === 0);
+  }
 }
 
 runAsync('session.check — the app stays signed in, safely', main);

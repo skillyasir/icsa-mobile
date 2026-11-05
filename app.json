@@ -29,6 +29,12 @@
       "expo-router",
       "expo-secure-store",
       [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "To unlock ICSA quickly and keep your account safe."
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "backgroundColor": "#0D47A1",

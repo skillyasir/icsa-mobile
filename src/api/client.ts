@@ -16,7 +16,7 @@ import { Platform } from 'react-native';
 
 import { AMS_API_URL } from '@/config';
 
-import { SessionClient, type TokenStore } from './session';
+import { SessionClient, type DeviceInfo, type TokenStore } from './session';
 
 const KEYCHAIN = { keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY };
 
@@ -26,13 +26,18 @@ const secureStore: TokenStore = {
   remove: (key) => SecureStore.deleteItemAsync(key, KEYCHAIN),
 };
 
+export const DEVICE: DeviceInfo = {
+  platform: Platform.OS === 'android' ? 'android' : 'ios',
+  deviceName: Device.modelName ?? null,
+  appVersion: Constants.expoConfig?.version ?? null,
+};
+
+/** The Keychain / Keystore, for anything else the app keeps on this phone. */
+export const phoneStore = secureStore;
+
 export const ams = new SessionClient({
   apiUrl: AMS_API_URL,
   fetch: (url, init) => fetch(url, init),
   store: secureStore,
-  device: {
-    platform: Platform.OS === 'android' ? 'android' : 'ios',
-    deviceName: Device.modelName ?? null,
-    appVersion: Constants.expoConfig?.version ?? null,
-  },
+  device: DEVICE,
 });

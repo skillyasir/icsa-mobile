@@ -59,3 +59,7 @@ Written 3 Nov 2026. Re-check every rule at release time — both stores change t
 
 - [ ] Screenshots: iPhone 6.9", iPad 13", Android phone; English first (Arabic later).
 - [ ] Short description, full description, keywords, category **Education**.
+
+## App Store address for the Update screen (S4, 5 Nov 2026)
+
+- [ ] **When the App Store Connect record exists**, put its address in `src/config.ts` › `APP_STORE_URL` (`https://apps.apple.com/app/id<number>`). Until then the iPhone Update screen names the App Store without a button. Google Play's address is already known from the package id (`us.icsa.app`).

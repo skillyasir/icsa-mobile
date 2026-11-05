@@ -1,11 +1,15 @@
 import { useRouter } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, Switch, View } from 'react-native';
+
+import { DEVICE } from '@/api/client';
 
 import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
 import { Notice } from '@/components/Notice';
 import { Card, Screen } from '@/components/Screen';
 import { EXPERIENCE_LABEL } from '@/lib/roles';
+import { useLock } from '@/lock/LockProvider';
+import { LOCK_AFTER_MS } from '@/lock/lockRule';
 import { useSession } from '@/session/SessionContext';
 import { minTouch } from '@/theme/tokens';
 import { useAppTheme } from '@/theme/useAppTheme';
@@ -20,6 +24,7 @@ function initials(name: string): string {
 /** The Me tab of every experience: who you are, switch view, sign out. */
 export function MeScreen() {
   const { user, experiences, active, setActive, signOut } = useSession();
+  const lock = useLock();
   const router = useRouter();
   const t = useAppTheme();
   if (!user) return null;
@@ -88,6 +93,38 @@ export function MeScreen() {
         </View>
       ) : null}
 
+      {!user.preview ? (
+        <View style={{ gap: t.space.sm }}>
+          <AppText variant="label" color="textMuted">
+            THIS PHONE
+          </AppText>
+          <Card>
+            <View style={styles.row}>
+              <View style={styles.flex}>
+                <AppText variant="body">Lock with {lock.ability.method}</AppText>
+                <AppText variant="caption" color="textSubtle">
+                  {lock.ability.available
+                    ? `After ${LOCK_AFTER_MS / 60_000} minutes away, ICSA asks for ${lock.ability.method}.`
+                    : 'Set up Face ID, a fingerprint or a passcode in the phone’s Settings to use this.'}
+                </AppText>
+              </View>
+              <Switch
+                value={lock.ability.available && lock.wanted}
+                disabled={!lock.ability.available}
+                onValueChange={(on) => {
+                  lock.setWanted(on);
+                }}
+                accessibilityLabel={`Lock with ${lock.ability.method}`}
+              />
+            </View>
+          </Card>
+        </View>
+      ) : null}
+
+      <AppText variant="caption" color="textSubtle" style={styles.centred}>
+        ICSA app version {DEVICE.appVersion ?? 'unknown'}
+      </AppText>
+
       <Button
         title="Sign out"
         variant="danger"
@@ -104,5 +141,6 @@ const styles = StyleSheet.create({
   who: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   avatar: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
   flex: { flex: 1 },
-  row: { minHeight: minTouch, flexDirection: 'row', alignItems: 'center' },
+  row: { minHeight: minTouch, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  centred: { textAlign: 'center' },
 });
