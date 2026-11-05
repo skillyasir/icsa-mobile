@@ -23,6 +23,9 @@ export function MeScreen() {
   const router = useRouter();
   const t = useAppTheme();
   if (!user) return null;
+  // What the AMS said about this person: their branch, and their student code
+  // (given at sign-in) or email.
+  const details = [user.branch_name, user.student_code ?? user.email].filter(Boolean).join(' · ');
 
   return (
     <Screen title="Me">
@@ -38,6 +41,11 @@ export function MeScreen() {
             <AppText variant="caption" color="textSubtle">
               {active ? EXPERIENCE_LABEL[active] : 'No app view'}
             </AppText>
+            {details ? (
+              <AppText variant="caption" color="textSubtle">
+                {details}
+              </AppText>
+            ) : null}
           </View>
         </View>
       </Card>
@@ -83,8 +91,8 @@ export function MeScreen() {
       <Button
         title="Sign out"
         variant="danger"
-        onPress={() => {
-          signOut();
+        onPress={async () => {
+          await signOut();
           router.replace('/sign-in');
         }}
       />

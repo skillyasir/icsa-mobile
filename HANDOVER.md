@@ -99,7 +99,17 @@ Rough sizes for one developer working with Claude; they move with the decisions 
 - **Piece 2 — real sign-in, in progress:**
   - **S1 built 4 Nov 2026** — AMS commit `002f5ba` (Mac copy; Yasir pushes and deploys): `client/public/mobile/captcha.html` + `client/src/lib/__checks__/mobile-captcha.check.js`. Protocol tested against a stand-in for Cloudflare's script. ✅ **Live 4 Nov 2026**: Yasir pushed and ran `./deploy` (135 checks, 0 red; bundle `main.31bbf2bb.js` unchanged), and the page on `https://app.icsasystem.com/mobile/captcha.html` shows Cloudflare **Success!** in Safari.
   - **S2 built 4 Nov 2026** — AMS commit `36889c5` (Mac copy): `mobile_devices` + `/api/mobile/session*` + the manager revoke + a Settings field. 30 days, every use resets it (Yasir). Details and what was deferred: `docs/03-ams-server-changes.md` › S2. ✅ **Live 4 Nov 2026**: migration applied to `icsa_subtest` and `icsa_db` before the code; test copy on 5001 and the live server both answer a made-up token with `SESSION_INVALID`; `./deploy` 136 checks, 0 red, bundle `main.86fca7fa.js` served.
-  - Then the app's sign-in wired to S1 + S2.
+  - **The app's sign-in, built 4 Nov 2026** (not yet run on a phone):
+    - `src/api/session.ts` — the session client, pure TypeScript: AMS login → `POST /mobile/session` → refresh token in the Keychain/Keystore (`expo-secure-store`, this-device-only, kept out of Android backups); access token in memory, renewed a minute before it runs out, one refresh at a time, one retry after a 401. **Only the server ends a session** (`SESSION_*`, `ACCOUNT_INACTIVE`, `AMBIGUOUS_STUDENT`); no signal, a timeout, a 5xx, a 404 or a 429 keep the sign-in. Sign out clears the phone first, then tells the server, so it works offline. A sign-out while a refresh is on the wire is not undone by the late reply.
+    - `src/api/client.ts` — wires it to the phone: Keychain, `Device.modelName` (never the owner's name for the phone), the app version.
+    - `src/auth/signInRoute.ts` — which AMS endpoint an identifier goes to: the web login's own rule, held to `Login.js` by its check.
+    - `src/auth/CaptchaView.tsx` + `captchaMessage.ts` — the S1 page in a WebView that may only load the AMS and Cloudflare; the protocol is held to `captcha.html` by its check.
+    - **Launch:** "Signing you in…" while the AMS is asked; with no signal, **"Cannot reach ICSA"** and Try again — the sign-in is kept, never dropped.
+    - **Me** shows the person from the AMS: branch, and student code (at sign-in) or email.
+    - **Removed until S4:** the "Unlock with Face ID" switch on the sign-in screen — it changed nothing, so it promised something the app does not do. It comes back with the Face ID lock.
+    - **Checks:** `session.check.ts` (51, against a stand-in AMS that rotates like S2), `signInRoute.check.ts` (17), `captchaMessage.check.ts` (23); 12 planted defects all caught. The checks read the AMS copy beside this repo (`../icsa-system`, or `ICSA_SYSTEM_DIR`) and **could not run** without it. `npx expo export` builds for iOS and Android.
+    - **Not tested yet:** a real phone against `app.icsasystem.com` — the Cloudflare check in the WebView, a real login, the Keychain. That is Yasir's Simulator run.
+    - New packages (SDK 58 versions from Expo's own list): `expo-secure-store ~58.0.2`, `react-native-webview 14.0.1` — **native, so the app must be rebuilt** (`npx expo run:ios` / `run:android`), not just reloaded.
 - **Next pieces:** sign-in for real (AMS S1 captcha page, S2 device sessions, then S12 Apple/Google), the API client, Face ID lock, the app version gate.
 
 ### Deferred — raise when the current piece is done

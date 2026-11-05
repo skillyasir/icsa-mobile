@@ -1,18 +1,18 @@
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
-  Switch,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/AppText';
+import { CaptchaView, type CaptchaHandle } from '@/auth/CaptchaView';
 import { Button } from '@/components/Button';
 import { Notice } from '@/components/Notice';
 import { TextField } from '@/components/TextField';
@@ -21,13 +21,15 @@ import { useSession, type SessionUser } from '@/session/SessionContext';
 import { brand, minTouch } from '@/theme/tokens';
 import { useAppTheme } from '@/theme/useAppTheme';
 
-// Mockup 16, approved 3 Nov 2026. PIECE 1 draws the screen only: the Sign in,
-// Apple and Google buttons say so instead of pretending. The AMS login, the
-// Cloudflare check, Sign in with Apple and Google arrive in the sign-in pieces
-// (docs/03-ams-server-changes.md S1, S2, S12). Apple and Google are drawn as
-// plain buttons for now; the app will use their official buttons.
+// Mockup 16, approved 3 Nov 2026. PIECE 2 (4 Nov 2026): Sign in is real — the
+// AMS login with the Cloudflare check (S1), then a device session (S2) so the
+// phone stays signed in. Which AMS endpoint is asked is the web login's own
+// rule (auth/signInRoute.ts). Sign in with Apple and Google arrive with S12;
+// their buttons say so instead of pretending. The "Unlock with Face ID" switch
+// returns with the Face ID lock (S4): a switch that changed nothing would be a
+// promise the app does not keep.
 
-const NOT_YET = 'Sign-in is not connected to the AMS yet — it arrives in the next step.';
+const NOT_YET = 'Sign in with Apple and Google arrive in a later step. Use your ICSA username, email or student code for now.';
 
 // Developer preview: made-up people, one per experience, plus mixed roles.
 // Shown in development builds only (__DEV__) — never in a store build.
@@ -45,13 +47,31 @@ const PREVIEW: { label: string; user: Omit<SessionUser, 'preview'> }[] = [
 export default function SignIn() {
   const t = useAppTheme();
   const router = useRouter();
-  const { previewSignIn } = useSession();
+  const { previewSignIn, signIn, notice } = useSession();
+  const captcha = useRef<CaptchaHandle>(null);
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
-  const [biometric, setBiometric] = useState(true);
-  const [message, setMessage] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<{ tone: 'info' | 'danger'; text: string } | null>(null);
 
-  const biometricName = Platform.OS === 'ios' ? 'Face ID' : 'fingerprint';
+  const ready = identifier.trim() !== '' && password !== '' && captchaToken !== null && !busy;
+
+  const submit = async () => {
+    if (!ready || !captchaToken) return;
+    setBusy(true);
+    setMessage(null);
+    const r = await signIn(identifier, password, captchaToken);
+    setBusy(false);
+    if (r.ok) {
+      setPassword('');
+      router.replace('/');
+      return;
+    }
+    // A check token is single-use: every failed attempt needs a fresh one.
+    captcha.current?.reset();
+    setMessage({ tone: 'danger', text: r.failure.message });
+  };
 
   return (
     <View style={[styles.fill, { backgroundColor: t.colors.surface }]}>
@@ -99,6 +119,7 @@ export default function SignIn() {
               autoComplete="current-password"
               textContentType="password"
               returnKeyType="go"
+              onSubmitEditing={submit}
             />
             <Pressable
               accessibilityRole="link"
@@ -110,18 +131,12 @@ export default function SignIn() {
               </AppText>
             </Pressable>
 
-            <View style={[styles.check, { borderColor: t.colors.border, backgroundColor: t.colors.surfaceMuted }]}>
-              <AppText variant="caption" color="textMuted" style={styles.flex}>
-                Security check
-              </AppText>
-              <AppText variant="caption" color="textSubtle">
-                Connects in the next step
-              </AppText>
-            </View>
+            <CaptchaView ref={captcha} onToken={setCaptchaToken} />
 
-            {message ? <Notice tone="info">{message}</Notice> : null}
+            {notice && !message ? <Notice tone="warning">{notice}</Notice> : null}
+            {message ? <Notice tone={message.tone}>{message.text}</Notice> : null}
 
-            <Button title="Sign in" onPress={() => setMessage(NOT_YET)} />
+            <Button title="Sign in" onPress={submit} disabled={!ready} busy={busy} />
 
             <View style={styles.orRow} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
               <View style={[styles.rule, { backgroundColor: t.colors.border }]} />
@@ -134,28 +149,17 @@ export default function SignIn() {
             <View style={styles.social}>
               {Platform.OS === 'ios' ? (
                 <View style={styles.flex}>
-                  <Button title="Sign in with Apple" variant="apple" onPress={() => setMessage(NOT_YET)} />
+                  <Button title="Sign in with Apple" variant="apple" onPress={() => setMessage({ tone: 'info', text: NOT_YET })} />
                 </View>
               ) : null}
               <View style={styles.flex}>
-                <Button title="Sign in with Google" variant="outline" onPress={() => setMessage(NOT_YET)} />
+                <Button title="Sign in with Google" variant="outline" onPress={() => setMessage({ tone: 'info', text: NOT_YET })} />
               </View>
             </View>
 
-            <View style={styles.bioRow}>
-              <View style={styles.flex}>
-                <AppText variant="bodyStrong">Unlock with {biometricName}</AppText>
-                <AppText variant="caption" color="textSubtle">
-                  Stay signed in on this phone
-                </AppText>
-              </View>
-              <Switch
-                accessibilityLabel={`Unlock with ${biometricName}`}
-                value={biometric}
-                onValueChange={setBiometric}
-                trackColor={{ true: t.colors.primary }}
-              />
-            </View>
+            <AppText variant="caption" color="textSubtle" style={styles.centred}>
+              This phone stays signed in while you keep using the app.
+            </AppText>
 
             {__DEV__ ? (
               <View style={[styles.preview, { borderColor: t.colors.borderStrong, gap: t.space.sm }]}>
@@ -231,19 +235,10 @@ const styles = StyleSheet.create({
   logoText: { color: brand.blue },
   form: {},
   forgot: { alignSelf: 'flex-end', minHeight: minTouch, justifyContent: 'center' },
-  check: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-  },
   orRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   rule: { flex: 1, height: StyleSheet.hairlineWidth * 2 },
   social: { flexDirection: 'row', gap: 10 },
-  bioRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: minTouch },
+  centred: { textAlign: 'center' },
   preview: { borderWidth: 1, borderStyle: 'dashed', borderRadius: 14, padding: 12 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { minHeight: minTouch, justifyContent: 'center', paddingHorizontal: 14, borderRadius: 999, borderWidth: 1 },

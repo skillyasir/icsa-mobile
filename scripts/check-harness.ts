@@ -64,3 +64,26 @@ export function run(name: string, body: (h: Harness) => void): void {
   console.log(`  ${h.passed} passed, ${h.failed} failed`);
   process.exit(h.failed > 0 ? 1 : 0);
 }
+
+/**
+ * run(), for a body that awaits. The tally is printed only after the body has
+ * settled — a check that printed before its promises ran would count nothing
+ * and pass. A rejected body is a COULD NOT RUN (exit 2), like a throw.
+ */
+export function runAsync(name: string, body: (h: Harness) => Promise<void>): void {
+  const h = makeHarness();
+  console.log(`${name}`);
+  const couldNotRun = (err: unknown) => {
+    console.log(`  COULD NOT RUN — ${err instanceof Error ? err.message : String(err)}`);
+    process.exit(2);
+  };
+  try {
+    selfTest(h);
+  } catch (err) {
+    couldNotRun(err);
+  }
+  body(h).then(() => {
+    console.log(`  ${h.passed} passed, ${h.failed} failed`);
+    process.exit(h.failed > 0 ? 1 : 0);
+  }, couldNotRun);
+}

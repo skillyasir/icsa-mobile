@@ -24,8 +24,8 @@ export default function WebOnly() {
       <Button
         title="Sign out"
         variant="danger"
-        onPress={() => {
-          signOut();
+        onPress={async () => {
+          await signOut();
           router.replace('/sign-in');
         }}
       />
