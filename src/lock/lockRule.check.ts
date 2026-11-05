@@ -47,7 +47,9 @@ run('lockRule.check — when ICSA locks, and with what', (h) => {
   h.check('§5 extraction floor: LockProvider.tsx read', p.length > 4000, String(p.length));
   h.check("§5 the phone's passcode is offered when Face ID fails (Yasir)", (p.match(/disableDeviceFallback: false/g) ?? []).length === 2);
   h.check('§5 only time in the BACKGROUND counts as away — the Face ID prompt itself must not re-lock (Cancel would loop for ever)',
-    /if \(s === 'background'\) \{\s*beenAway\.current = true;/.test(p) && /if \(back && lockable && shouldLock\(/.test(p));
+    /if \(s === 'background'\) \{\s*beenAway\.current = true;/.test(p) && /if \(back && lockableNow && shouldLock\(/.test(p));
+  h.check('§5 what the phone can unlock with is asked AGAIN on every return, and the lock decides on that answer (a PIN set up in Settings with ICSA open counts at once — the first Android run)',
+    /readAbility\(platform\)\.then\(\(found\) => \{\s*setAbility\(found\);/.test(p) && /const lockableNow = now\.wanted && found\.available && now\.signedIn && !now\.preview;/.test(p));
   h.check('§5 never a second prompt over the first', /if \(prompting\.current\) return;\s*prompting\.current = true;/.test(p));
   h.check('§5 "Sign in again" is on the lock screen', /title="Sign in again"/.test(p));
   h.check('§5 the screen is covered for the app switcher, and hidden from screen readers while locked',

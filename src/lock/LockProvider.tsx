@@ -24,6 +24,20 @@ import { lockAbility, lockWanted, shouldLock, type LockAbility } from './lockRul
 // A fresh sign-in counts as use, so it never locks straight after.
 
 const WANTED_KEY = 'icsa.lock';
+
+/**
+ * What this phone can unlock with, asked fresh. Asked on every return to the
+ * app, not only at launch: someone told "set up a passcode in Settings" does
+ * exactly that with ICSA still open, and the first Android run (5 Nov 2026)
+ * never locked because the answer read at launch — no lock at all — was kept.
+ */
+async function readAbility(platform: 'ios' | 'android'): Promise<LockAbility> {
+  const [types, level] = await Promise.all([
+    LocalAuthentication.supportedAuthenticationTypesAsync().catch(() => []),
+    LocalAuthentication.getEnrolledLevelAsync().catch(() => 0),
+  ]);
+  return lockAbility(platform, types, level);
+}
 const LAST_ACTIVE_KEY = 'icsa.last_active';
 
 type Lock = {
@@ -72,14 +86,13 @@ export function LockProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let live = true;
     (async () => {
-      const [types, level, saved, last] = await Promise.all([
-        LocalAuthentication.supportedAuthenticationTypesAsync().catch(() => []),
-        LocalAuthentication.getEnrolledLevelAsync().catch(() => 0),
+      const [found, saved, last] = await Promise.all([
+        readAbility(platform),
         phoneStore.get(WANTED_KEY).catch(() => null),
         phoneStore.get(LAST_ACTIVE_KEY).catch(() => null),
       ]);
       if (!live) return;
-      setAbility(lockAbility(platform, types, level));
+      setAbility(found);
       setWantedState(lockWanted(saved));
       const n = last === null ? NaN : Number(last);
       lastActive.current = Number.isFinite(n) ? n : null;
@@ -161,12 +174,19 @@ export function LockProvider({ children }: { children: ReactNode }) {
       } else if (s === 'active') {
         const back = beenAway.current;
         beenAway.current = false;
-        if (back && lockable && shouldLock({ ...f, lastActiveAt: lastActive.current, now: Date.now() })) lockAndAsk();
-        setCovered(false);
+        // Ask the phone again before deciding, and keep the cover on until
+        // the decision is made, so nothing shows for a frame before the lock.
+        readAbility(platform).then((found) => {
+          setAbility(found);
+          const now = facts.current;
+          const lockableNow = now.wanted && found.available && now.signedIn && !now.preview;
+          if (back && lockableNow && shouldLock({ ...now, available: found.available, lastActiveAt: lastActive.current, now: Date.now() })) lockAndAsk();
+          setCovered(false);
+        });
       }
     });
     return () => sub.remove();
-  }, [markActive, lockAndAsk]);
+  }, [markActive, lockAndAsk, platform]);
 
   const setWanted = useCallback(
     async (on: boolean, opts: { confirm?: boolean } = {}) => {
