@@ -64,6 +64,15 @@ export const LOCATION_MESSAGES: Record<LocationFailure, string> = {
 /** How long the phone may take to find a position, as on the website. */
 export const LOCATION_TIMEOUT_MS = 15_000;
 
+/**
+ * A position the phone found in the last 30 seconds is used as it is, as the
+ * website does (maximumAge) — a fresh GPS fix indoors can take longer than
+ * the student will wait. Only one precise enough to name a distance from:
+ * the AMS's own bar (VAGUE_ACCURACY_M). A vaguer one asks for a fresh fix.
+ */
+export const LOCATION_MAX_AGE_MS = 30_000;
+export const LOCATION_REUSE_ACCURACY_M = 100;
+
 // ── Batch classes: the check-in window ──────────────────────────────────────
 
 /** Whether a batch check-in can be made now, and if not, what to say. */

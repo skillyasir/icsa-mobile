@@ -6,7 +6,13 @@
 import * as Location from 'expo-location';
 import { Linking } from 'react-native';
 
-import { LOCATION_TIMEOUT_MS, type Fix, type LocationFailure } from './rules';
+import {
+  LOCATION_MAX_AGE_MS,
+  LOCATION_REUSE_ACCURACY_M,
+  LOCATION_TIMEOUT_MS,
+  type Fix,
+  type LocationFailure,
+} from './rules';
 
 export type FixResult =
   | { ok: true; fix: Fix; approximate: boolean }
@@ -23,10 +29,18 @@ export async function readFix(): Promise<FixResult> {
     // a refusal may follow.
     const approximate = perm.ios?.accuracy === 'reduced' || perm.android?.accuracy === 'coarse';
 
-    const pos = await Promise.race([
-      Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High }),
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), LOCATION_TIMEOUT_MS)),
-    ]);
+    // A precise position from the last 30 seconds first (the website's
+    // maximumAge), else a fresh one — waited for no longer than the website.
+    const recent = await Location.getLastKnownPositionAsync({
+      maxAge: LOCATION_MAX_AGE_MS,
+      requiredAccuracy: LOCATION_REUSE_ACCURACY_M,
+    }).catch(() => null);
+    const pos =
+      recent ??
+      (await Promise.race([
+        Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High }),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), LOCATION_TIMEOUT_MS)),
+      ]));
     if (!pos) return { ok: false, why: 'timeout', settings: false };
     const acc = pos.coords.accuracy;
     const fix: Fix = {

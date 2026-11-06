@@ -3,6 +3,8 @@ import { run } from '../../scripts/check-harness.ts';
 
 import {
   ATTENDANCE_API,
+  LOCATION_MAX_AGE_MS,
+  LOCATION_REUSE_ACCURACY_M,
   LOCATION_TIMEOUT_MS,
   STUDENT_CHANGEABLE,
   batchGate,
@@ -104,6 +106,10 @@ run('rules.check — the student check-in agrees with the AMS', (h) => {
   h.check('§3 no mode → required (the AMS default)', locationPlan(null) === 'required' && locationPlan(undefined) === 'required' && locationPlan('') === 'required');
   const timeout = /const DEFAULT_TIMEOUT_MS = (\d+);/.exec(geo)?.[1];
   h.check('§3 the phone waits as long as the website', Number(timeout) === LOCATION_TIMEOUT_MS, `${timeout} vs ${LOCATION_TIMEOUT_MS}`);
+  const maxAge = /maximumAge: (\d+)/.exec(geo)?.[1];
+  h.check('§3 it reuses a position as recent as the website does', Number(maxAge) === LOCATION_MAX_AGE_MS, `${maxAge} vs ${LOCATION_MAX_AGE_MS}`);
+  const vague = /const VAGUE_ACCURACY_M = (\d+);/.exec(ctl)?.[1];
+  h.check('§3 …only one the AMS calls precise enough to name a distance', Number(vague) === LOCATION_REUSE_ACCURACY_M, `${vague} vs ${LOCATION_REUSE_ACCURACY_M}`);
   h.check('§3 the online button says so', checkInLabel('online') === "I'm in my online class" && checkInLabel('hybrid') === 'Check in' && checkInLabel(null) === 'Check in');
 
   // §4 changing the teacher: the AMS's list, the web switch's condition
