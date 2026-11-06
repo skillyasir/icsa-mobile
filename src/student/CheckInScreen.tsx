@@ -69,6 +69,9 @@ export function CheckInScreen() {
 
   const send = async (c: TodayClass, f: Fix | null, approximate: boolean) => {
     setBusy('sending');
+    setAskOnline(null); // the student chose: Online, or a position
+    setError(null);
+    setHint(null);
     const teacher = checkInTeacher(c, chosen);
     const r = await ams.request<CheckInAnswer>(
       'POST',
@@ -223,7 +226,7 @@ export function CheckInScreen() {
 
       {ctx.failure && ctx.data ? <LoadFailed failure={ctx.failure} onRetry={ctx.refresh} stale /> : null}
 
-      {askOnline && cls ? (
+      {askOnline && cls && !cls.todays ? (
         <View style={{ gap: t.space.sm }}>
           <Notice tone="warning" title="We couldn't read your location">
             {`${askOnline} If you are at the branch, allow location and try again. Otherwise you can check in as Online.`}
