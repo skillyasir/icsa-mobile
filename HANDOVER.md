@@ -140,6 +140,7 @@ Rough sizes for one developer working with Claude; they move with the decisions 
   - **Checks:** `providerRoute.check.ts` 35 — the app's routes, fields, client IDs, URL scheme and bundle id against the AMS's own; 9 planted defects caught.
   - **First Android run, 6 Nov 2026:** the red "RNGoogleSignin could not be found" screen right after `npm install` is expected — Metro served the new code to the old build. Gone after `npx expo prebuild --clean` + `npx expo run:android`.
   - ✅ **Android emulator, 6 Nov 2026, after `b3bbf8f`:** Yasir: "yes it worked on android" — Sign in with Google signs in.
+  - **First iOS run, 6 Nov 2026: "No code signing certificates are available to use", even on the simulator.** Expo requires a development team for ANY build carrying the Sign in with Apple entitlement (its `simulatorBuildRequiresCodeSigning`). Fixed: `ios.appleTeamId: "69B3AATWN8"` in app.json (the team us.icsa.app is registered under); `providerRoute.check.ts` §3 now requires it. A REAL iPhone additionally needs Xcode signed in to that Apple ID once (it makes the development certificate).
 - **Next pieces:** test S12 on the iPhone (Google and Apple, and Me › Sign in with Apple); then Phase 2 (Teachers + Students).
 
 ### Deferred — raise when the current piece is done

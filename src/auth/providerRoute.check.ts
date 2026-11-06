@@ -73,7 +73,7 @@ run('providerRoute.check — Google and Apple sign-in agree with the AMS', (h) =
 
   // §3 app.json
   const app = JSON.parse(read('../../app.json')).expo as {
-    ios: { bundleIdentifier: string; usesAppleSignIn?: boolean };
+    ios: { bundleIdentifier: string; appleTeamId?: string; usesAppleSignIn?: boolean };
     plugins: (string | [string, Record<string, unknown>])[];
   };
   const plugin = (name: string) => app.plugins.find((p) => (Array.isArray(p) ? p[0] : p) === name);
@@ -83,6 +83,12 @@ run('providerRoute.check — Google and Apple sign-in agree with the AMS', (h) =
     Array.isArray(g) && g[1].iosUrlScheme === googleUrlScheme(GOOGLE_IOS_CLIENT_ID), JSON.stringify(g));
   h.check('§3 googleUrlScheme: the known shape', googleUrlScheme('1-ab.apps.googleusercontent.com') === 'com.googleusercontent.apps.1-ab');
   h.check('§3 Sign in with Apple is on (usesAppleSignIn + the plugin)', app.ios.usesAppleSignIn === true && plugin('expo-apple-authentication') !== undefined);
+  // Expo refuses to build even for the SIMULATOR when the app carries the
+  // Sign in with Apple entitlement and names no team ("No code signing
+  // certificates are available to use", 6 Nov 2026). The team is ICSA's Apple
+  // Developer team, the one the App ID us.icsa.app was registered under.
+  h.check('§3 …and the Apple team is named (team 69B3AATWN8, where us.icsa.app is registered)',
+    app.ios.appleTeamId === '69B3AATWN8', String(app.ios.appleTeamId));
   const amsBundle = /const APP_BUNDLE_ID = '([^']+)'/.exec(readAmsFile('server/src/services/appleIdentity.js'))?.[1];
   h.check('§3 the AMS checks Apple\'s token for this app\'s bundle id', !!amsBundle && amsBundle === app.ios.bundleIdentifier, `${amsBundle} vs ${app.ios.bundleIdentifier}`);
 
