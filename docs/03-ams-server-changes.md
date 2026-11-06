@@ -42,7 +42,9 @@ Order = the order the app needs them.
   - **The access token** the app gets is the AMS's own, same length as the web's (idle minutes + 120 s), carrying the student claim the phone signed in with. A student whose email holds two records must sign in by enrolment number.
   - **Settings › Security:** "ICSA app stays signed in" (days). **The biometric setting moves to S4**, with the Face ID lock it controls.
   - **Proved:** a rehearsal on PostgreSQL 16 with the AMS's real firewall, auth and router (69/0, four mutants killed) and `mobile-sessions.check.js` in the gate (71/0, eleven mutants killed). The rehearsal caught one real bug before commit: a refresh looked the student up by the phone's id and dropped the claim.
-  - **Not built, deferred:** a manager screen for phones (S2b — the endpoints exist, the AMS page does not); signing every phone out when a password is changed or reset; the app's own "my phones" list.
+  - **Not built, deferred:** a manager screen for phones (S2b — the endpoints exist, the AMS page does not); the app's own "my phones" list.
+  - ✅ **S2c — a changed password signs the person's phones out. LIVE 6 Nov 2026, AMS `329369d`** (Yasir: "Password change signs phones out"). Migration `2026-11-06-phones-out-on-password.sql` (widens `revoke_reason` with `password_changed`, both databases first). `services/mobileDevices.signOutPhonesForPassword` runs on the password's own transaction in all four writes: own change, the email reset link, the users editor, a student's password set by staff — every phone, whoever changed it. The phone's next refresh says "Your password was changed. Please sign in again with the new password." `phones-out-on-password.check.js` 44/0 (counts every password write, floor 4), 12 planted defects caught; the server's full gate exit 0 after the pull.
+  - **Found, not changed:** changing your OWN password writes no audit row (staff-set ones do). Asked Yasir, 6 Nov 2026.
 
 ## S3 — Push notifications
 
