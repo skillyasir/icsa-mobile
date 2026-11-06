@@ -138,7 +138,9 @@ Rough sizes for one developer working with Claude; they move with the decisions 
   - **App:** `src/auth/nativeSignIn.ts` asks Google or Apple for a token (Google's choice is forgotten once the token is in hand, so the next sign-in asks which account again; Apple is asked for the email only); `src/auth/providerRoute.ts` says where it goes (`/auth/google { credential }`, `/auth/apple { identity_token }`), and the session client binds the phone exactly as after a password sign-in. The sign-in screen: Apple's own button (iPhone) and Google's, side by side, the same size. **Me › SIGN-IN:** a "Sign in with Apple" switch (links / unlinks through the AMS) and a line saying which Google account works.
   - **New native packages:** `@react-native-google-signin/google-signin 17.0.0` (exact) and `expo-apple-authentication ~58.0.2`; app.json gains both plugins, the Google URL scheme and `ios.usesAppleSignIn` — **`npm install`, then rebuild** (`npx expo prebuild --clean`).
   - **Checks:** `providerRoute.check.ts` 35 — the app's routes, fields, client IDs, URL scheme and bundle id against the AMS's own; 9 planted defects caught.
-- **Next pieces:** test S12 on both phones; then Phase 2 (Teachers + Students).
+  - **First Android run, 6 Nov 2026:** the red "RNGoogleSignin could not be found" screen right after `npm install` is expected — Metro served the new code to the old build. Gone after `npx expo prebuild --clean` + `npx expo run:android`.
+  - ✅ **Android emulator, 6 Nov 2026, after `b3bbf8f`:** Yasir: "yes it worked on android" — Sign in with Google signs in.
+- **Next pieces:** test S12 on the iPhone (Google and Apple, and Me › Sign in with Apple); then Phase 2 (Teachers + Students).
 
 ### Deferred — raise when the current piece is done
 
