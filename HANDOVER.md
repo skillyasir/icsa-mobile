@@ -157,7 +157,8 @@ Rough sizes for one developer working with Claude; they move with the decisions 
   - **Differs from the mockup, on purpose:** no "You are 42 m from ICSA City" before checking in (it needs the location before the tap); back from Check in goes to the Attendance list, not Home.
   - **Packages:** `expo-location` ~58.0.20 (while-in-use only: Always, background and motion are removed from the build) and `react-native-maps` 1.29.11.
   - **Checks:** `rules.check.ts` 97 and `today.check.ts` 24 hold the endpoints, fields, location rule, teacher-change rule, Kuwait dates and the map to the AMS's own; `tabs.check.ts` now knows a built tab and a tab that is a stack. 13 planted defects caught (9 in rules, 3 in today, 1 in tabs).
-  - **Not tested yet:** on a phone — needs `npm install` and a rebuild (For You).
+  - **First run, iPhone simulator, 6 Nov 2026:** the Apple map draws Mahboula's 1000 m area; class, teacher and "Choose another teacher" right; the simulator had no location set, so a hybrid check-in asked before Online, as designed. test22 was then checked in **Online at 5:09 PM** from that question (a real record, Sameer Salim Malim's class), so the location test moved to **7 Nov 2026 with test22** (Yasir). Two fixes from the run: the no-position cause is logged (`ed89b24`), and the question no longer stays on screen after the check-in (`ea4f08f`).
+  - **No Features › Location in this Simulator:** set the position with **Run on Mac:** `xcrun simctl location booted set 29.1462787,48.1249043` (Mahboula; Kuwait City is 29.3632516,47.9640249; both 1000 m).
 
 ### Deferred — raise when the current piece is done
 
