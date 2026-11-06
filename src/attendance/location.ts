@@ -39,7 +39,11 @@ export async function readFix(): Promise<FixResult> {
     // keeps such a check-in for review rather than refusing it.
     if (typeof pos.mocked === 'boolean') fix.mocked = pos.mocked;
     return { ok: true, fix, approximate };
-  } catch {
+  } catch (err) {
+    // The student sees "could not find your location"; the cause goes to the
+    // log, so a developer can tell a simulator with no location set from a
+    // missing permission text or a phone with no GPS fix.
+    console.warn('[check-in] the phone gave no position:', err instanceof Error ? err.message : String(err));
     return { ok: false, why: 'unavailable', settings: false };
   }
 }
