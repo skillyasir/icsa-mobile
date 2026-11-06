@@ -113,6 +113,7 @@ Order = the order the app needs them.
 - **Both:** session = the device session (S2); audit the sign-in and every link/unlink (credentials tier — fail the request if the audit fails); add the paths to the student firewall where students use them.
 - **App Review:** the Apple button must be at least as prominent as Google's, on the same screen.
 - ✅ **Yasir, 5–6 Nov 2026: Google + Apple, and "link once in Me"** for an Apple email that matches no ICSA account. (Guideline 4.8's education exemption likely covers Google-only — accounts are ICSA-made, Google signs in only existing ones — but he chose both.)
+- ✅ **Built and LIVE, 6 Nov 2026 — AMS `a4aec9f`.** Apple: `user_apple_ids` + `services/appleIdentity.js` + `controllers/appleSignInController.js` (sign-in, status, link, unlink; all audited in their transaction; status/link/unlink in the student allowlist). Google: `googleAudiences()` = the website's client + the app's iPhone and Android clients — added rather than waiting to see which audience a phone's token carries.
 - ✅ **Consoles set up, 6 Nov 2026** — the client IDs and the Apple App ID are in HANDOVER.md, piece 4. The Google project is now **In production** (it was in Testing with no test users, which blocked Google sign-in for everyone, the website included).
 
 ---

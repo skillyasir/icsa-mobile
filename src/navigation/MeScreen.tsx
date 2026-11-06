@@ -14,6 +14,7 @@ import { useSession } from '@/session/SessionContext';
 import { minTouch } from '@/theme/tokens';
 import { useAppTheme } from '@/theme/useAppTheme';
 
+import { SignInMethods } from './SignInMethods';
 import { HOME } from './tabs';
 
 function initials(name: string): string {
@@ -120,6 +121,8 @@ export function MeScreen() {
           </Card>
         </View>
       ) : null}
+
+      {!user.preview ? <SignInMethods email={user.email} /> : null}
 
       <AppText variant="caption" color="textSubtle" style={styles.centred}>
         ICSA app version {DEVICE.appVersion ?? 'unknown'}

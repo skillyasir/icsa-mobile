@@ -2,11 +2,15 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 
 import { ams } from '@/api/client';
 import type { AmsUser, Failure, Outcome } from '@/api/session';
+import { appleToken, googleToken } from '@/auth/nativeSignIn';
+import { providerRoute, type Provider } from '@/auth/providerRoute';
 import { signInRoute } from '@/auth/signInRoute';
 import { experiencesFor, type Experience } from '@/lib/roles';
 
 // Who is signed in, and which experience they are looking at.
 //
+// PIECE 4 (6 Nov 2026): Google and Sign in with Apple (S12) — the provider's
+// token goes to the AMS, which answers as the password sign-in does.
 // PIECE 2 (4 Nov 2026): real sign-in. The AMS login + the Cloudflare check,
 // then a device session (AMS S2) so the phone stays signed in for 30 days of
 // not being used (Yasir). The developer preview stays, in development builds
@@ -42,6 +46,8 @@ type Session = {
   active: Experience | null;
   setActive: (e: Experience) => void;
   signIn: (identifier: string, password: string, captchaToken: string) => Promise<Outcome<AmsUser>>;
+  /** Google or Apple (S12). null = the person closed Google's or Apple's sheet. */
+  signInWith: (provider: Provider) => Promise<Outcome<AmsUser> | null>;
   retry: () => void;
   previewSignIn: (user: Omit<SessionUser, 'preview'>) => void;
   signOut: () => Promise<void>;
@@ -106,9 +112,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     ams.restore().then(settle);
   }, [settle]);
 
-  const signIn = useCallback(async (identifier: string, password: string, captchaToken: string) => {
-    const route = signInRoute(identifier);
-    const r = await ams.signIn({ path: route.path, body: route.body(password, captchaToken) });
+  // Every sign-in ends here, whichever way the person proved who they are.
+  const signedIn = useCallback((r: Outcome<AmsUser>) => {
     if (r.ok) {
       setUser(fromAms(r.value));
       setChosen(null);
@@ -118,6 +123,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
     return r;
   }, []);
+
+  const signIn = useCallback(async (identifier: string, password: string, captchaToken: string) => {
+    const route = signInRoute(identifier);
+    return signedIn(await ams.signIn({ path: route.path, body: route.body(password, captchaToken) }));
+  }, [signedIn]);
+
+  const signInWith = useCallback(async (provider: Provider): Promise<Outcome<AmsUser> | null> => {
+    const got = provider === 'google' ? await googleToken() : await appleToken();
+    if (!got.ok) return got.cancelled ? null : { ok: false, failure: { kind: 'refused', message: got.message } };
+    return signedIn(await ams.signIn(providerRoute(provider, got.token)));
+  }, [signedIn]);
 
   const previewSignIn = useCallback((u: Omit<SessionUser, 'preview'>) => {
     if (!__DEV__) return; // never reachable in a store build
@@ -148,11 +164,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       active,
       setActive: setChosen,
       signIn,
+      signInWith,
       retry,
       previewSignIn,
       signOut,
     }),
-    [status, user, notice, problem, experiences, active, signIn, retry, previewSignIn, signOut],
+    [status, user, notice, problem, experiences, active, signIn, signInWith, retry, previewSignIn, signOut],
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

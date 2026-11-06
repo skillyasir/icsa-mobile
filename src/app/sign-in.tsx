@@ -1,6 +1,7 @@
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -14,6 +15,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/AppText';
 import { CaptchaView, type CaptchaHandle } from '@/auth/CaptchaView';
+import { appleAvailable } from '@/auth/nativeSignIn';
+import type { Provider } from '@/auth/providerRoute';
 import { useLock } from '@/lock/LockProvider';
 import { Button } from '@/components/Button';
 import { Notice } from '@/components/Notice';
@@ -26,12 +29,11 @@ import { useAppTheme } from '@/theme/useAppTheme';
 // Mockup 16, approved 3 Nov 2026. PIECE 2 (4 Nov 2026): Sign in is real — the
 // AMS login with the Cloudflare check (S1), then a device session (S2) so the
 // phone stays signed in. Which AMS endpoint is asked is the web login's own
-// rule (auth/signInRoute.ts). Sign in with Apple and Google arrive with S12;
-// their buttons say so instead of pretending. The "Unlock with Face ID" switch
-// came back with the lock itself (S4, 5 Nov 2026), and shows only on a phone
-// that can lock.
-
-const NOT_YET = 'Sign in with Apple and Google arrive in a later step. Use your ICSA username, email or student code for now.';
+// rule (auth/signInRoute.ts). The "Unlock with Face ID" switch came back with
+// the lock itself (S4, 5 Nov 2026), and shows only on a phone that can lock.
+// PIECE 4 (6 Nov 2026): Sign in with Apple (iPhone) and Google (both) are real
+// (S12). Apple's button is Apple's own, the same size as Google's and beside
+// it (App Review: at least as prominent).
 
 // Developer preview: made-up people, one per experience, plus mixed roles.
 // Shown in development builds only (__DEV__) — never in a store build.
@@ -49,33 +51,57 @@ const PREVIEW: { label: string; user: Omit<SessionUser, 'preview'> }[] = [
 export default function SignIn() {
   const t = useAppTheme();
   const router = useRouter();
-  const { previewSignIn, signIn, notice } = useSession();
+  const { previewSignIn, signIn, signInWith, notice } = useSession();
   const lock = useLock();
   const [lockOn, setLockOn] = useState(true);
   const captcha = useRef<CaptchaHandle>(null);
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [busyWith, setBusyWith] = useState<'password' | Provider | null>(null);
+  const busy = busyWith !== null;
   const [message, setMessage] = useState<{ tone: 'info' | 'danger'; text: string } | null>(null);
+  const [apple, setApple] = useState(false);
+
+  useEffect(() => {
+    let live = true;
+    appleAvailable().then((yes) => {
+      if (live) setApple(yes);
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
 
   const ready = identifier.trim() !== '' && password !== '' && captchaToken !== null && !busy;
 
+  const done = async () => {
+    // The person's choice, without a second prompt: the lock asks the next time.
+    if (lock.ability.available) await lock.setWanted(lockOn, { confirm: false });
+    setPassword('');
+    router.replace('/');
+  };
+
   const submit = async () => {
     if (!ready || !captchaToken) return;
-    setBusy(true);
+    setBusyWith('password');
     setMessage(null);
     const r = await signIn(identifier, password, captchaToken);
-    setBusy(false);
-    if (r.ok) {
-      // The person's choice, without a second prompt: the lock asks the next time.
-      if (lock.ability.available) await lock.setWanted(lockOn, { confirm: false });
-      setPassword('');
-      router.replace('/');
-      return;
-    }
+    setBusyWith(null);
+    if (r.ok) return done();
     // A check token is single-use: every failed attempt needs a fresh one.
     captcha.current?.reset();
+    setMessage({ tone: 'danger', text: r.failure.message });
+  };
+
+  const withProvider = async (provider: Provider) => {
+    if (busy) return;
+    setBusyWith(provider);
+    setMessage(null);
+    const r = await signInWith(provider);
+    setBusyWith(null);
+    if (!r) return; // closed Google's or Apple's sheet: nothing to say
+    if (r.ok) return done();
     setMessage({ tone: 'danger', text: r.failure.message });
   };
 
@@ -142,7 +168,7 @@ export default function SignIn() {
             {notice && !message ? <Notice tone="warning">{notice}</Notice> : null}
             {message ? <Notice tone={message.tone}>{message.text}</Notice> : null}
 
-            <Button title="Sign in" onPress={submit} disabled={!ready} busy={busy} />
+            <Button title="Sign in" onPress={submit} disabled={!ready} busy={busyWith === 'password'} />
 
             <View style={styles.orRow} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
               <View style={[styles.rule, { backgroundColor: t.colors.border }]} />
@@ -153,13 +179,29 @@ export default function SignIn() {
             </View>
 
             <View style={styles.social}>
-              {Platform.OS === 'ios' ? (
-                <View style={styles.flex}>
-                  <Button title="Sign in with Apple" variant="apple" onPress={() => setMessage({ tone: 'info', text: NOT_YET })} />
+              {apple ? (
+                <View style={[styles.flex, busy && styles.dim]} pointerEvents={busy ? 'none' : 'auto'}>
+                  <AppleAuthentication.AppleAuthenticationButton
+                    buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                    buttonStyle={
+                      t.scheme === 'dark'
+                        ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
+                        : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
+                    }
+                    cornerRadius={t.radius.lg}
+                    style={styles.appleButton}
+                    onPress={() => withProvider('apple')}
+                  />
                 </View>
               ) : null}
               <View style={styles.flex}>
-                <Button title="Sign in with Google" variant="outline" onPress={() => setMessage({ tone: 'info', text: NOT_YET })} />
+                <Button
+                  title="Sign in with Google"
+                  variant="outline"
+                  onPress={() => withProvider('google')}
+                  disabled={busy && busyWith !== 'google'}
+                  busy={busyWith === 'google'}
+                />
               </View>
             </View>
 
@@ -256,6 +298,8 @@ const styles = StyleSheet.create({
   orRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   rule: { flex: 1, height: StyleSheet.hairlineWidth * 2 },
   social: { flexDirection: 'row', gap: 10 },
+  appleButton: { height: Math.max(minTouch, 50) },
+  dim: { opacity: 0.55 },
   centred: { textAlign: 'center' },
   lockRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: minTouch },
   preview: { borderWidth: 1, borderStyle: 'dashed', borderRadius: 14, padding: 12 },
