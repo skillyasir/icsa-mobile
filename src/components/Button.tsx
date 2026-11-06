@@ -5,7 +5,7 @@ import { useAppTheme } from '@/theme/useAppTheme';
 
 import { AppText } from './AppText';
 
-type Variant = 'primary' | 'outline' | 'apple' | 'danger';
+type Variant = 'primary' | 'outline' | 'apple' | 'danger' | 'attention';
 
 type Props = Omit<PressableProps, 'children' | 'style'> & {
   title: string;
@@ -24,6 +24,7 @@ export function Button({ title, variant = 'primary', busy = false, block = true,
     outline: { bg: c.surface, pressed: c.surfaceMuted, fg: c.text, border: c.borderStrong },
     apple: { bg: c.appleButton, pressed: c.appleButton, fg: c.onAppleButton },
     danger: { bg: c.surface, pressed: c.dangerSoft, fg: c.onDangerSoft, border: c.borderStrong },
+    attention: { bg: c.attention, pressed: c.attentionPressed, fg: c.onAttention },
   };
   const v = look[variant];
   const isDisabled = disabled || busy;

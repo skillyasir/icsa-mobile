@@ -77,6 +77,8 @@ Order = the order the app needs them.
 
 ## S6 — Location hardening
 
+- **LIVE 6 Nov 2026** (AMS `3140e02`, migration `2026-11-06-attendance-mock-location.sql` on both databases): `mocked` and `app_platform` are stored; a mocked check-in is kept as `pending_review`, which no teacher can confirm; `GET /attendance/my-context` answers `branches` for the map.
+- **Also 6 Nov 2026, no migration:** my-context sends `class_days`, `start_time`, `end_time` on each enrolment and `check_in_distance_m` / `check_in_accuracy_m` on today's check-in, for the app's Home card. Additive (`mobile-my-context.check.js`).
 - **Today:** the server measures the distance itself and caps the claimed accuracy. Good.
 - **Add:** accept `mocked: true|false` (Android reports a mock-location provider) and `app_platform` on `POST /api/attendance/check-in`; store them; a mocked fix becomes `pending_review` (supervisor/manager confirms) rather than a silent present. Log the rejection the same way `logRejection` does today.
 

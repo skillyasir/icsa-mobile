@@ -38,6 +38,25 @@
         }
       ],
       [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "ICSA reads your location only when you tap Check in, to confirm you are at a branch.",
+          "locationAlwaysAndWhenInUsePermission": false,
+          "locationAlwaysPermission": false,
+          "locationFullAccuracyPermission": "ICSA needs your precise location to confirm you are inside the branch.",
+          "motionUsagePermission": false,
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false,
+          "isAndroidForegroundServiceEnabled": false
+        }
+      ],
+      [
+        "react-native-maps",
+        {
+          "androidGoogleMapsApiKey": "AIzaSyDA2Ol6w8GmxMVQayTf4eTChvxsU9i4bkk"
+        }
+      ],
+      [
         "expo-local-authentication",
         {
           "faceIDPermission": "To unlock ICSA quickly and keep your account safe."

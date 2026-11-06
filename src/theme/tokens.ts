@@ -42,6 +42,10 @@ export type Palette = {
   onHeroMuted: string;
   appleButton: string;
   onAppleButton: string;
+  // Yellow is for attention (brand): the one action a screen wants now, e.g. Check in.
+  attention: string;
+  attentionPressed: string;
+  onAttention: string;
 };
 
 export const palettes: Record<ColorScheme, Palette> = {
@@ -71,6 +75,9 @@ export const palettes: Record<ColorScheme, Palette> = {
     onHeroMuted: '#DCE7FA',
     appleButton: '#000000',
     onAppleButton: '#FFFFFF',
+    attention: brand.yellow,
+    attentionPressed: '#E0A800',
+    onAttention: '#0F172A',
   },
   dark: {
     background: '#0B1220',
@@ -98,6 +105,9 @@ export const palettes: Record<ColorScheme, Palette> = {
     onHeroMuted: '#DCE7FA',
     appleButton: '#FFFFFF',
     onAppleButton: '#000000',
+    attention: brand.yellow,
+    attentionPressed: '#E0A800',
+    onAttention: '#0F172A',
   },
 };
 

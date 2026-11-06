@@ -145,10 +145,24 @@ Rough sizes for one developer working with Claude; they move with the decisions 
   - ✅ **Piece 4 (S12) done, 6 Nov 2026.**
 - **Phase 1 (Foundation) is complete.**
 - **S2c — a changed password signs the person's phones out: LIVE 6 Nov 2026** (AMS `329369d`; Yasir chose it as the next piece). No app change: the app already shows the server's words when a refresh is refused. Details in docs/03, S2.
-- **Next:** Phase 2 (Teachers + Students), unless Yasir picks a deferred item.
+- **Next:** Phase 2 (Teachers + Students) — started 6 Nov 2026, below.
+
+### Phase 2 progress
+
+- **Piece 1 — Student Home + check-in** (Yasir chose it, 6 Nov 2026). **Yasir ruled, 6 Nov 2026:** the location is read **only when the student taps Check in**; a location the phone reports as **faked is recorded and marked for review** (S6), never refused by the app; **a real map now** — Apple Maps on iPhone, Google Maps on Android.
+  - **AMS S6: LIVE 6 Nov 2026** (`3140e02`): `mocked` + `app_platform` on check-in, a mocked one written `pending_review`, my-context answers `branches`. The deploy restarted the code before the migration; the access log shows no failed check-in in that gap.
+  - **AMS addition, no migration (6 Nov 2026):** my-context also sends `class_days`, `start_time`, `end_time` per enrolment and `check_in_distance_m` / `check_in_accuracy_m` on today's check-in (never the coordinates). Additive; the app shows nothing for them on an older AMS. `mobile-my-context.check.js`.
+  - **Google Maps key "ICSA app Android maps"** (project `icsa-system-g-login`): Android apps only (`us.icsa.app` + the debug SHA-1), API limited to Maps SDK for Android. Only Maps SDK for Android is switched on in the project — the other Maps APIs were never on. It is in `app.json` through the `react-native-maps` plugin. **Before a Play build, add the Play signing key's SHA-1 to this key** (with the second Google sign-in client).
+  - **App:** Home (greeting, YOUR CLASS TODAY with Check in, Attended / Progress / Next fee, Continue learning, Due soon) and the Attendance tab, now a stack: today's classes and the history, with **Check in** pushed over it (the map, check in, choosing the teacher, Wrong teacher? Change, Check out). Home's Check in tap is the check-in: the screen opens and starts at once.
+  - **Differs from the mockup, on purpose:** no "You are 42 m from ICSA City" before checking in (it needs the location before the tap); back from Check in goes to the Attendance list, not Home.
+  - **Packages:** `expo-location` ~58.0.20 (while-in-use only: Always, background and motion are removed from the build) and `react-native-maps` 1.29.11.
+  - **Checks:** `rules.check.ts` 97 and `today.check.ts` 24 hold the endpoints, fields, location rule, teacher-change rule, Kuwait dates and the map to the AMS's own; `tabs.check.ts` now knows a built tab and a tab that is a stack. 13 planted defects caught (9 in rules, 3 in today, 1 in tabs).
+  - **Not tested yet:** on a phone — needs `npm install` and a rebuild (For You).
 
 ### Deferred — raise when the current piece is done
 
+- **Continue learning on Home is not tappable yet** — it opens the lesson once the Learn tab is built.
+- **Android permissions from Expo's defaults** — the build asks for `SYSTEM_ALERT_WINDOW` and `READ`/`WRITE_EXTERNAL_STORAGE`, which the app does not use. Remove them (`android.blockedPermissions`) before the Play listing; Play asks about each one.
 - **Staff attendance module (Yasir, 4 Nov 2026):** ICSA staff will clock in their **own** working day. It does not exist in the AMS today (attendance there is students only, marked by teachers and supervisors). It needs a new AMS module first, then app screens. Daily clock-in works with the 30-day sign-in (no daily sign-in). Open questions for then: location at clock-in only, like students (arrival reminders are students-only today); who sees and corrects staff records.
 
 ### Platform order — Yasir ruled, 4 Nov 2026

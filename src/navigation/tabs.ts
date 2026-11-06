@@ -6,7 +6,10 @@ import type { Experience } from '@/lib/roles';
 
 // The tab bar of each experience — the plan in docs/01-advice.md §4, five tabs
 // at most. `name` is the route file inside src/app/<experience>/.
-// `soon` is what the placeholder says until the real screen is built.
+// `soon` is what the placeholder says until the real screen is built; `built`
+// marks a tab whose real screen is in (its route file then shows that screen,
+// never the placeholder). A tab with screens of its own is a folder with a
+// _layout.tsx (a stack), its tab screen being the folder's index.tsx.
 
 export type TabDef = {
   name: string;
@@ -15,6 +18,7 @@ export type TabDef = {
   md: AndroidSymbol;
   soon: string;
   phase: number;
+  built?: true;
 };
 
 export const HOME: Record<Experience, Href> = {
@@ -36,11 +40,11 @@ const ME: TabDef = {
 
 export const TABS: Record<Experience, TabDef[]> = {
   student: [
-    { name: 'index', label: 'Home', sf: { default: 'house', selected: 'house.fill' }, md: 'home', phase: 2,
+    { name: 'index', label: 'Home', sf: { default: 'house', selected: 'house.fill' }, md: 'home', phase: 2, built: true,
       soon: "Today's class, check in, your progress and your next fee." },
     { name: 'learn', label: 'Learn', sf: { default: 'book', selected: 'book.fill' }, md: 'menu_book', phase: 2,
       soon: 'Your courses, subjects, lessons, quizzes and assignments.' },
-    { name: 'attendance', label: 'Attendance', sf: 'calendar.badge.checkmark', md: 'event_available', phase: 2,
+    { name: 'attendance', label: 'Attendance', sf: 'calendar.badge.checkmark', md: 'event_available', phase: 2, built: true,
       soon: 'Check in at your branch, check out, and your attendance history.' },
     { name: 'fees', label: 'Fees', sf: { default: 'creditcard', selected: 'creditcard.fill' }, md: 'payments', phase: 2,
       soon: 'Your fee, what you have paid, your balance, and uploading a payment proof.' },

@@ -29,6 +29,7 @@ const PAIRS: [keyof Palette, keyof Palette][] = [
   ['onSuccessSoft', 'successSoft'], ['onWarningSoft', 'warningSoft'],
   ['onDangerSoft', 'dangerSoft'], ['onDangerSoft', 'surface'], ['onInfoSoft', 'infoSoft'],
   ['onHero', 'hero'], ['onHeroMuted', 'hero'], ['onAppleButton', 'appleButton'],
+  ['onAttention', 'attention'], ['onAttention', 'attentionPressed'],
 ];
 
 run('tokens.check — every text colour is readable', (h) => {
