@@ -123,7 +123,11 @@ Rough sizes for one developer working with Claude; they move with the decisions 
   - ✅ **Android emulator, 5 Nov 2026, after `caa86fb`:** Yasir: "yes all worked" — Me shows "Lock with fingerprint", the app locks after 5 minutes away, unlocks with the fingerprint, and Cancel stays on the lock screen with Unlock and Sign in again working.
   - **New native package:** `expo-local-authentication ~58.0.2` with its Face ID permission text ("To unlock ICSA quickly and keep your account safe.") — **rebuild needed** (`npx expo prebuild --clean`).
   - **Checks:** `version.check.ts` 18, `lockRule.check.ts` 26 (it reads the package's own numbers, so it COULD NOT RUN until `npm install`), `session.check.ts` 53; 9 planted defects caught, among them the gate failing closed, versions compared as text, the Face ID loop and a token on the public call.
-- **Next pieces:** S12 Apple/Google sign-in; then Phase 2 (Teachers + Students).
+- **Piece 4 — Google + Apple sign-in (S12), started 6 Nov 2026.** Yasir's rulings, 5–6 Nov 2026:
+  - ✅ **Google + Apple** (asked whether Apple is needed: guideline 4.8 has an education exemption that likely fits ICSA, since accounts are made by ICSA and Google only signs in existing ones — he chose both anyway, the safe route for review).
+  - ✅ **An Apple email that matches no ICSA account (Apple can hide it, and gives it only the first time):** the person signs in with their ICSA password once and **links Apple in Me**; the Apple button works for them from then on.
+  - ✅ **Claude does the console setup** in the Claude app's built-in browser (Google Cloud: iPhone + Android sign-in IDs in the AMS web client's project, number 834637605414; Apple Developer: Sign in with Apple for `us.icsa.app`), asking before anything is saved.
+- **Next pieces:** finish S12; then Phase 2 (Teachers + Students).
 
 ### Deferred — raise when the current piece is done
 
