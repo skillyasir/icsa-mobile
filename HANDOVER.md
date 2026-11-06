@@ -127,6 +127,13 @@ Rough sizes for one developer working with Claude; they move with the decisions 
   - ✅ **Google + Apple** (asked whether Apple is needed: guideline 4.8 has an education exemption that likely fits ICSA, since accounts are made by ICSA and Google only signs in existing ones — he chose both anyway, the safe route for review).
   - ✅ **An Apple email that matches no ICSA account (Apple can hide it, and gives it only the first time):** the person signs in with their ICSA password once and **links Apple in Me**; the Apple button works for them from then on.
   - ✅ **Claude does the console setup** in the Claude app's built-in browser (Google Cloud: iPhone + Android sign-in IDs in the AMS web client's project, number 834637605414; Apple Developer: Sign in with Apple for `us.icsa.app`), asking before anything is saved.
+  - ✅ **Console setup done, 6 Nov 2026** (Claude, in the built-in browser; Yasir approved each save):
+    - **Google Cloud project `icsa-system-g-login`** (number 834637605414). Client IDs are not secrets:
+      - Web (existing, the AMS website): `834637605414-rh4f6dci5gkqv7uhc6rqi9semnvg8tpa.apps.googleusercontent.com`
+      - **iPhone** "ICSA app iPhone", bundle `us.icsa.app`: `834637605414-p01k9vro3eiqilr45c51cuidu0tueefc.apps.googleusercontent.com` (URL scheme `com.googleusercontent.apps.834637605414-p01k9vro3eiqilr45c51cuidu0tueefc`)
+      - **Android** "ICSA app Android (debug)", package `us.icsa.app`, the standard React Native debug key SHA-1 `5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25`: `834637605414-hgj3vasgohi36cvje4nag16a4lq38v46.apps.googleusercontent.com`. **The Play signing key needs a second Android client in Phase 2.**
+    - ⚠️ **Found: the project was still in "Testing" with 0 test users**, so Google sign-in was blocked for everyone, the AMS website included (lifetime user count 0). Yasir chose **fix and publish**: app name "ICSA" (was the typo "ICSA-SYSTEM-G-LOING"), home `https://icsa.us`, privacy `https://icsa.us/privacy_policy`, terms `https://icsa.us/terms`, domains `icsasystem.com` + `icsa.us`, **no logo** (a logo forces Google's review). **Now "In production".** Basic sign-in only, so no review.
+    - **Apple Developer, Team `69B3AATWN8` (an individual account: "Yasir Muhammad Farooq"):** App ID "ICSA app" `us.icsa.app` (explicit), **Sign In with Apple** on (primary App ID). No Services ID, key or email sources: the app verifies Apple's identity token itself, and nothing emails through Apple's relay.
 - **Next pieces:** finish S12; then Phase 2 (Teachers + Students).
 
 ### Deferred — raise when the current piece is done
