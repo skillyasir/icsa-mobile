@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import MapView, { Circle, Marker } from 'react-native-maps';
 
@@ -18,16 +19,26 @@ import type { Branch } from './types';
 // student taps Check in.
 //
 // A picture, not a control: it does not pan or zoom, so the screen scrolls
-// over it. It is drawn afresh when the student's position arrives (the key):
-// on the first Android run, 7 Nov 2026, moving the live map to the new
-// region left the check-in circle and the ICSA badge off the redrawn map.
+// over it. It is drawn afresh when the student's position arrives (the key),
+// and fitted to the area once the map is ready (fitToCoordinates): on the
+// Android emulator, 7 Nov 2026, the map after a check-in ignored the region
+// it was given and opened zoomed inside the circle, so neither the circle's
+// edge nor the ICSA badge was in view. iPhone kept the region either way.
 
 export function BranchMap({ branches, focus, fix }: { branches: Branch[]; focus: Branch; fix: Fix | null }) {
   const t = useAppTheme();
   const points = [{ lat: focus.latitude, lng: focus.longitude, radiusM: focus.radius_m }];
   if (fix) points.push({ lat: fix.lat, lng: fix.lng, radiusM: 0 });
   const region = regionFor(points);
+  const map = useRef<MapView>(null);
   if (!region) return null;
+  // The region's two corners: fitting to them shows the whole area on both platforms.
+  const corners = [
+    { latitude: region.latitude - region.latitudeDelta / 2, longitude: region.longitude - region.longitudeDelta / 2 },
+    { latitude: region.latitude + region.latitudeDelta / 2, longitude: region.longitude + region.longitudeDelta / 2 },
+  ];
+  const fit = () =>
+    map.current?.fitToCoordinates(corners, { edgePadding: { top: 0, right: 0, bottom: 0, left: 0 }, animated: false });
 
   return (
     <View
@@ -37,8 +48,11 @@ export function BranchMap({ branches, focus, fix }: { branches: Branch[]; focus:
     >
       <MapView
         key={fix ? `at-${fix.lat},${fix.lng}` : 'branches'}
+        ref={map}
         style={StyleSheet.absoluteFill}
         initialRegion={region}
+        onMapReady={fit}
+        onLayout={fit}
         scrollEnabled={false}
         zoomEnabled={false}
         rotateEnabled={false}
