@@ -1,6 +1,6 @@
 import { run } from '../../scripts/check-harness.ts';
 
-import { checkInTeacher, heroClass, todayClasses } from './today.ts';
+import { attendanceList, checkInTeacher, heroClass, todayClasses } from './today.ts';
 import type { MyContext, TodaysAttendance } from './types.ts';
 
 // Today's classes, as the Home card and the Attendance tab draw them: which
@@ -61,7 +61,11 @@ run('today.check — today’s classes for Home and Attendance', (h) => {
   h.check('§5 Home features an open check-in first', heroClass([n, i, { ...inB }])?.enrollmentId === 'eb');
   h.check('§5 …then one that can be checked in to now', heroClass([i, n, b])?.enrollmentId === 'en');
   h.check('§5 …then any class today', heroClass([i, closed])?.enrollmentId === 'eb');
-  h.check('§5 …else nothing', heroClass([i, none]) === null && heroClass([]) === null);
+  h.check('§5 …then any class that can be checked in to (class days are display only)', heroClass([i, none])?.enrollmentId === 'ei');
+  h.check('§5 …else nothing', heroClass([none]) === null && heroClass([]) === null);
+  const all = attendanceList([i, b, none, n]);
+  h.check('§7 the Attendance tab lists every class, as the website does', all.length === 4, all.map((c) => c.enrollmentId).join());
+  h.check('§7 …today\'s first', all[0] === b && all[1] === n && all[2] === i && all[3] === none);
   const out = { ...inB, todays: checkedIn({ check_out_time: '2026-11-06T15:00:00Z' }) };
   h.check('§5 a checked-out class is not "open"; another open one wins', heroClass([out, n])?.enrollmentId === 'en');
 

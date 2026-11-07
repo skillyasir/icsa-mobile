@@ -11,7 +11,7 @@ import {
   statusView,
   statusWord,
 } from '@/attendance/rules';
-import { todayClasses, type TodayClass } from '@/attendance/today';
+import { attendanceList, todayClasses, type TodayClass } from '@/attendance/today';
 import type { MyContext, MyHistory } from '@/attendance/types';
 import { useAmsGet } from '@/attendance/useAmsGet';
 import { AppText } from '@/components/AppText';
@@ -43,7 +43,7 @@ export function AttendanceScreen() {
   const live = !user?.preview;
   const ctx = useAmsGet<MyContext>(ATTENDANCE_API.context.path, live);
   const hist = useAmsGet<MyHistory>(ATTENDANCE_API.history.path, live);
-  const today = todayClasses(ctx.data).filter((c) => c.isToday || c.todays);
+  const classes = attendanceList(todayClasses(ctx.data));
   const refresh = () => {
     ctx.refresh();
     hist.refresh();
@@ -67,19 +67,19 @@ export function AttendanceScreen() {
   return (
     <Screen title="Attendance" refreshing={ctx.refreshing || hist.refreshing} onRefresh={refresh}>
       <AppText variant="label" color="textMuted">
-        TODAY
+        YOUR CLASSES
       </AppText>
       {ctx.loading && !ctx.data ? (
         <Loading what="Loading today’s classes…" />
       ) : ctx.failure && !ctx.data ? (
         <LoadFailed failure={ctx.failure} onRetry={ctx.refresh} />
-      ) : today.length === 0 ? (
+      ) : classes.length === 0 ? (
         <Card>
-          <AppText variant="headline">No class today</AppText>
-          <AppText color="textMuted">When you have a class, you check in here.</AppText>
+          <AppText variant="headline">No classes yet</AppText>
+          <AppText color="textMuted">When you are enrolled in a class, you check in here.</AppText>
         </Card>
       ) : (
-        today.map((c) => <TodayCard key={c.enrollmentId} c={c} onOpen={(start) => open(c, start)} />)
+        classes.map((c) => <TodayCard key={c.enrollmentId} c={c} onOpen={(start) => open(c, start)} />)
       )}
 
       <AppText variant="label" color="textMuted">
@@ -154,6 +154,11 @@ function TodayCard({ c, onOpen }: { c: TodayClass; onOpen: (start: boolean) => v
         <AppText variant="caption" color="textSubtle">
           {[c.group, times, c.teacher?.name].filter(Boolean).join(' · ')}
         </AppText>
+        {!c.isToday && !a && c.classDays ? (
+          <AppText variant="caption" color="textSubtle">
+            {`Class days: ${c.classDays}`}
+          </AppText>
+        ) : null}
       </View>
       {a && v ? (
         <>

@@ -82,15 +82,26 @@ function teacherOf(
 /**
  * The one class the Home card features: a check-in still open (checked in,
  * not out) first; then one that can be checked in to now; then any class
- * today; then nothing.
+ * today; then any class that can be checked in to at all — class days are
+ * display only (the batch rule), and an individual student may check in on
+ * any day the AMS allows, as on the website. Else nothing.
  */
 export function heroClass(list: TodayClass[]): TodayClass | null {
   return (
     list.find((c) => c.todays && !c.todays.check_out_time) ??
     list.find((c) => c.isToday && c.open) ??
     list.find((c) => c.isToday) ??
+    list.find((c) => c.open) ??
     null
   );
+}
+
+/**
+ * Every class, for the Attendance tab — the website lists them all, whatever
+ * the class days say. Today's first, in the AMS's order otherwise.
+ */
+export function attendanceList(list: TodayClass[]): TodayClass[] {
+  return [...list.filter((c) => c.isToday || c.todays), ...list.filter((c) => !(c.isToday || c.todays))];
 }
 
 /** The teacher a new check-in goes under: the one chosen, else the assigned one. */

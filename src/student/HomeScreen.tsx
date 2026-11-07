@@ -6,11 +6,12 @@ import {
   ATTENDANCE_API,
   checkInLabel,
   classTimes,
+  feeTile,
   formatDay,
   formatTime,
   formatWeekdayDay,
   greeting,
-  kd,
+  kuwaitDay,
   lessonPct,
   startsLabel,
   statusView,
@@ -59,7 +60,7 @@ export function HomeScreen() {
   const d = dash.data;
   const resume = d?.courses.find((c) => c.resume_lesson_title && !c.frozen) ?? null;
   const progressOf = resume ?? d?.courses.find((c) => !c.frozen) ?? null;
-  const due = d?.payments.next_due ?? null;
+  const fee = feeTile(d?.payments.next_due, ctx.data?.today ?? kuwaitDay(now));
 
   return (
     <Screen
@@ -101,11 +102,7 @@ export function HomeScreen() {
             sub={progressOf ? `${Number(progressOf.lessons_done) || 0} of ${Number(progressOf.lessons_total) || 0} lessons` : ''}
             bar={progressOf ? lessonPct(progressOf.lessons_done, progressOf.lessons_total) : null}
           />
-          <Tile
-            label="Next fee"
-            value={d ? (due ? kd(due.amount) : 'Paid') : '—'}
-            sub={d ? (due ? formatDay(due.due_date) : 'Nothing due') : ''}
-          />
+          <Tile label={fee.label} value={d ? fee.value : '—'} sub={d ? fee.sub : ''} alert={!!d && fee.overdue} />
         </View>
       ) : null}
 
@@ -171,7 +168,7 @@ function HeroCard({
     <View style={[styles.hero, { backgroundColor: t.colors.hero, borderRadius: t.radius.xl, padding: t.space.lg, gap: t.space.md }]}>
       <View style={styles.heroTop}>
         <AppText variant="label" color="onHeroMuted">
-          YOUR CLASS TODAY
+          {c.isToday ? 'YOUR CLASS TODAY' : 'YOUR CLASS'}
         </AppText>
         {soon ? (
           <View style={[styles.soon, { backgroundColor: t.colors.onHero + '26', borderRadius: t.radius.pill }]}>
@@ -188,6 +185,11 @@ function HeroCard({
         <AppText variant="caption" color="onHeroMuted">
           {[classTimes(c.start, c.end), place, c.teacher?.name].filter(Boolean).join(' · ')}
         </AppText>
+        {!c.isToday && c.classDays ? (
+          <AppText variant="caption" color="onHeroMuted">
+            {`Your class days: ${c.classDays}`}
+          </AppText>
+        ) : null}
       </View>
       {a && v ? (
         <>
@@ -214,11 +216,32 @@ function HeroCard({
   );
 }
 
-function Tile({ label, value, sub, bar = null }: { label: string; value: string; sub: string; bar?: number | null }) {
+function Tile({
+  label,
+  value,
+  sub,
+  bar = null,
+  alert = false,
+}: {
+  label: string;
+  value: string;
+  sub: string;
+  bar?: number | null;
+  alert?: boolean;
+}) {
   const t = useAppTheme();
   return (
-    <View style={[styles.tile, { backgroundColor: t.colors.surface, borderColor: t.colors.border, borderRadius: t.radius.lg }]}>
-      <AppText variant="caption" color="textSubtle">
+    <View
+      style={[
+        styles.tile,
+        {
+          backgroundColor: alert ? t.colors.dangerSoft : t.colors.surface,
+          borderColor: t.colors.border,
+          borderRadius: t.radius.lg,
+        },
+      ]}
+    >
+      <AppText variant="caption" color={alert ? 'onDangerSoft' : 'textSubtle'}>
         {label}
       </AppText>
       <AppText variant="title" numberOfLines={1} adjustsFontSizeToFit>

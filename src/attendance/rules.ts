@@ -327,6 +327,21 @@ export function lessonPct(done: number | string | null | undefined, total: numbe
   return t ? Math.round((d / t) * 100) : 0;
 }
 
+/**
+ * The Home fee tile, from the dashboard's next_due (the same figure as the
+ * website's Fees card). A due date already past says so: the website prints
+ * "Due 20 Oct 2026" either way; the tile's title says Overdue.
+ */
+export function feeTile(
+  next: { amount: number | string; due_date: string } | null | undefined,
+  today: string | null | undefined,
+): { label: string; value: string; sub: string; overdue: boolean } {
+  if (!next) return { label: 'Next fee', value: 'Paid', sub: 'Nothing due', overdue: false };
+  const day = kuwaitDay(next.due_date);
+  const overdue = !!day && !!today && day < today;
+  return { label: overdue ? 'Overdue' : 'Next fee', value: kd(next.amount), sub: `Due ${formatDay(next.due_date)}`, overdue };
+}
+
 /** "42 m from ICSA City · ±8 m" — whichever parts the AMS recorded. */
 export function distanceLine(distanceM: number | null | undefined, accuracyM: number | null | undefined, branch: string | null): string {
   const parts: string[] = [];

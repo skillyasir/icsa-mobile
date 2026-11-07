@@ -18,7 +18,9 @@ import type { Branch } from './types';
 // student taps Check in.
 //
 // A picture, not a control: it does not pan or zoom, so the screen scrolls
-// over it.
+// over it. It is drawn afresh when the student's position arrives (the key):
+// on the first Android run, 7 Nov 2026, moving the live map to the new
+// region left the check-in circle and the ICSA badge off the redrawn map.
 
 export function BranchMap({ branches, focus, fix }: { branches: Branch[]; focus: Branch; fix: Fix | null }) {
   const t = useAppTheme();
@@ -34,8 +36,9 @@ export function BranchMap({ branches, focus, fix }: { branches: Branch[]; focus:
       accessibilityLabel={`Map of ${focus.name} and its ${focus.radius_m} metre check-in area${fix ? ', with where you checked in' : ''}`}
     >
       <MapView
+        key={fix ? `at-${fix.lat},${fix.lng}` : 'branches'}
         style={StyleSheet.absoluteFill}
-        region={region}
+        initialRegion={region}
         scrollEnabled={false}
         zoomEnabled={false}
         rotateEnabled={false}

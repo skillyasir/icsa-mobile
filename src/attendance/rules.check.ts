@@ -15,6 +15,7 @@ import {
   checkOutBody,
   classTimes,
   distanceLine,
+  feeTile,
   formatClock,
   formatDay,
   formatTime,
@@ -177,6 +178,16 @@ run('rules.check — the student check-in agrees with the AMS', (h) => {
   h.check('§9 the web rounds done ÷ total', /const pctOf = \(done, total\) => \(total \? Math\.round\(\(done \/ total\) \* 100\) : 0\);/.test(home));
   h.check('§9 the app does the same', lessonPct(23, 36) === 64 && lessonPct('1', '3') === 33 && lessonPct(5, 0) === 0 && lessonPct(null, null) === 0);
   h.check('§9 the distance line', distanceLine(42.4, 8, 'ICSA City') === '42 m from ICSA City · ±8 m' && distanceLine(null, null, 'ICSA City') === 'ICSA City' && distanceLine(null, null, null) === '');
+
+  // §9b the fee tile: the website's next_due, and a past date says Overdue
+  h.check('§9b the web shows next_due as "Due <date>"', /\{kd\(pay\.next_due\.amount\)\}/.test(home) && /Due \{fmtDate\(pay\.next_due\.due_date\)\}/.test(home));
+  const past = feeTile({ amount: '750', due_date: '2026-10-20' }, '2026-11-07');
+  h.check('§9b a past due date: Overdue, the amount, the date', past.label === 'Overdue' && past.overdue && past.value === '750.000' && past.sub === 'Due 20 Oct 2026', JSON.stringify(past));
+  const ahead = feeTile({ amount: 90, due_date: '2026-11-10' }, '2026-11-07');
+  h.check('§9b a date ahead: Next fee', ahead.label === 'Next fee' && !ahead.overdue && ahead.sub === 'Due 10 Nov 2026');
+  h.check('§9b due today is not overdue yet', !feeTile({ amount: 1, due_date: '2026-11-07' }, '2026-11-07').overdue);
+  h.check('§9b nothing due: Paid', feeTile(null, '2026-11-07').value === 'Paid' && !feeTile(null, null).overdue);
+  h.check('§9b no today known: never called overdue', !feeTile({ amount: 1, due_date: '2026-10-20' }, null).overdue);
 
   // §10 what is sent
   const none = checkInBody({ enrollmentId: 'e', fix: null, platform: 'ios' });
