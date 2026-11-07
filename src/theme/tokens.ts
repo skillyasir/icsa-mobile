@@ -46,6 +46,11 @@ export type Palette = {
   attention: string;
   attentionPressed: string;
   onAttention: string;
+  // Solid green: the one-tap Present for a teacher (brand green, darkened to
+  // carry white text at 4.5:1).
+  success: string;
+  successPressed: string;
+  onSuccess: string;
 };
 
 export const palettes: Record<ColorScheme, Palette> = {
@@ -78,6 +83,9 @@ export const palettes: Record<ColorScheme, Palette> = {
     attention: brand.yellow,
     attentionPressed: '#E0A800',
     onAttention: '#0F172A',
+    success: '#15803D',
+    successPressed: '#166534',
+    onSuccess: '#FFFFFF',
   },
   dark: {
     background: '#0B1220',
@@ -108,6 +116,9 @@ export const palettes: Record<ColorScheme, Palette> = {
     attention: brand.yellow,
     attentionPressed: '#E0A800',
     onAttention: '#0F172A',
+    success: '#15803D',
+    successPressed: '#166534',
+    onSuccess: '#FFFFFF',
   },
 };
 

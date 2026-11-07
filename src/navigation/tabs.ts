@@ -51,7 +51,7 @@ export const TABS: Record<Experience, TabDef[]> = {
     ME,
   ],
   teacher: [
-    { name: 'index', label: 'Today', sf: 'calendar', md: 'today', phase: 2,
+    { name: 'index', label: 'Today', sf: 'calendar', md: 'today', phase: 2, built: true,
       soon: "Check-ins waiting for you, and today's classes." },
     { name: 'classes', label: 'Classes', sf: { default: 'person.3', selected: 'person.3.fill' }, md: 'groups', phase: 2,
       soon: 'Your classes and each student’s progress.' },

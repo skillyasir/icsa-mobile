@@ -8,7 +8,8 @@ import { AppText } from './AppText';
 
 /**
  * A tab screen: safe area, scrolls, large title like the iOS large-title style.
- * Pass onRefresh for pull-to-refresh; `top` sits above the title (a back link).
+ * Pass onRefresh for pull-to-refresh; `top` sits above the title (a back link);
+ * `footer` stays below the scrolling part (a Save button).
  */
 export function Screen({
   title,
@@ -16,6 +17,7 @@ export function Screen({
   top,
   refreshing = false,
   onRefresh,
+  footer,
   children,
 }: {
   title: string;
@@ -23,11 +25,14 @@ export function Screen({
   top?: ReactNode;
   refreshing?: boolean;
   onRefresh?: () => void;
+  footer?: ReactNode;
   children: ReactNode;
 }) {
   const t = useAppTheme();
   return (
-    <SafeAreaView edges={['top']} style={[styles.fill, { backgroundColor: t.colors.background }]}>
+    // A screen with a footer is pushed over the tabs (no tab bar), so the
+    // footer keeps clear of the home indicator itself.
+    <SafeAreaView edges={footer ? ['top', 'bottom'] : ['top']} style={[styles.fill, { backgroundColor: t.colors.background }]}>
       <ScrollView
         contentContainerStyle={[styles.content, { padding: t.space.xl, gap: t.space.lg }]}
         refreshControl={onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.colors.textSubtle} /> : undefined}
@@ -45,6 +50,16 @@ export function Screen({
         </View>
         {children}
       </ScrollView>
+      {footer ? (
+        <View
+          style={[
+            styles.footer,
+            { borderTopColor: t.colors.border, backgroundColor: t.colors.surface, padding: t.space.lg, gap: t.space.sm },
+          ]}
+        >
+          {footer}
+        </View>
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -74,4 +89,5 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   content: { paddingBottom: 40 },
   card: { borderWidth: 1 },
+  footer: { borderTopWidth: 1 },
 });

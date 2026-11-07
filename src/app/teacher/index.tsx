@@ -1,5 +1,6 @@
-import { TabPlaceholder } from '@/navigation/TabPlaceholder';
+import { TodayScreen } from '@/teacher/TodayScreen';
 
+// Tab: teacher/index
 export default function TeacherHome() {
-  return <TabPlaceholder experience="teacher" name="index" />;
+  return <TodayScreen />;
 }
