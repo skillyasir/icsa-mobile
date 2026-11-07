@@ -4,6 +4,7 @@ import {
   MESSAGES,
   REFRESH_TOKEN_KEY,
   SessionClient,
+  failureOfAnswer,
   type FetchLike,
   type TokenStore,
 } from './session.ts';
@@ -400,6 +401,29 @@ async function main(h: Harness) {
     const t0 = Date.now();
     const off = await client.publicGet('/mobile/config');
     h.check('§16 no answer → offline, quickly, and the sign-in is untouched', !off.ok && off.failure.kind === 'offline' && Date.now() - t0 < 1000 && store.data.size === 1 && ended.length === 0);
+  }
+
+  // §17 a token for a file transfer (an upload or a download, 7 Nov 2026):
+  // renewed when due, exactly as request() would, and the same failure when
+  // the renewal is refused
+  {
+    const { client, ams } = setup();
+    await client.signIn(staff);
+    const t1 = await client.token();
+    h.check('§17 signed in → the current access token', t1.ok && t1.value.startsWith('acc-'));
+    const before = ams.count('/mobile/session/refresh');
+    ams.clock += 13 * 60_000;
+    const t2 = await client.token();
+    h.check('§17 when it is due, it is renewed first', t2.ok && t2.value !== (t1.ok ? t1.value : '') && ams.count('/mobile/session/refresh') === before + 1);
+    ams.faults.set('/mobile/session/refresh', { status: 401, json: { code: 'SESSION_REVOKED', error: 'Your password was changed. Please sign in again with the new password.' } });
+    ams.clock += 13 * 60_000;
+    const t3 = await client.token();
+    h.check('§17 a refused renewal is that failure, in the AMS\'s words', !t3.ok && t3.failure.kind === 'signed_out' && t3.failure.message.startsWith('Your password was changed'));
+  }
+  {
+    const f = failureOfAnswer(400, { error: 'A valid amount is required' });
+    h.check('§17 an upload\'s refusal reads like any other: the AMS\'s words', f.kind === 'refused' && f.message === 'A valid amount is required' && f.status === 400);
+    h.check('§17 no answer at all is offline', failureOfAnswer(0, {}).kind === 'offline');
   }
 }
 

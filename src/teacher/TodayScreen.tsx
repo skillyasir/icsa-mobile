@@ -249,11 +249,13 @@ export function TodayScreen() {
         <Tile
           n={queue.data ? String(queue.data.total_pending ?? 0) : queue.failure ? '—' : '…'}
           label="assignments to check"
+          onPress={() => router.navigate('/teacher/assignments')}
         />
         <Tile
           n={classes.data ? String(stuckStudents(classes.data)) : classes.failure ? '—' : '…'}
           label="students stuck"
           alert={!!classes.data && stuckStudents(classes.data) > 0}
+          onPress={() => router.navigate('/teacher/classes')}
         />
       </View>
     </Screen>
@@ -338,17 +340,22 @@ function ClassRow({ s, onMark }: { s: Session; onMark: () => void }) {
   );
 }
 
-function Tile({ n, label, alert = false }: { n: string; label: string; alert?: boolean }) {
+function Tile({ n, label, alert = false, onPress }: { n: string; label: string; alert?: boolean; onPress: () => void }) {
   const t = useAppTheme();
   return (
-    <View style={[styles.tile, { backgroundColor: t.colors.surface, borderColor: t.colors.border, borderRadius: t.radius.lg }]}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${n} ${label}`}
+      onPress={onPress}
+      style={({ pressed }) => [styles.tile, { backgroundColor: pressed ? t.colors.surfaceMuted : t.colors.surface, borderColor: t.colors.border, borderRadius: t.radius.lg }]}
+    >
       <AppText variant="title" color={alert ? 'onDangerSoft' : 'text'}>
         {n}
       </AppText>
       <AppText variant="caption" color="textSubtle">
         {label}
       </AppText>
-    </View>
+    </Pressable>
   );
 }
 

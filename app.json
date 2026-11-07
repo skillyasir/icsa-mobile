@@ -51,6 +51,14 @@
         }
       ],
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "ICSA opens your photos only when you choose a payment proof to send.",
+          "cameraPermission": "ICSA uses the camera only when you take a photo of a payment proof.",
+          "microphonePermission": false
+        }
+      ],
+      [
         "react-native-maps",
         {
           "androidGoogleMapsApiKey": "AIzaSyDA2Ol6w8GmxMVQayTf4eTChvxsU9i4bkk"
@@ -69,7 +77,8 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true,

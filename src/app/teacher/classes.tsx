@@ -1,5 +1,6 @@
-import { TabPlaceholder } from '@/navigation/TabPlaceholder';
+import { ClassesScreen } from '@/teacher/ClassesScreen';
 
+// Tab: teacher/classes
 export default function TeacherClasses() {
-  return <TabPlaceholder experience="teacher" name="classes" />;
+  return <ClassesScreen />;
 }

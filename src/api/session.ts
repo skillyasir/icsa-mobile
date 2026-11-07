@@ -119,6 +119,11 @@ const errorText = (json: Record<string, unknown>) => (typeof json.error === 'str
 const codeOf = (json: Record<string, unknown>) => (typeof json.code === 'string' ? json.code : undefined);
 
 /** A server answer that is not a success, as a Failure. `refused` is what a 4xx means for this call. */
+/** The same reading of a refusal, for a transfer made outside request() (an upload). */
+export function failureOfAnswer(status: number, json: Record<string, unknown>): Failure {
+  return failureOf({ status, json }, 'refused');
+}
+
 function failureOf(a: Answer, refusedKind: FailureKind): Failure {
   if (a.status === 0) return { kind: 'offline', message: MESSAGES.offline };
   const code = codeOf(a.json);
@@ -329,6 +334,19 @@ export class SessionClient {
     }
     if (a.status >= 200 && a.status < 300) return ok(a.json as T);
     return fail(failureOf(a, 'refused'));
+  }
+
+  /**
+   * A current access token, for a transfer the JSON wire cannot carry — a file
+   * upload (multipart) or download. Renewed first when due, exactly as
+   * request() does; a refused renewal is the same failure.
+   */
+  async token(): Promise<Outcome<string>> {
+    if (!this.access || this.access.expiresAt - this.d.now() < REFRESH_MARGIN_MS) {
+      const r = await this.refresh();
+      if (!r.ok) return fail(r.failure);
+    }
+    return this.access ? ok(this.access.token) : fail({ kind: 'signed_out', message: MESSAGES.signed_out });
   }
 
   /** An AMS call that needs no sign-in (the app's config, S4). Never sends a token. */

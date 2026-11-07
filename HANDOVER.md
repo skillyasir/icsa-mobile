@@ -168,10 +168,24 @@ Rough sizes for one developer working with Claude; they move with the decisions 
   - **Not tested:** Confirm all (needs two waiting), **Mark class** (needs a day with a batch class), a check-in awaiting review on Today, another day (read_only).
   - **Not built, on purpose:** the mockup's individual-class rows ("6:30 PM · Individual · 2 students") — staff-context has no today's-individual-classes list; walk-ins appear in Waiting for you when they check in.
 
+- **Yasir ruled, 7 Nov 2026: build in bunches, then test together** — "instead of asking me again and again we should do all or atleast a bunch and then check". So pieces are built several at a time without a question between them, and tested in one run.
+
+- **Bunch 1 (7 Nov 2026) — Check assignments, Classes, student Fees + payment proof** (mockups 07 and 04). No AMS change: the review queue, submissions, review, my-classes, the student fees, `payment-proofs/mine` and `POST /payment-proofs` are all open already (the three student paths are in STUDENT_ALLOWLIST).
+  - **Teacher › Assignments** (a stack): the review queue, then each assignment's submissions; To check / Returned / All, oldest waiting first. A submission opens with its file (downloaded with the sign-in, then shown or shared), a score out of the assignment's points, a comment, **Return to redo** or **Mark reviewed** — the AMS's `needs_revision` / `approved`. Read-only when the AMS says the teacher cannot grade it.
+  - **Teacher › Classes:** the students who need you (stuck, failing a quiz, to mark, not started — progressService's own words), then each class with its average and chips.
+  - **Today's two figures are tappable** — assignments to check opens Assignments, students stuck opens Classes.
+  - **Student › Fees** (a stack): per course the fee, paid and balance **as the AMS computes them** (never added up in the app), the instalments marked paid / part paid / overdue / due, and the proofs sent (a rejected one shows reception's reason).
+  - **Upload payment proof:** take a photo or choose one, the course (asked only when more than one has a balance), the amount (the next instalment's remainder, editable), a note. Shrunk as the website does (1600 px, 0.85, then 0.7) to the AMS's 500 KB. **Sent once per tap, never queued or retried** — a proof is a request reception confirms, and a second copy is a second request.
+  - **Packages:** `expo-image-picker` ~58.0.10 (camera and photos; the microphone is removed from the build), `expo-image-manipulator` ~58.0.16, `expo-file-system` ~58.0.13, `expo-sharing` ~58.0.21. **New native modules: a rebuild is needed** (For You). The image picker caps the storage permissions at Android 12 and older (`maxSdkVersion 32`).
+  - **Session:** `ams.token()` (a fresh access token for a file download or an upload) and `failureOfAnswer` (the same words for a refused upload as for any refused request); `session.check.ts` §17.
+  - **Checks:** `assignments.check.ts` 27, `classes.check.ts` 22, `fees.check.ts` 37 hold the endpoints, field names, statuses and words to the AMS's own; planted defects in each were caught.
+  - **Not tested yet:** all of it, on a phone (For You).
+
 ### Deferred — raise when the current piece is done
 
 - **Continue learning on Home is not tappable yet** — it opens the lesson once the Learn tab is built.
-- **Android permissions from Expo's defaults** — the build asks for `SYSTEM_ALERT_WINDOW` and `READ`/`WRITE_EXTERNAL_STORAGE`, which the app does not use. Remove them (`android.blockedPermissions`) before the Play listing; Play asks about each one.
+- **Android permissions from Expo's defaults** — the build asks for `SYSTEM_ALERT_WINDOW`, which the app does not use. Remove it (`android.blockedPermissions`) before the Play listing; Play asks about each one. `READ`/`WRITE_EXTERNAL_STORAGE` are now the image picker's, for Android 12 and older only (7 Nov 2026) — keep them.
+- **AMS, found 7 Nov 2026, not fixed:** `POST /payment-proofs` does not check that the `enrollment_id` it is sent is the student's own. Approving such a proof finds no fee plan and records the payment with no schedule. The app only ever sends the student's own enrolments; the AMS should refuse another's.
 - **Staff attendance module (Yasir, 4 Nov 2026):** ICSA staff will clock in their **own** working day. It does not exist in the AMS today (attendance there is students only, marked by teachers and supervisors). It needs a new AMS module first, then app screens. Daily clock-in works with the 30-day sign-in (no daily sign-in). Open questions for then: location at clock-in only, like students (arrival reminders are students-only today); who sees and corrects staff records.
 
 ### Platform order — Yasir ruled, 4 Nov 2026
