@@ -163,6 +163,11 @@ Rough sizes for one developer working with Claude; they move with the decisions 
   - **Starting the app: `npm run ios` / `npm run android` (= `npx expo run:…`), never `npx expo start` + `i`/`a`.** There is no expo-dev-client, so `expo start` targets **Expo Go**, which lacks this app's native modules — found 7 Nov 2026 as "RNGoogleSignin could not be found" on both phones. `run:` opens ICSA's own build, starts Metro (or reuses one on 8081) and links the Android emulator (`adb reverse`) itself.
   - **No Features › Location in this Simulator:** set the position with **Run on Mac:** `xcrun simctl location booted set 29.1462787,48.1249043` (Mahboula; Kuwait City is 29.3632516,47.9640249; both 1000 m).
 
+- **Piece 2 — the teacher's Today and Mark class** (Yasir chose it, 7 Nov 2026; mockups 05 and 06), `d35e2d2`. No AMS change: staff-context, individual confirm, confirm-present, session confirm, the review queue and my-classes are all open to a teacher already.
+  - ✅ **Tested 7 Nov 2026 on the iPhone simulator, signed in as Sameer Salim Malim (Yasir's choice):** Waiting for you with a real walk-in; **Present** on test22's check-in (moved back to Sameer from test22's phone with Wrong teacher? Change) — it moved to Marked today as Present; "No batch classes today" (a Saturday); the two figures: 2 assignments to check, 10 students stuck.
+  - **Not tested:** Confirm all (needs two waiting), **Mark class** (needs a day with a batch class), a check-in awaiting review on Today, another day (read_only).
+  - **Not built, on purpose:** the mockup's individual-class rows ("6:30 PM · Individual · 2 students") — staff-context has no today's-individual-classes list; walk-ins appear in Waiting for you when they check in.
+
 ### Deferred — raise when the current piece is done
 
 - **Continue learning on Home is not tappable yet** — it opens the lesson once the Learn tab is built.
