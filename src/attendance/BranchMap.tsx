@@ -61,11 +61,19 @@ export function BranchMap({ branches, focus, fix }: { branches: Branch[]; focus:
           />
         ))}
         {branches.map((b) => (
-          <Marker key={'m' + b.id} coordinate={{ latitude: b.latitude, longitude: b.longitude }} anchor={{ x: 0.5, y: 0.5 }}>
-            <View style={[styles.badge, { backgroundColor: t.colors.primary, borderRadius: t.radius.sm }]}>
-              <AppText variant="label" color="onPrimary">
-                ICSA
-              </AppText>
+          // With the student's dot on the map, the badge stands above the branch
+          // point like a pin, so the dot never covers it (iPhone, 7 Nov 2026).
+          <Marker
+            key={'m' + b.id}
+            coordinate={{ latitude: b.latitude, longitude: b.longitude }}
+            anchor={fix ? { x: 0.5, y: 1 } : { x: 0.5, y: 0.5 }}
+          >
+            <View style={fix ? styles.lift : undefined}>
+              <View style={[styles.badge, { backgroundColor: t.colors.primary, borderRadius: t.radius.sm }]}>
+                <AppText variant="label" color="onPrimary">
+                  ICSA
+                </AppText>
+              </View>
             </View>
           </Marker>
         ))}
@@ -89,6 +97,7 @@ export function BranchMap({ branches, focus, fix }: { branches: Branch[]; focus:
 const styles = StyleSheet.create({
   frame: { height: 220, overflow: 'hidden', borderWidth: 1 },
   badge: { paddingHorizontal: 8, paddingVertical: 6 },
+  lift: { paddingBottom: 20 },
   halo: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   dot: { width: 16, height: 16, borderRadius: 8, borderWidth: 3 },
   label: { position: 'absolute', left: 12, bottom: 12, maxWidth: '85%', paddingHorizontal: 12, paddingVertical: 6 },
