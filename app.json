@@ -25,7 +25,9 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "us.icsa.app"
+      "package": "us.icsa.app",
+      "versionCode": 1,
+      "blockedPermissions": ["android.permission.SYSTEM_ALERT_WINDOW"]
     },
     "plugins": [
       "expo-router",
@@ -53,8 +55,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "ICSA opens your photos only when you choose a payment proof to send.",
-          "cameraPermission": "ICSA uses the camera only when you take a photo of a payment proof.",
+          "photosPermission": "ICSA opens your photos only when you choose a payment proof or your assignment to send.",
+          "cameraPermission": "ICSA uses the camera only when you take a photo of a payment proof or your assignment.",
           "microphonePermission": false
         }
       ],
@@ -78,7 +80,8 @@
           "imageWidth": 76
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      "./plugins/withReleaseSigning"
     ],
     "experiments": {
       "typedRoutes": true,

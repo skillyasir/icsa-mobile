@@ -5,6 +5,7 @@ web-build/
 ios/
 android/
 *.jks
+*.keystore
 *.p8
 *.p12
 *.key
