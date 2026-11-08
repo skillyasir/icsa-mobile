@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { readAmsFile } from '../../scripts/ams.ts';
+import { amsFirewallAdmits, readAmsFile } from '../../scripts/ams.ts';
 import { run } from '../../scripts/check-harness.ts';
 
 import {
@@ -27,23 +27,20 @@ import {
 
 const strip = (s: string) => s.replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1').replace(/\/\*[\s\S]*?\*\//g, '');
 const body = (src: string, name: string) => new RegExp(`const ${name} = async[\\s\\S]*?\\n};`).exec(src)?.[0] ?? '';
-function firewallAdmits(fw: string, method: string, path: string): boolean {
-  const entries = [...fw.matchAll(/\{\s*method:\s*'([A-Z]+)',\s*path:\s*'([^']+)'\s*\}/g)].map((m) => ({ method: m[1], path: m[2] }));
-  return entries.some((e) => e.method === method && (e.path.endsWith('*') ? path.startsWith(e.path.slice(0, -1)) : e.path === path));
-}
 const concrete = (p: string) => '/api' + p.replace(/:[A-Za-z_]\w*/g, '0b1c');
 
 run('assignment.check — a student\'s assignment agrees with the AMS', (h) => {
+  const admits = amsFirewallAdmits();
+  h.check('§0 the AMS firewall matcher admits a student path and refuses a staff one', admits('GET', '/api/auth/student/assignments/x') && !admits('GET', '/api/assignments/review-queue'));
   h.check('§0 body() finds a function and stops at its end', body('const a = async (x) => {\n  y;\n};\nconst b = 1;', 'a') === 'const a = async (x) => {\n  y;\n};');
 
   // §1 routed, and open to a student
-  const fw = strip(readAmsFile('server/src/middleware/studentFirewall.js'));
   const authR = strip(readAmsFile('server/src/routes/auth.js'));
   const idx = strip(readAmsFile('server/src/index.js'));
-  h.check('§1 the AMS files were read', fw.length > 1500 && authR.length > 1000 && idx.length > 10000);
+  h.check('§1 the AMS files were read', authR.length > 1000 && idx.length > 10000);
   const eps = Object.values(STUDENT_ASSIGNMENT_API);
   h.check('§1 five endpoints (floor)', eps.length === 5);
-  for (const e of eps) h.check(`§1 ${e.method} /api${e.path} is in the student firewall`, firewallAdmits(fw, e.method, concrete(e.path)));
+  for (const e of eps) h.check(`§1 ${e.method} /api${e.path} is in the student firewall`, admits(e.method, concrete(e.path)));
   h.check('§1 the student routes: one, submit, comments', /router\.get\('\/student\/assignments\/:id', auth, assignCtrl\.getMyAssignment\);/.test(authR)
     && /router\.post\('\/student\/assignments\/:id\/submit', auth, assignCtrl\.submitAssignment\);/.test(authR)
     && /router\.get\('\/student\/assignments\/submissions\/:submissionId\/comments', auth, assignCtrl\.listComments\);/.test(authR)

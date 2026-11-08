@@ -189,8 +189,8 @@ export type Line = {
   sub: string;
   badge: { text: string; tone: Tone } | null;
   done: boolean;
-  /** Only an assignment opens in the app today; lessons and quizzes need the lesson player (next bunch). */
-  opens: boolean;
+  /** An assignment opens in the app's own screen; a lesson or a quiz as the website's page (Yasir ruled, 8 Nov 2026 — webPage.ts). */
+  opens: 'assignment' | 'page';
 };
 
 export const SUBMISSION_STATUS: Record<string, { text: string; tone: Tone }> = {
@@ -210,7 +210,7 @@ export function lineOf(it: Item, day: (v: string) => string): Line {
       sub: grade == null ? 'Assignment' : `Assignment · Grade ${grade}`,
       badge: it.assignment_status ? (SUBMISSION_STATUS[it.assignment_status] ?? { text: it.assignment_status, tone: 'muted' }) : { text: 'To do', tone: 'muted' },
       done: !!it.assignment_status,
-      opens: true,
+      opens: 'assignment',
     };
   }
   if (it.item_type === 'quiz') {
@@ -225,7 +225,7 @@ export function lineOf(it: Item, day: (v: string) => string): Line {
       sub: head + (used ? ` · ${used} attempt${used === 1 ? '' : 's'}` : ''),
       badge: best == null ? null : { text: `${best}%`, tone: it.quiz_passed ? 'success' : 'warning' },
       done: used > 0,
-      opens: false,
+      opens: 'page',
     };
   }
   const done = !!it.completed_at;
@@ -242,6 +242,6 @@ export function lineOf(it: Item, day: (v: string) => string): Line {
     sub: done && it.completed_at ? `Completed ${day(it.completed_at)}` : meta.join(' · '),
     badge: null,
     done,
-    opens: false,
+    opens: 'page',
   };
 }

@@ -114,7 +114,14 @@ export function HomeScreen() {
           <Pressable
             accessibilityRole="button"
             disabled={!resume.resume_subject_id}
-            onPress={() => resume.resume_subject_id && router.push({ pathname: '/student/learn/subject', params: { subject: resume.resume_subject_id } })}
+            onPress={() =>
+              resume.resume_subject_id &&
+              router.push(
+                resume.resume_lesson_id
+                  ? { pathname: '/student/learn/open', params: { subject: resume.resume_subject_id, item: resume.resume_lesson_id, title: resume.resume_lesson_title ?? '' } }
+                  : { pathname: '/student/learn/subject', params: { subject: resume.resume_subject_id } },
+              )
+            }
             style={({ pressed }) => pressed && { opacity: 0.7 }}
           >
             <Card>

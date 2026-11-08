@@ -1,4 +1,4 @@
-import { readAmsFile } from '../../scripts/ams.ts';
+import { amsFirewallAdmits, readAmsFile } from '../../scripts/ams.ts';
 import { run } from '../../scripts/check-harness.ts';
 
 import { formatDay } from '../attendance/rules.ts';
@@ -24,11 +24,6 @@ import {
 const strip = (s: string) => s.replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1').replace(/\/\*[\s\S]*?\*\//g, '');
 const body = (src: string, name: string) => new RegExp(`const ${name} = async[\\s\\S]*?\\n};`).exec(src)?.[0] ?? '';
 
-/** The AMS firewall's own matcher: an exact path, or a prefix that ends in '*'. */
-function firewallAdmits(fw: string, method: string, path: string): boolean {
-  const entries = [...fw.matchAll(/\{\s*method:\s*'([A-Z]+)',\s*path:\s*'([^']+)'\s*\}/g)].map((m) => ({ method: m[1], path: m[2] }));
-  return entries.some((e) => e.method === method && (e.path.endsWith('*') ? path.startsWith(e.path.slice(0, -1)) : e.path === path));
-}
 const concrete = (p: string) => '/api' + p.replace(/:[A-Za-z_]\w*/g, '0b1c');
 
 const item = (over: Partial<Item>): Item => ({
@@ -50,16 +45,17 @@ const item = (over: Partial<Item>): Item => ({
 
 run('learn.check — the student Learn tab agrees with the AMS', (h) => {
   h.check('§0 body() finds a function and stops at its end', body('const a = async (x) => {\n  y;\n};\nconst b = 1;', 'a') === 'const a = async (x) => {\n  y;\n};');
-  h.check('§0 the firewall matcher: a prefix admits, an exact entry does not', firewallAdmits("{ method: 'GET', path: '/api/a/*' } { method: 'GET', path: '/api/b' }", 'GET', '/api/a/1/x') && !firewallAdmits("{ method: 'GET', path: '/api/b' }", 'GET', '/api/b/1') && !firewallAdmits("{ method: 'GET', path: '/api/a/*' }", 'POST', '/api/a/1'));
+  // The AMS's own firewall matcher (scripts/ams.ts amsFirewallAdmits), proved on known answers first.
+  const admits = amsFirewallAdmits();
+  h.check('§0 the AMS firewall matcher admits a student path and refuses a staff one', admits('GET', '/api/auth/student/courses/x/subjects') && !admits('GET', '/api/students') && !admits('POST', '/api/auth/student/courses'));
 
   // §1 routed, and open to a student
-  const fw = strip(readAmsFile('server/src/middleware/studentFirewall.js'));
   const authR = strip(readAmsFile('server/src/routes/auth.js'));
-  h.check('§1 the AMS files were read', fw.length > 1500 && authR.length > 1000);
+  h.check('§1 the AMS files were read', authR.length > 1000);
   const eps = Object.entries(LEARN_API);
   h.check('§1 five endpoints (floor)', eps.length === 5);
   for (const [, e] of eps) {
-    h.check(`§1 ${e.method} /api${e.path} is in the student firewall`, firewallAdmits(fw, e.method, concrete(e.path)));
+    h.check(`§1 ${e.method} /api${e.path} is in the student firewall`, admits(e.method, concrete(e.path)));
     const route = e.path.replace(/^\/auth/, '');
     h.check(`§1 ${e.method} ${route} is routed`, new RegExp(`router\\.${e.method.toLowerCase()}\\('${route.replace(/\//g, '\\/')}',\\s+auth,`).test(authR));
   }
@@ -120,9 +116,9 @@ run('learn.check — the student Learn tab agrees with the AMS', (h) => {
   h.check('§3 …"Quiz not taken yet"', lineOf(item({ interactive: { started: true, basis: 'quiz', taken: false } }), formatDay).sub === 'Quiz not taken yet' && /"Quiz not taken yet"/.test(web));
   h.check('§3 a completed lesson says when', lineOf(item({ completed_at: '2026-11-05T21:00:00.000Z' }), formatDay).sub === 'Completed 6 Nov 2026');
   const as = lineOf(item({ item_type: 'assignment', kind: 'assignment', assignment_status: 'approved', assignment_grade: '80' }), formatDay);
-  h.check('§3 an assignment: its grade and status, and it opens', as.sub === 'Assignment · Grade 80' && as.badge?.text === 'Approved' && as.opens);
+  h.check('§3 an assignment: its grade and status, and it opens in the app\'s screen', as.sub === 'Assignment · Grade 80' && as.badge?.text === 'Approved' && as.opens === 'assignment');
   h.check('§3 …not handed in: "To do"', lineOf(item({ item_type: 'assignment', kind: 'assignment' }), formatDay).badge?.text === 'To do');
-  h.check('§3 lessons and quizzes do not open yet (the lesson player is the next bunch)', !lineOf(item({}), formatDay).opens && !q.opens && !fx.opens);
+  h.check('§3 a lesson, a quiz and the final exam open as the website\'s page (Yasir ruled, 8 Nov 2026)', lineOf(item({}), formatDay).opens === 'page' && q.opens === 'page' && fx.opens === 'page');
 
   // §4 chapters, the website's groupIntoChapters
   h.check('§4 the website groups by label', /if \(it\.kind === "label"\) \{/.test(web) && /let current = \{ id: "__lead__", title: null, lessons: \[\] \};/.test(web));

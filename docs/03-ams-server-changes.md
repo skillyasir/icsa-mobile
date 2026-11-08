@@ -85,7 +85,7 @@ Order = the order the app needs them.
 ## S7 — Student firewall lines
 
 - With S2/S3: the session, push-token and notifications paths.
-- **A defect found on 3 Nov 2026 while preparing this:** `{ method: 'GET', path: '/api/auth/student/typing/:lessonId/attempts' }` — the matcher compares exact strings (or prefixes ending in `*`), so a literal `:lessonId` never matches a real request and **students get a 403 on their typing history today**. Fix: `'/api/auth/student/typing/*'`. Not fixed yet — it is a web bug too; raise it with Yasir as its own change.
+- **A defect found on 3 Nov 2026 while preparing this:** `{ method: 'GET', path: '/api/auth/student/typing/:lessonId/attempts' }` — the matcher compares exact strings (or prefixes ending in `*`), so a literal `:lessonId` never matches a real request and **students get a 403 on their typing history today**. ✅ **Fixed in the AMS on 8 Nov 2026 (`2d2e6f0`, the other session):** the matcher now reads `:name` as exactly one path part, and `student-firewall.check.js` holds every entry to a real route. The app's checks run that matcher itself (`scripts/ams.ts amsFirewallAdmits`).
 
 ## S8 — Cloudflare
 

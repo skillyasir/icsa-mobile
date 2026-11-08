@@ -17,8 +17,8 @@ import { LEARN_API, chaptersOf, lineOf, type Line, type SubjectLessons } from '.
 
 // One subject (built 8 Nov 2026): its chapters, and in each the lessons,
 // quizzes and assignments in the teacher's order, with where the student is.
-// An assignment opens here; lessons and quizzes need the lesson player, which
-// is the next bunch — until then they are listed, not opened.
+// An assignment opens in the app's own screen; a lesson or a quiz opens as the
+// website's own page (Yasir ruled, 8 Nov 2026 — LessonWebScreen).
 
 const MARK: Record<Line['kind'], { glyph: string; bg: keyof Palette; fg: keyof Palette }> = {
   lesson: { glyph: '○', bg: 'surfaceMuted', fg: 'textMuted' },
@@ -36,7 +36,6 @@ export function SubjectScreen() {
   const d = data.data;
   const chapters = d ? chaptersOf(d.lessons) : [];
   const pct = d && d.progress.total ? Math.round((d.progress.completed / d.progress.total) * 100) : 0;
-  const hasLocked = !!d?.lessons.some((i) => i.item_type === 'lesson' || i.item_type === 'quiz');
 
   const back = (
     <Pressable accessibilityRole="link" hitSlop={12} style={styles.back} onPress={() => (router.canGoBack() ? router.back() : router.replace('/student/learn'))}>
@@ -96,38 +95,31 @@ export function SubjectScreen() {
                     ) : null}
                   </View>
                   {l.badge ? <Pill text={l.badge.text} tone={l.badge.tone} /> : null}
-                  {l.opens ? (
-                    <AppText variant="headline" color="textMuted">
-                      ›
-                    </AppText>
-                  ) : null}
+                  <AppText variant="headline" color="textMuted">
+                    ›
+                  </AppText>
                 </>
               );
               const style = [styles.row, i > 0 && { borderTopWidth: 1, borderTopColor: t.colors.border }];
-              return l.opens ? (
+              return (
                 <Pressable
                   key={it.id}
                   accessibilityRole="button"
-                  onPress={() => router.push({ pathname: '/student/learn/assignment', params: { id: it.id } })}
+                  onPress={() =>
+                    l.opens === 'assignment'
+                      ? router.push({ pathname: '/student/learn/assignment', params: { id: it.id } })
+                      : router.push({ pathname: '/student/learn/open', params: { subject: subject ?? '', item: it.id, title: l.title } })
+                  }
                   style={({ pressed }) => [...style, pressed && { backgroundColor: t.colors.surfaceMuted }]}
                 >
                   {row}
                 </Pressable>
-              ) : (
-                <View key={it.id} style={style}>
-                  {row}
-                </View>
               );
             })}
           </View>
         </View>
       ))}
 
-      {hasLocked ? (
-        <AppText variant="caption" color="textSubtle">
-          Assignments open here. Lessons and quizzes open in the app in the next update — until then, open them on the ICSA website.
-        </AppText>
-      ) : null}
     </Screen>
   );
 }

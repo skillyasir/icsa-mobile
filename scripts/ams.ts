@@ -21,3 +21,22 @@ export function readAmsFile(rel: string): string {
   }
   return readFileSync(p, 'utf8');
 }
+
+/**
+ * The AMS student firewall's OWN matcher, run here: its allowlist entries and
+ * its pathMatches function, both read from studentFirewall.js (8 Nov 2026 —
+ * when the AMS taught ':name' to match one path part, a copy of the old
+ * matcher in a check would have gone on answering the old question). A file
+ * without the function is a COULD NOT RUN, never a guess.
+ */
+export function amsFirewallAdmits(): (method: string, path: string) => boolean {
+  const raw = readAmsFile('server/src/middleware/studentFirewall.js');
+  const src = raw.replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1');
+  const fn = /function pathMatches\(entryPath, path\) \{[\s\S]*?\n\}/.exec(src)?.[0];
+  if (!fn) throw new Error('the AMS firewall has no pathMatches function — is the AMS copy older than 8 Nov 2026?');
+  const pathMatches = new Function(`${fn}; return pathMatches;`)() as (entry: string, path: string) => boolean;
+  const list = /const STUDENT_ALLOWLIST = \[([\s\S]*?)\n\];/.exec(src)?.[1] ?? '';
+  const entries = [...list.matchAll(/\{\s*method:\s*'([A-Z]+)',\s*path:\s*'([^']+)'\s*\}/g)].map((m) => ({ method: m[1], path: m[2] }));
+  if (entries.length < 30) throw new Error(`the AMS firewall's allowlist read as ${entries.length} entries`);
+  return (method, path) => entries.some((e) => e.method === method && pathMatches(e.path, path));
+}
