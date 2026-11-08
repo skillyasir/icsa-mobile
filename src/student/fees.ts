@@ -82,9 +82,15 @@ export function instalmentLine(
   kd: (v: number | string) => string,
 ): { state: 'paid' | 'partial' | 'overdue' | 'due'; text: string } {
   if (it.status === 'paid') return { state: 'paid', text: 'Paid' };
-  if (it.status === 'partial') return { state: 'partial', text: `Part paid: ${kd(it.paid_amount)} of ${kd(it.scheduled_amount)} · due ${day(it.due_date)}` };
   const d = kuwaitDay(it.due_date);
-  if (d && d < today) return { state: 'overdue', text: `Overdue since ${day(it.due_date)}` };
+  const late = !!d && d < today;
+  // Part paid and past its date is overdue, in red (Yasir, 8 Nov 2026) — the
+  // AMS's own word stays "partial", so it is said as both.
+  if (it.status === 'partial') {
+    const part = `Part paid: ${kd(it.paid_amount)} of ${kd(it.scheduled_amount)}`;
+    return late ? { state: 'overdue', text: `${part} · overdue since ${day(it.due_date)}` } : { state: 'partial', text: `${part} · due ${day(it.due_date)}` };
+  }
+  if (late) return { state: 'overdue', text: `Overdue since ${day(it.due_date)}` };
   return { state: 'due', text: `Due ${day(it.due_date)}` };
 }
 

@@ -89,6 +89,12 @@ run('fees.check — the student Fees agree with the AMS', (h) => {
   h.check('§5 overdue', line(it({ due_date: '2026-10-20' })).state === 'overdue' && line(it({ due_date: '2026-10-20' })).text === 'Overdue since 20 Oct 2026');
   h.check('§5 due today is not overdue yet', line(it({ due_date: '2026-11-07' })).state === 'due');
   h.check('§5 part paid names both amounts', line(it({ status: 'partial', paid_amount: '30' })).text === 'Part paid: 30.000 of 90.000 · due 10 Nov 2026');
+  // Yasir, 8 Nov 2026: part paid and past its date is overdue (Graphics, 5.000 of 200.000, due 15 Sep 2026).
+  const latePart = line(it({ status: 'partial', paid_amount: '5', scheduled_amount: '200', due_date: '2026-09-15' }));
+  h.check('§5 part paid and past its date is overdue, in red', latePart.state === 'overdue', latePart.state);
+  h.check('§5 …and still names both amounts', latePart.text === 'Part paid: 5.000 of 200.000 · overdue since 15 Sep 2026', latePart.text);
+  h.check('§5 part paid and due today is not overdue yet', line(it({ status: 'partial', paid_amount: '30', due_date: '2026-11-07' })).state === 'partial');
+  h.check('§5 part paid, a DATE as Kuwait midnight in UTC: 7 Nov on 7 Nov is not overdue yet', line(it({ status: 'partial', paid_amount: '30', due_date: '2026-11-06T21:00:00.000Z' })).state === 'partial');
   h.check('§5 the AMS\'s three proof statuses have words', ['pending', 'approved', 'rejected'].every((s) => proofWord({ status: s }).text.length > 5) && /status='rejected'/.test(ctl) && /'pending'/.test(submit));
   h.check('§5 the suggested amount is what is left of the first unpaid instalment',
     suggestedAmount({ id: 'e', enrollment_no: null, status: 'active', course_name: null, net_amount: 350, paid: '260', balance: '90',
