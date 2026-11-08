@@ -1,3 +1,6 @@
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { readAmsFile } from '../../scripts/ams.ts';
 import { run } from '../../scripts/check-harness.ts';
 
@@ -24,6 +27,10 @@ import {
   type StaffContext,
   type WalkIn,
 } from './today.ts';
+import { ATTENDANCE_API } from '../attendance/rules.ts';
+import { FEES_API } from '../student/fees.ts';
+import { ASSIGNMENT_API } from './assignments.ts';
+import { CLASSES_API } from './classes.ts';
 
 // The teacher's Today and Mark class (Phase 2 piece 2, 7 Nov 2026) against the
 // AMS: the endpoints, who may call them, the fields they read, the statuses
@@ -71,6 +78,59 @@ run('teacher/today.check — Today and Mark class agree with the AMS', (h) => {
     h.check(`§1 ${e.method} ${e.path} is routed and a teacher may call it`, teacherMay(m, src));
   }
   h.check('§1 a path parameter is filled and escaped', pathFor(TEACHER_API.confirmSession.path, { session_id: 'a/b' }) === '/attendance/sessions/a%2Fb/confirm');
+
+  // §1b every path the app fills (8 Nov 2026). pathFor matched lowercase and
+  // underscore only, so ':submissionId' became ':submission' + 'Id' and every
+  // review went to /submissions/Id/review. §1 above tested a snake_case name
+  // only — it could not have seen it. Now: a camelCase name; every path in
+  // every API table against an oracle that does not use pathFor's regex; and
+  // every call site's names against its path's.
+  // A throw from pathFor is a FAILED assertion here, never a check that could not run.
+  const fill = (path: string, params: Record<string, string>) => {
+    try {
+      return pathFor(path, params);
+    } catch (err) {
+      return `THREW: ${err instanceof Error ? err.message : String(err)}`;
+    }
+  };
+  h.check('§1b a camelCase parameter is filled whole', fill('/assignments/submissions/:submissionId/review', { submissionId: 'abc' }) === '/assignments/submissions/abc/review', fill('/assignments/submissions/:submissionId/review', { submissionId: 'abc' }));
+  h.check('§1b a name the caller did not give throws (never an empty or partial segment)', fill('/x/:submissionId/y', { submission: 'abc' }).startsWith('THREW'));
+  const TABLES: Record<string, Record<string, { method: string; path: string }>> = { TEACHER_API, ASSIGNMENT_API, ATTENDANCE_API, FEES_API, CLASSES_API };
+  const namesOf = (path: string) => path.split('/').filter((seg) => seg.startsWith(':')).map((seg) => seg.slice(1));
+  const apiPaths = Object.entries(TABLES).flatMap(([t, tab]) => Object.entries(tab).map(([k, v]) => ({ id: `${t}.${k}`, path: v.path })));
+  const withParams = apiPaths.filter((e) => namesOf(e.path).length > 0);
+  h.check('§1b the API tables were read, with parameters (floor)', apiPaths.length >= 15 && withParams.length >= 4, `${apiPaths.length} paths, ${withParams.length} with parameters`);
+  for (const e of withParams) {
+    const names = namesOf(e.path);
+    h.check(`§1b ${e.id}: every parameter name is a whole identifier`, names.every((n) => /^[A-Za-z_][A-Za-z0-9_]*$/.test(n)), names.join());
+    const filled = fill(e.path, Object.fromEntries(names.map((n) => [n, 'V'])));
+    const oracle = e.path.split('/').map((seg) => (seg.startsWith(':') ? 'V' : seg)).join('/');
+    h.check(`§1b ${e.id}: filled whole`, filled === oracle, filled);
+  }
+  // Every call site names exactly its path's parameters.
+  const SRC = new URL('../', import.meta.url).pathname;
+  const files: string[] = [];
+  const walkDir = (d: string) => {
+    for (const f of readdirSync(d)) {
+      const p = join(d, f);
+      if (statSync(p).isDirectory()) walkDir(p);
+      else if (/\.(ts|tsx)$/.test(f) && !/\.check\.ts$/.test(f)) files.push(p);
+    }
+  };
+  walkDir(SRC);
+  const calls: { file: string; table: string; key: string; given: string[] }[] = [];
+  for (const f of files) {
+    const text = strip(readFileSync(f, 'utf8'));
+    for (const m of text.matchAll(/\bpathFor\(\s*([A-Z_]+)\.(\w+)\.path\s*,\s*\{([^}]*)\}\s*\)/g)) {
+      calls.push({ file: f.slice(SRC.length), table: m[1], key: m[2], given: [...m[3].matchAll(/(\w+)\s*:/g)].map((x) => x[1]).sort() });
+    }
+  }
+  const uses = files.reduce((n, f) => n + (strip(readFileSync(f, 'utf8')).match(/\bpathFor\(/g)?.length ?? 0), 0) - 1; // less its definition
+  h.check('§1b every pathFor( call was read in the shape below (floor 5)', calls.length >= 5 && calls.length === uses, `${calls.length} read, ${uses} calls`);
+  for (const c of calls) {
+    const want = namesOf(TABLES[c.table]?.[c.key]?.path ?? '').sort();
+    h.check(`§1b ${c.file}: ${c.table}.${c.key} is given exactly ${want.join(', ') || '(none)'}`, want.length > 0 && JSON.stringify(want) === JSON.stringify(c.given), c.given.join());
+  }
 
   // §2 the fields and statuses the AMS reads
   const ctl = strip(readAmsFile('server/src/controllers/attendanceController.js'));

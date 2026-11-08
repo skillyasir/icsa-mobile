@@ -77,13 +77,19 @@ export function ReviewScreen() {
       return;
     }
     setBusy(outcome);
-    const res = await ams.request('POST', pathFor(ASSIGNMENT_API.review.path, { submissionId: row.id }), b.body);
-    setBusy(null);
-    if (!res.ok) {
-      setMessage({ tone: 'danger', text: res.failure.message });
-      return;
+    try {
+      const res = await ams.request('POST', pathFor(ASSIGNMENT_API.review.path, { submissionId: row.id }), b.body);
+      if (!res.ok) {
+        setMessage({ tone: 'danger', text: res.failure.message });
+        return;
+      }
+      router.back();
+    } catch (err) {
+      console.warn('[review] could not send:', err instanceof Error ? err.message : String(err));
+      setMessage({ tone: 'danger', text: 'The review could not be sent. Nothing was saved — try again.' });
+    } finally {
+      setBusy(null);
     }
-    router.back();
   };
 
   return (
