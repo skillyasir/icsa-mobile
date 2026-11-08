@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+
 import { readAmsFile } from '../../scripts/ams.ts';
 import { run } from '../../scripts/check-harness.ts';
 
@@ -92,4 +94,23 @@ run('fees.check — the student Fees agree with the AMS', (h) => {
     suggestedAmount({ id: 'e', enrollment_no: null, status: 'active', course_name: null, net_amount: 350, paid: '260', balance: '90',
       items: [it({ status: 'paid' }), it({ status: 'partial', scheduled_amount: '140', paid_amount: '50' })] }) === '90.000');
   h.check('§5 nothing unpaid, nothing suggested', suggestedAmount(null) === '');
+
+  // §6 how the proof is SENT (8 Nov 2026). This Expo replaces the global fetch
+  // with Expo's, which refuses React Native's { uri, name, type } file part:
+  // the first upload threw on the phone before anything was sent, and was
+  // shown as "Cannot reach ICSA". The screen sends with expo-file-system's
+  // multipart upload instead. Asserted on USES (a call, an option), never on
+  // a mention, and the extraction is floored first.
+  const screen = strip(readFileSync(new URL('./ProofScreen.tsx', import.meta.url), 'utf8'));
+  h.check('§6 the proof screen reads, and is not a stub', screen.length > 3000, String(screen.length));
+  h.check('§6 no FormData is built (Expo\'s fetch refuses a { uri } file part)', !/new\s+FormData\s*\(/.test(screen));
+  h.check('§6 no fetch( call sends it', !/\bfetch\s*\(/.test(screen));
+  const call = /\.upload\(\s*AMS_API_URL\s*\+\s*FEES_API\.submit\.path\s*,\s*\{([\s\S]*?)\}\s*\)/.exec(screen)?.[1] ?? '';
+  h.check('§6 it is sent by File.upload to the submit path', call.length > 0);
+  h.check('§6 …as multipart', /uploadType:\s*UploadType\.MULTIPART\b/.test(call));
+  h.check('§6 …with the file in the field the AMS reads', /fieldName:\s*PROOF_FIELDS\.file\b/.test(call) && /upload\.single\('proof'\)/.test(proofR) && PROOF_FIELDS.file === 'proof');
+  h.check('§6 …as a JPEG, a type the AMS takes', /mimeType:\s*'image\/jpeg'/.test(call) && PROOF_IMAGE_TYPES.includes('image/jpeg'));
+  h.check('§6 …with the form fields', /parameters:\s*f\.fields\b/.test(call));
+  h.check('§6 …in the foreground, so its answer is known (never left to finish later)', /sessionType:\s*'foreground'/.test(call));
+  h.check('§6 …with the sign-in and a time limit', /Authorization:\s*`Bearer \$\{tok\.value\}`/.test(call) && /signal:\s*ac\.signal\b/.test(call));
 });

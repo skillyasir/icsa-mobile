@@ -179,7 +179,8 @@ Rough sizes for one developer working with Claude; they move with the decisions 
   - **Packages:** `expo-image-picker` ~58.0.10 (camera and photos; the microphone is removed from the build), `expo-image-manipulator` ~58.0.16, `expo-file-system` ~58.0.13, `expo-sharing` ~58.0.21. **New native modules: a rebuild is needed** (For You). The image picker caps the storage permissions at Android 12 and older (`maxSdkVersion 32`).
   - **Session:** `ams.token()` (a fresh access token for a file download or an upload) and `failureOfAnswer` (the same words for a refused upload as for any refused request); `session.check.ts` §17.
   - **Checks:** `assignments.check.ts` 27, `classes.check.ts` 22, `fees.check.ts` 37 hold the endpoints, field names, statuses and words to the AMS's own; planted defects in each were caught.
-  - **Not tested yet:** all of it, on a phone (For You).
+  - **8 Nov 2026, first proof upload on Android: "Cannot reach ICSA"; nothing was sent.** This Expo replaces the global `fetch` with Expo's own (`expo/src/winter/runtime.native.ts`, unless `EXPO_PUBLIC_USE_RN_FETCH`), and Expo's fetch **refuses React Native's `{ uri, name, type }` FormData file part** — it threw while building the body, before any request, and the screen's catch called every throw "Cannot reach ICSA". Fixed: the proof goes by expo-file-system's `File.upload` (multipart, field `proof`, foreground), and the catch logs the real error (`[proof] the upload failed:`). `fees.check.ts` §6 (10 assertions, 6 planted defects caught, a comment that only MENTIONS FormData passes). **Any future upload uses `File.upload`, never FormData + fetch.**
+  - **Not tested yet:** the rest, on a phone (For You).
 
 ### Deferred — raise when the current piece is done
 

@@ -1,4 +1,4 @@
-import { File } from 'expo-file-system';
+import { File, UploadType } from 'expo-file-system';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
@@ -37,6 +37,12 @@ import {
 // connection (no retry: a proof is a request reception confirms, and a second
 // copy would be a second request). The photo is shrunk as the website does,
 // to the AMS's 500 KB.
+//
+// Sent with expo-file-system's own multipart upload, NOT fetch + FormData:
+// this Expo replaces the global fetch with Expo's, which refuses React
+// Native's { uri, name, type } file part — it threw before anything left the
+// phone, and the catch called it "Cannot reach ICSA" (found 8 Nov 2026).
+// fees.check §6 holds the screen to this.
 
 const UPLOAD_TIMEOUT_MS = 60_000;
 
@@ -104,31 +110,44 @@ export function ProofScreen() {
     if (!photo) return;
     setBusy('send');
     try {
-      const small = await shrink(photo);
+      let small: string | { error: string };
+      try {
+        small = await shrink(photo);
+      } catch (err) {
+        console.warn('[proof] shrinking failed:', err instanceof Error ? err.message : String(err));
+        return setMessage('The photo could not be prepared. Try another one.');
+      }
       if (typeof small !== 'string') return setMessage(small.error);
       const tok = await ams.token();
       if (!tok.ok) return setMessage(tok.failure.message);
-      const form = new FormData();
-      // React Native's FormData takes a file as { uri, name, type }.
-      form.append(PROOF_FIELDS.file, { uri: small, name: 'payment-proof.jpg', type: 'image/jpeg' } as unknown as Blob);
-      for (const [k, v] of Object.entries(f.fields)) form.append(k, v);
       const ac = new AbortController();
       const timer = setTimeout(() => ac.abort(), UPLOAD_TIMEOUT_MS);
-      let res: Response;
+      let res: { status: number; body: string };
       try {
-        res = await fetch(AMS_API_URL + FEES_API.submit.path, {
-          method: 'POST',
+        res = await new File(small).upload(AMS_API_URL + FEES_API.submit.path, {
+          httpMethod: 'POST',
+          uploadType: UploadType.MULTIPART,
+          fieldName: PROOF_FIELDS.file,
+          mimeType: 'image/jpeg',
+          parameters: f.fields,
           headers: { Authorization: `Bearer ${tok.value}`, Accept: 'application/json' },
-          body: form,
+          sessionType: 'foreground',
           signal: ac.signal,
         });
-      } catch {
+      } catch (err) {
+        // Say what really happened in the log: the screen can only say "no answer".
+        console.warn('[proof] the upload failed:', err instanceof Error ? err.message : String(err));
         return setMessage(MESSAGES.offline);
       } finally {
         clearTimeout(timer);
       }
-      const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-      if (!res.ok) return setMessage(failureOfAnswer(res.status, json).message);
+      let json: Record<string, unknown> = {};
+      try {
+        json = JSON.parse(res.body) as Record<string, unknown>;
+      } catch {
+        // not JSON: the status decides
+      }
+      if (res.status < 200 || res.status >= 300) return setMessage(failureOfAnswer(res.status, json).message);
       router.back();
     } finally {
       setBusy(null);
