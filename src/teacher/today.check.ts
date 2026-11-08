@@ -28,9 +28,12 @@ import {
   type WalkIn,
 } from './today.ts';
 import { ATTENDANCE_API } from '../attendance/rules.ts';
+import { STUDENT_ASSIGNMENT_API } from '../student/assignment.ts';
 import { FEES_API } from '../student/fees.ts';
+import { LEARN_API } from '../student/learn.ts';
 import { ASSIGNMENT_API } from './assignments.ts';
 import { CLASSES_API } from './classes.ts';
+import { STUDENTS_API } from './students.ts';
 
 // The teacher's Today and Mark class (Phase 2 piece 2, 7 Nov 2026) against the
 // AMS: the endpoints, who may call them, the fields they read, the statuses
@@ -95,7 +98,16 @@ run('teacher/today.check — Today and Mark class agree with the AMS', (h) => {
   };
   h.check('§1b a camelCase parameter is filled whole', fill('/assignments/submissions/:submissionId/review', { submissionId: 'abc' }) === '/assignments/submissions/abc/review', fill('/assignments/submissions/:submissionId/review', { submissionId: 'abc' }));
   h.check('§1b a name the caller did not give throws (never an empty or partial segment)', fill('/x/:submissionId/y', { submission: 'abc' }).startsWith('THREW'));
-  const TABLES: Record<string, Record<string, { method: string; path: string }>> = { TEACHER_API, ASSIGNMENT_API, ATTENDANCE_API, FEES_API, CLASSES_API };
+  const TABLES: Record<string, Record<string, { method: string; path: string }>> = {
+    TEACHER_API,
+    ASSIGNMENT_API,
+    ATTENDANCE_API,
+    FEES_API,
+    CLASSES_API,
+    LEARN_API,
+    STUDENT_ASSIGNMENT_API,
+    STUDENTS_API,
+  };
   const namesOf = (path: string) => path.split('/').filter((seg) => seg.startsWith(':')).map((seg) => seg.slice(1));
   const apiPaths = Object.entries(TABLES).flatMap(([t, tab]) => Object.entries(tab).map(([k, v]) => ({ id: `${t}.${k}`, path: v.path })));
   const withParams = apiPaths.filter((e) => namesOf(e.path).length > 0);
@@ -122,11 +134,12 @@ run('teacher/today.check — Today and Mark class agree with the AMS', (h) => {
   for (const f of files) {
     const text = strip(readFileSync(f, 'utf8'));
     for (const m of text.matchAll(/\bpathFor\(\s*([A-Z_]+)\.(\w+)\.path\s*,\s*\{([^}]*)\}\s*\)/g)) {
-      calls.push({ file: f.slice(SRC.length), table: m[1], key: m[2], given: [...m[3].matchAll(/(\w+)\s*:/g)].map((x) => x[1]).sort() });
+      calls.push({ file: f.slice(SRC.length), table: m[1], key: m[2], given: m[3].split(',').map((x) => /^\s*(\w+)/.exec(x)?.[1] ?? '').filter(Boolean).sort() });
     }
   }
   const uses = files.reduce((n, f) => n + (strip(readFileSync(f, 'utf8')).match(/\bpathFor\(/g)?.length ?? 0), 0) - 1; // less its definition
-  h.check('§1b every pathFor( call was read in the shape below (floor 5)', calls.length >= 5 && calls.length === uses, `${calls.length} read, ${uses} calls`);
+  h.check('§1b every pathFor( call was read in the shape below (floor 14)', calls.length >= 14 && calls.length === uses, `${calls.length} read, ${uses} calls`);
+  h.check('§1b …a shorthand name ({ courseId }) is read as its name', 'courseId'.split(',').map((x) => /^\s*(\w+)/.exec(x)?.[1] ?? '').join() === 'courseId' && calls.some((c) => c.key === 'subjects' && c.given.join() === 'courseId'));
   for (const c of calls) {
     const want = namesOf(TABLES[c.table]?.[c.key]?.path ?? '').sort();
     h.check(`§1b ${c.file}: ${c.table}.${c.key} is given exactly ${want.join(', ') || '(none)'}`, want.length > 0 && JSON.stringify(want) === JSON.stringify(c.given), c.given.join());

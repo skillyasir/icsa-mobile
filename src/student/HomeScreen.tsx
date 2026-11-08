@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import {
   ATTENDANCE_API,
@@ -111,13 +111,20 @@ export function HomeScreen() {
           <AppText variant="label" color="textMuted">
             CONTINUE LEARNING
           </AppText>
-          <Card>
-            <AppText variant="caption" color="textSubtle">
-              {[resume.name, resume.resume_subject_name].filter(Boolean).join(' · ')}
-            </AppText>
-            <AppText variant="headline">{resume.resume_lesson_title}</AppText>
-            <Bar pct={lessonPct(resume.lessons_done, resume.lessons_total)} />
-          </Card>
+          <Pressable
+            accessibilityRole="button"
+            disabled={!resume.resume_subject_id}
+            onPress={() => resume.resume_subject_id && router.push({ pathname: '/student/learn/subject', params: { subject: resume.resume_subject_id } })}
+            style={({ pressed }) => pressed && { opacity: 0.7 }}
+          >
+            <Card>
+              <AppText variant="caption" color="textSubtle">
+                {[resume.name, resume.resume_subject_name].filter(Boolean).join(' · ')}
+              </AppText>
+              <AppText variant="headline">{resume.resume_lesson_title}</AppText>
+              <Bar pct={lessonPct(resume.lessons_done, resume.lessons_total)} />
+            </Card>
+          </Pressable>
         </View>
       ) : null}
 
@@ -128,7 +135,13 @@ export function HomeScreen() {
           </AppText>
           <Card>
             {d.due_soon.slice(0, 3).map((x, i) => (
-              <View key={x.kind + x.id} style={[styles.due, i > 0 && { borderTopWidth: 1, borderTopColor: t.colors.border, paddingTop: t.space.md }]}>
+              <Pressable
+                key={x.kind + x.id}
+                accessibilityRole="button"
+                disabled={x.kind !== 'assignment'}
+                onPress={() => router.push({ pathname: '/student/learn/assignment', params: { id: x.id } })}
+                style={[styles.due, i > 0 && { borderTopWidth: 1, borderTopColor: t.colors.border, paddingTop: t.space.md }]}
+              >
                 <View style={[styles.chip, { backgroundColor: t.colors.warningSoft, borderRadius: t.radius.sm }]}>
                   <AppText variant="label" color="onWarningSoft">
                     {formatDay(x.due_date) || 'No date'}
@@ -137,7 +150,7 @@ export function HomeScreen() {
                 <AppText style={styles.flex} numberOfLines={2}>
                   {`${x.kind === 'assignment' ? 'Assignment' : 'Quiz'} — ${x.title}`}
                 </AppText>
-              </View>
+              </Pressable>
             ))}
           </Card>
         </View>

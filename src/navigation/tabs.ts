@@ -42,7 +42,7 @@ export const TABS: Record<Experience, TabDef[]> = {
   student: [
     { name: 'index', label: 'Home', sf: { default: 'house', selected: 'house.fill' }, md: 'home', phase: 2, built: true,
       soon: "Today's class, check in, your progress and your next fee." },
-    { name: 'learn', label: 'Learn', sf: { default: 'book', selected: 'book.fill' }, md: 'menu_book', phase: 2,
+    { name: 'learn', label: 'Learn', sf: { default: 'book', selected: 'book.fill' }, md: 'menu_book', phase: 2, built: true,
       soon: 'Your courses, subjects, lessons, quizzes and assignments.' },
     { name: 'attendance', label: 'Attendance', sf: 'calendar.badge.checkmark', md: 'event_available', phase: 2, built: true,
       soon: 'Check in at your branch, check out, and your attendance history.' },
@@ -57,7 +57,7 @@ export const TABS: Record<Experience, TabDef[]> = {
       soon: 'Your classes and each student’s progress.' },
     { name: 'assignments', label: 'Assignments', sf: { default: 'doc.text', selected: 'doc.text.fill' }, md: 'assignment', phase: 2, built: true,
       soon: 'Submissions to check, score and comment on.' },
-    { name: 'students', label: 'Students', sf: { default: 'person.2', selected: 'person.2.fill' }, md: 'school', phase: 2,
+    { name: 'students', label: 'Students', sf: { default: 'person.2', selected: 'person.2.fill' }, md: 'school', phase: 2, built: true,
       soon: 'Your students, their attendance and follow-ups.' },
     ME,
   ],
