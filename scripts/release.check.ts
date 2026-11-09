@@ -85,6 +85,10 @@ run('release.check — the Android release build is signed with ICSA\'s upload k
   const a = app.expo.android;
   h.check('§3 the plugin is in app.json', app.expo.plugins.includes('./plugins/withReleaseSigning'));
   h.check('§3 versionCode is a whole number from 1 (raise it for every upload)', Number.isInteger(a.versionCode) && (a.versionCode ?? 0) >= 1, String(a.versionCode));
+  // iPhone (9 Nov 2026): App Store Connect refuses a second upload with the
+  // same build number, so it is set here and raised for every upload.
+  const ios = (JSON.parse(readFileSync(new URL('app.json', ROOT), 'utf8')) as { expo: { ios: { buildNumber?: string } } }).expo.ios;
+  h.check('§3 the iOS buildNumber is a whole number from 1, written as text (raise it for every upload)', typeof ios.buildNumber === 'string' && /^[1-9]\d*$/.test(ios.buildNumber), String(ios.buildNumber));
   h.check('§3 the package is us.icsa.app', a.package === 'us.icsa.app');
   h.check('§3 SYSTEM_ALERT_WINDOW is removed (the app never draws over other apps)', (a.blockedPermissions ?? []).includes('android.permission.SYSTEM_ALERT_WINDOW'));
   const picker = app.expo.plugins.find((p) => Array.isArray(p) && p[0] === 'expo-image-picker') as [string, Record<string, unknown>] | undefined;

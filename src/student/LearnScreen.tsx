@@ -12,10 +12,13 @@ import { Pill } from '@/components/Pill';
 import { Card, Screen } from '@/components/Screen';
 import { LoadFailed, Loading } from '@/components/States';
 import { useSession } from '@/session/SessionContext';
+import { mix, readableOn, tintedCard } from '@/theme/color';
 import { minTouch } from '@/theme/tokens';
 import { useAppTheme } from '@/theme/useAppTheme';
 
 import {
+  CARD_TINT,
+  CARD_TINT_PRESSED,
   LEARN_API,
   countsLine,
   countsOf,
@@ -23,6 +26,7 @@ import {
   daysLeftLine,
   initialOf,
   subjectChip,
+  subjectColor,
   type Course,
   type MyGrades,
   type MyProgress,
@@ -197,7 +201,14 @@ export function LearnScreen() {
             const chip = subjectChip(s, items, lessons?.resume_lesson_id ?? null);
             const left = daysLeftLine(s.days_left);
             const pct = c && c.lessons.total ? Math.round((c.lessons.done / c.lessons.total) * 100) : 0;
-            const tint = /^#[0-9a-f]{6}$/i.test(s.color ?? '') ? (s.color as string) : t.colors.primary;
+            // Vibrant (Yasir, 9 Nov 2026): the card is tinted with the
+            // subject's colour, with a solid stripe, tile and bar in it. The
+            // badge sits under the name, never beside it — beside it, a long
+            // name broke mid-word ("Microsof t Word") on a phone with big text.
+            const tint = subjectColor(s);
+            const inks = [t.colors.text, t.colors.textMuted, t.colors.onDangerSoft];
+            const card = tintedCard(t.colors.surface, tint, CARD_TINT[t.scheme], inks);
+            const pressedCard = tintedCard(t.colors.surface, tint, CARD_TINT_PRESSED[t.scheme], inks);
             return (
               <Pressable
                 key={s.id}
@@ -207,34 +218,33 @@ export function LearnScreen() {
                 style={({ pressed }) => [
                   styles.subject,
                   {
-                    backgroundColor: pressed ? t.colors.surfaceMuted : t.colors.surface,
-                    borderColor: chip?.tone === 'info' ? t.colors.primary : t.colors.border,
+                    backgroundColor: pressed ? pressedCard : card,
+                    borderColor: mix(card, tint, 0.55),
                     borderRadius: t.radius.xl,
                     opacity: s.frozen ? 0.6 : 1,
                   },
                 ]}
               >
-                <View style={[styles.tile, { backgroundColor: tint + '22', borderRadius: t.radius.md }]}>
-                  <AppText variant="title" style={{ color: tint }}>
+                <View style={[styles.stripe, { backgroundColor: tint }]} />
+                <View style={[styles.tile, { backgroundColor: tint, borderRadius: t.radius.md }]}>
+                  <AppText variant="title" style={{ color: readableOn(tint) }}>
                     {initialOf(s.name)}
                   </AppText>
                 </View>
                 <View style={[styles.flex, { gap: t.space.xs }]}>
-                  <View style={styles.row}>
-                    <AppText variant="headline" style={styles.flex} numberOfLines={2}>
-                      {s.name}
-                    </AppText>
-                    {chip ? <Pill text={chip.text} tone={chip.tone} /> : null}
-                  </View>
-                  <AppText variant="caption" color="textSubtle">
+                  <AppText variant="headline" numberOfLines={2}>
+                    {s.name}
+                  </AppText>
+                  {chip ? <Pill text={chip.text} tone={chip.tone} /> : null}
+                  <AppText variant="caption" color="textMuted">
                     {c ? countsLine(c) : `${s.lesson_count} lesson${s.lesson_count === 1 ? '' : 's'}`}
                   </AppText>
                   {left ? (
-                    <AppText variant="caption" color={left.urgent ? 'onDangerSoft' : 'textSubtle'}>
+                    <AppText variant="caption" color={left.urgent ? 'onDangerSoft' : 'textMuted'}>
                       {left.text}
                     </AppText>
                   ) : null}
-                  {c ? <Bar pct={pct} /> : null}
+                  {c ? <Bar pct={pct} color={tint} track={mix(card, tint, 0.25)} /> : null}
                 </View>
               </Pressable>
             );
@@ -245,12 +255,12 @@ export function LearnScreen() {
   );
 }
 
-function Bar({ pct }: { pct: number }) {
+function Bar({ pct, color, track }: { pct: number; color?: string; track?: string }) {
   const t = useAppTheme();
   const w = Math.max(0, Math.min(100, pct));
   return (
-    <View style={[styles.track, { backgroundColor: t.colors.surfaceMuted, borderRadius: t.radius.pill }]}>
-      <View style={{ width: `${w}%`, height: '100%', backgroundColor: w >= 100 ? t.colors.success : t.colors.primary, borderRadius: t.radius.pill }} />
+    <View style={[styles.track, { backgroundColor: track ?? t.colors.surfaceMuted, borderRadius: t.radius.pill }]}>
+      <View style={{ width: `${w}%`, height: '100%', backgroundColor: w >= 100 ? t.colors.success : (color ?? t.colors.primary), borderRadius: t.radius.pill }} />
     </View>
   );
 }
@@ -259,7 +269,8 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   picker: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, padding: 14, minHeight: minTouch },
-  subject: { flexDirection: 'row', gap: 12, borderWidth: 1.5, padding: 14 },
+  subject: { flexDirection: 'row', gap: 12, borderWidth: 1.5, padding: 14, paddingStart: 20, overflow: 'hidden' },
+  stripe: { position: 'absolute', top: 0, bottom: 0, start: 0, width: 6 },
   tile: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
-  track: { height: 6, overflow: 'hidden' },
+  track: { height: 8, overflow: 'hidden', marginTop: 4 },
 });

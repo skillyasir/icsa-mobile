@@ -1,5 +1,6 @@
-import * as AppleAuthentication from 'expo-apple-authentication';
+import { GoogleSigninButton } from '@react-native-google-signin/google-signin';
 import { useRouter } from 'expo-router';
+import { SymbolView } from 'expo-symbols';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -32,8 +33,10 @@ import { useAppTheme } from '@/theme/useAppTheme';
 // rule (auth/signInRoute.ts). The "Unlock with Face ID" switch came back with
 // the lock itself (S4, 5 Nov 2026), and shows only on a phone that can lock.
 // PIECE 4 (6 Nov 2026): Sign in with Apple (iPhone) and Google (both) are real
-// (S12). Apple's button is Apple's own, the same size as Google's and beside
-// it (App Review: at least as prominent).
+// (S12). 9 Nov 2026 (Yasir): logos only — the worded buttons were cut off
+// side by side on a phone with big text. Google's is Google's own icon button;
+// Apple's is Apple's logo on Apple's black or white, the same size, beside it
+// (App Review 4.8: at least as prominent).
 
 // Developer preview: made-up people, one per experience, plus mixed roles.
 // Shown in development builds only (__DEV__) — never in a store build.
@@ -180,30 +183,36 @@ export default function SignIn() {
 
             <View style={styles.social}>
               {apple ? (
-                <View style={[styles.flex, busy && styles.dim]} pointerEvents={busy ? 'none' : 'auto'}>
-                  <AppleAuthentication.AppleAuthenticationButton
-                    buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-                    buttonStyle={
-                      t.scheme === 'dark'
-                        ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
-                        : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
-                    }
-                    cornerRadius={t.radius.lg}
-                    style={styles.appleButton}
-                    onPress={() => withProvider('apple')}
-                  />
-                </View>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Sign in with Apple"
+                  disabled={busy}
+                  onPress={() => withProvider('apple')}
+                  style={({ pressed }) => [
+                    styles.logoButton,
+                    { backgroundColor: t.colors.appleButton, borderRadius: SOCIAL_RADIUS },
+                    (busy || pressed) && styles.dim,
+                  ]}
+                >
+                  <SymbolView name="apple.logo" size={22} tintColor={t.colors.onAppleButton} />
+                </Pressable>
               ) : null}
-              <View style={styles.flex}>
-                <Button
-                  title="Sign in with Google"
-                  variant="outline"
+              <View style={[styles.logoButton, busy && styles.dim]}>
+                <GoogleSigninButton
+                  size={GoogleSigninButton.Size.Icon}
+                  color={t.scheme}
+                  accessibilityLabel="Sign in with Google"
+                  disabled={busy}
                   onPress={() => withProvider('google')}
-                  disabled={busy && busyWith !== 'google'}
-                  busy={busyWith === 'google'}
+                  style={styles.logoButton}
                 />
               </View>
             </View>
+            {busyWith === 'apple' || busyWith === 'google' ? (
+              <AppText variant="caption" color="textSubtle" style={styles.centred}>
+                Signing in with {busyWith === 'apple' ? 'Apple' : 'Google'}…
+              </AppText>
+            ) : null}
 
             {lock.ability.available ? (
               <View style={styles.lockRow}>
@@ -263,6 +272,10 @@ export default function SignIn() {
   );
 }
 
+// One size for both sign-in logos, so neither is more prominent (App Review 4.8).
+const SOCIAL_SIZE = 48;
+const SOCIAL_RADIUS = 10;
+
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   flex: { flex: 1 },
@@ -297,8 +310,9 @@ const styles = StyleSheet.create({
   forgot: { alignSelf: 'flex-end', minHeight: minTouch, justifyContent: 'center' },
   orRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   rule: { flex: 1, height: StyleSheet.hairlineWidth * 2 },
-  social: { flexDirection: 'row', gap: 10 },
-  appleButton: { height: Math.max(minTouch, 50) },
+  social: { flexDirection: 'row', justifyContent: 'center', gap: 20 },
+  // Google's icon button is 48 × 48 by Google's rule; Apple's is made the same size.
+  logoButton: { width: SOCIAL_SIZE, height: SOCIAL_SIZE, alignItems: 'center', justifyContent: 'center' },
   dim: { opacity: 0.55 },
   centred: { textAlign: 'center' },
   lockRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: minTouch },

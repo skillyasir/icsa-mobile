@@ -1,9 +1,14 @@
+import { readFileSync } from 'node:fs';
+
 import { amsFirewallAdmits, readAmsFile } from '../../scripts/ams.ts';
 import { run } from '../../scripts/check-harness.ts';
 
 import { formatDay } from '../attendance/rules.ts';
 import {
+  CARD_TINT,
+  CARD_TINT_PRESSED,
   LEARN_API,
+  SUBJECT_COLORS,
   SUBMISSION_STATUS,
   chaptersOf,
   countsLine,
@@ -13,8 +18,11 @@ import {
   initialOf,
   lineOf,
   subjectChip,
+  subjectColor,
   type Item,
 } from './learn.ts';
+import { contrast, isHex, readableOn, tintedCard } from '../theme/color.ts';
+import { palettes } from '../theme/tokens.ts';
 
 // The student's Learn tab (8 Nov 2026) against the AMS: every endpoint is
 // routed and open to a student, every field the screens read is one the
@@ -146,4 +154,44 @@ run('learn.check — the student Learn tab agrees with the AMS', (h) => {
   h.check('§5 every lesson done: All lessons done (never "Completed" — that is the AMS\'s verdict)', subjectChip({ frozen: false, days_left: null }, [item({ completed_at: 'x' })], null)?.text === 'All lessons done');
   h.check('§5 days left: from 7, red from 3, the website\'s red line', daysLeftLine(8) === null && daysLeftLine(7)?.urgent === false && daysLeftLine(3)?.urgent === true && daysLeftLine(1)?.text === '1 day left' && /s\.days_left <= 3 \? "text-rose-500"/.test(strip(readAmsFile('client/src/pages/student/StudentCourseSubjects.js'))));
   h.check('§5 the tile letter', initialOf('MS Excel') === 'M' && initialOf('  ') === '•' && initialOf(null) === '•');
+
+  // §6 vibrant cards (9 Nov 2026). The colour is the AMS's when it has one,
+  // else stable per subject; and every word on a tinted card stays readable.
+  h.check('§6 a subject\'s own colour wins', subjectColor({ id: 'a', color: '#f59e0b' }) === '#F59E0B');
+  h.check('§6 …no colour, or not a #RRGGBB: one of the palette', [null, '', 'red', '#fff'].every((c) => (SUBJECT_COLORS as readonly string[]).includes(subjectColor({ id: 'x', color: c }))));
+  h.check('§6 …the same subject gets the same colour every time', subjectColor({ id: 'subj-42', color: null }) === subjectColor({ id: 'subj-42', color: null }));
+  const spread = new Set(Array.from({ length: 40 }, (_, i) => subjectColor({ id: `s${i}`, color: null })));
+  h.check('§6 …and different subjects spread across the palette (cardinality: 40 ids)', spread.size >= 6, String(spread.size));
+  h.check('§6 the palette is all #RRGGBB (floor: 8)', SUBJECT_COLORS.length >= 8 && SUBJECT_COLORS.every((c) => isHex(c)));
+  // The palette, plus the extremes an AMS subject colour could be.
+  const colours = [...SUBJECT_COLORS, '#FFFF00', '#FFFFFF', '#000000', '#FF0000', '#808080'];
+  let text = { ratio: 99, at: '' };
+  let tile = { ratio: 99, at: '' };
+  let pairs = 0;
+  for (const scheme of ['light', 'dark'] as const) {
+    const p = palettes[scheme];
+    for (const c of colours) {
+      for (const amount of [CARD_TINT[scheme], CARD_TINT_PRESSED[scheme]]) {
+        const card = tintedCard(p.surface, c, amount, [p.text, p.textMuted, p.onDangerSoft]);
+        for (const ink of ['text', 'textMuted', 'onDangerSoft'] as const) {
+          pairs++;
+          const r = contrast(p[ink], card);
+          if (r < text.ratio) text = { ratio: r, at: `${scheme} ${c} @${amount} ${ink}` };
+        }
+      }
+      const r = contrast(readableOn(c), c);
+      if (r < tile.ratio) tile = { ratio: r, at: `${scheme} ${c}` };
+    }
+  }
+  h.check('§6 every word on a tinted card is at least 4.5:1, any subject colour (cardinality: 156 pairs)',
+    pairs === 156 && text.ratio >= 4.5, `${pairs} pairs, worst ${text.ratio.toFixed(2)} at ${text.at}`);
+  h.check('§6 …and the tile letter at least 3:1 (it is 22 pt bold)', tile.ratio >= 3, `worst ${tile.ratio.toFixed(2)} at ${tile.at}`);
+  const screen = strip(readFileSync(new URL('./LearnScreen.tsx', import.meta.url), 'utf8'));
+  const card = /const tint = subjectColor\(s\);[\s\S]*?<\/Pressable>/.exec(screen)?.[0] ?? '';
+  h.check('§6 the subject card extracts (floor)', card.length > 800, String(card.length));
+  h.check('§6 the badge sits under the name, never in a row beside it (a long name broke mid-word)',
+    !/styles\.row/.test(card) && card.indexOf('{s.name}') > 0 && card.indexOf('<Pill') > card.indexOf('{s.name}'));
+  h.check('§6 the card, its stripe, tile and bar are all the subject\'s colour',
+    /tintedCard\(t\.colors\.surface, tint, CARD_TINT\[t\.scheme\], inks\)/.test(card) && /const inks = \[t\.colors\.text, t\.colors\.textMuted, t\.colors\.onDangerSoft\]/.test(card) && /styles\.stripe, \{ backgroundColor: tint \}/.test(card)
+    && /styles\.tile, \{ backgroundColor: tint/.test(card) && /<Bar pct=\{pct\} color=\{tint\}/.test(card));
 });

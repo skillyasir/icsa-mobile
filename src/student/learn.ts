@@ -9,6 +9,8 @@
 // sent, never a second "done" rule: a subject card says how many lessons are
 // completed and how many quizzes were taken, not whether the subject is done.
 
+import { isHex } from '../theme/color.ts';
+
 export const LEARN_API = {
   courses: { method: 'GET', path: '/auth/student/courses' },
   subjects: { method: 'GET', path: '/auth/student/courses/:courseId/subjects' },
@@ -152,6 +154,24 @@ export function daysLeftLine(days: number | null | undefined): { text: string; u
 export function initialOf(name: string | null | undefined): string {
   const m = /[A-Za-z0-9؀-ۿ]/.exec(name ?? '');
   return m ? m[0].toUpperCase() : '•';
+}
+
+/**
+ * A subject card's colour (9 Nov 2026, "vibrant"): the colour the AMS gives the
+ * subject, else one of these picked by the subject's id — so a subject keeps
+ * its colour from day to day, and cards without one still differ.
+ */
+export const SUBJECT_COLORS = ['#2563EB', '#0D9488', '#7C3AED', '#EA580C', '#DB2777', '#16A34A', '#CA8A04', '#0891B2'] as const;
+
+/** How much of the subject's colour a card carries, by scheme (and when pressed). */
+export const CARD_TINT = { light: 0.09, dark: 0.2 } as const;
+export const CARD_TINT_PRESSED = { light: 0.16, dark: 0.3 } as const;
+
+export function subjectColor(s: Pick<Subject, 'id' | 'color'>): string {
+  if (isHex(s.color)) return s.color.toUpperCase();
+  let h = 0;
+  for (const ch of String(s.id)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return SUBJECT_COLORS[h % SUBJECT_COLORS.length];
 }
 
 // ── The subject screen ──────────────────────────────────────────────────────

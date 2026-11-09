@@ -97,9 +97,18 @@ run('providerRoute.check — Google and Apple sign-in agree with the AMS', (h) =
   h.check('§4 the sign-in screen no longer says "a later step"', !/later step/i.test(signIn) && !/NOT_YET/.test(signIn));
   const social = /<View style=\{styles\.social\}>[\s\S]*?\n {12}<\/View>\n/.exec(signIn)?.[0] ?? '';
   h.check('§4 the Google/Apple row extracts (floor)', social.length > 600, String(social.length));
-  h.check('§4 Apple\'s own button and Google\'s are in the same row, each flex: 1 (App Review: as prominent)',
-    /AppleAuthentication\.AppleAuthenticationButton/.test(social) && /withProvider\('apple'\)/.test(social)
-    && /withProvider\('google'\)/.test(social) && (social.match(/styles\.flex/g) ?? []).length === 2);
+  // 9 Nov 2026 (Yasir): logos only. Both in the same row, both the one
+  // SOCIAL_SIZE, and that size is the size Google gives its own icon button —
+  // so neither logo is more prominent than the other (App Review 4.8).
+  h.check('§4 Apple\'s logo and Google\'s icon button are in the same row, each wired to its provider',
+    /name="apple\.logo"/.test(social) && /withProvider\('apple'\)/.test(social)
+    && /GoogleSigninButton\.Size\.Icon/.test(social) && /withProvider\('google'\)/.test(social));
+  h.check('§4 …both drawn at SOCIAL_SIZE (styles.logoButton on each)', (social.match(/styles\.logoButton/g) ?? []).length >= 3, String((social.match(/styles\.logoButton/g) ?? []).length));
+  const size = Number(/const SOCIAL_SIZE = (\d+);/.exec(signIn)?.[1]);
+  const googleIcon = Number(/iconSize: \{\s*width: (\d+),\s*height: \1,/.exec(readFileSync(new URL('../../node_modules/@react-native-google-signin/google-signin/src/buttons/GoogleSigninButton.tsx', import.meta.url), 'utf8'))?.[1]);
+  h.check('§4 …and SOCIAL_SIZE is Google\'s own icon-button size', size > 0 && size === googleIcon, `${size} vs ${googleIcon}`);
+  h.check('§4 …and at least Apple\'s 44 pt minimum', size >= 44, String(size));
+  h.check('§4 Apple\'s logo is labelled for VoiceOver', /accessibilityLabel="Sign in with Apple"/.test(social) && /accessibilityLabel="Sign in with Google"/.test(social));
   h.check('§4 a closed sheet says nothing', /if \(!r\) return;/.test(signIn));
   const me = strip(read('../navigation/MeScreen.tsx'));
   h.check('§4 Me shows the sign-in methods (not in the preview)', /\{!user\.preview \? <SignInMethods email=\{user\.email\} \/> : null\}/.test(me));
