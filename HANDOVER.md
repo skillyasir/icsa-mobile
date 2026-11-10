@@ -218,6 +218,19 @@ Rough sizes for one developer working with Claude; they move with the decisions 
   - **`store/play-listing.md`:** the short and full descriptions, the App content answers and the Data safety table, ready to copy. **Before pasting, Yasir checks icsa.us/privacy covers the app.**
   - **`scripts/brand.check.ts`** (21): every size and kind the stores require, the app.json wiring, and that **no Expo template art comes back** (by checksum); 3 planted defects caught.
 
+- **The stores (9–10 Nov 2026).**
+  - **Google Play Console** (developer account **ICSA-SKILL**, Personal): **trader status: non-trader** (Yasir ruled, 9 Nov 2026); public details **YASIR Muhammad Farooq · skillworked@gmail.com · Kuwait** — the payments-profile name was corrected that day to match his ID (it said "YASIR M MOHAMED FAROQ"). **Android device: verified.** **Identity: Google is verifying** (submitted 9 Nov 2026, takes days); the **phone number** unlocks after it. **Create app stays locked until then** — next: create the app, the listing from `store/play-listing.md`, the closed test, upload the `.aab`. Public developer name is still **ICSA-SKILL** — ask whether to change it to ICSA when the app is created.
+  - **App Store Connect:** app **ICSA** created 9 Nov 2026 (iOS, English (U.K.), bundle `us.icsa.app`, SKU `icsa-ios`, app id 6832572243). Built and uploaded **from Xcode on the Mac** (Product › Archive › Distribute › App Store Connect › Upload; team **69B3AATWN8**, automatic signing; Yasir's iPhone registered so Xcode could make the profile). The dSYM warnings on upload (Expo's prebuilt frameworks) are harmless.
+  - **TestFlight:** internal group **ICSA team** (automatic distribution on), tester **isuperskill@gmail.com** (Yasir's Apple ID). Builds: **1** (9 Nov), **2** (9 Nov, logo buttons + vibrant cards), **3** (10 Nov, light by default + Me › Appearance + "(build N)" in Me). **Raise `ios.buildNumber` in app.json for every upload** (`release.check` holds it) — and in `ios/` (Info.plist `CFBundleVersion`, pbxproj `CURRENT_PROJECT_VERSION`) or run prebuild.
+  - **Demo login for screenshots and App Review: `appreview@icsa.us`**, student **Demo Student** in **Future Branch** (Yasir ruled, 9 Nov 2026), real courses, teacher Ibrahim Yasir, a fee plan with no payment. Yasir keeps its password; he types it into the review form himself.
+  - **Screenshots:** `store/raw/` has 4 iPhone (1206 × 2622, iPhone 18 Pro) and 4 Android (1344 × 2992) of the demo student. **Still needed: iPad 13" (2064 × 2752)** — the app supports iPad. The store sets are still to be made: Play 1080 × 1920 (Play refuses a long side over 2 × the short), App Store 6.9" (1320 × 2868) — the 6.3" captures go on a 6.9" canvas.
+  - **Still to do for Apple:** the listing (description, keywords, support URL, privacy URL icsa.us/privacy), App Privacy, age rating, price Free, countries, **EU trader status (Apple asks too)**, review notes (staff create accounts, so in-app account creation and deletion do not apply), then submit.
+- **On Yasir's iPhone (9–10 Nov 2026):**
+  - **Sign-in: logos only** (Yasir: the worded buttons were cut off side by side with big text) — Google's own icon button and Apple's logo on Apple's black/white, both 48 × 48, Google's icon size (App Review 4.8).
+  - **Learn: vibrant subject cards** (Yasir) — tinted with the subject's colour (`theme/color.ts`: `tintedCard` backs the tint off until every word reads 4.5:1); the "Now on lesson" badge under the name (beside it, long names broke mid-word).
+  - **Light by default, a switch in Me › Appearance** (Yasir ruled, 10 Nov 2026: Light · Dark · Same as phone; the phone keeps it after sign-out; React Native's own override, the splash waits for it). Before, the app followed the phone, so a phone in Dark Mode showed it dark.
+  - **Me shows the build** ("1.0.0 (build 3)") — every test build is 1.0.0.
+
 ### Deferred — raise when the current piece is done
 
 - ✅ **AMS, found 8 Nov 2026 — Yasir: "fix it" — FIXED and LIVE 8 Nov 2026 (AMS `cfb6095`, `main.52d98594.js`): the website never showed a student the teacher's review comment.** `getMyAssignment` sends `feedback`; `StudentAssignmentView.js` never reads it (not asserted in a check on purpose: a check that the defect is present would go red on its fix). A teacher who types a comment in the review dialog is talking to nobody on the web. The app shows it.
@@ -232,7 +245,7 @@ Rough sizes for one developer working with Claude; they move with the decisions 
 
 ## 6. Where things are
 
-- **This folder:** `~/Projects/icsa-mobile` on Yasir's MacBook Pro (Apple silicon). Local git repo once §5 step 0 has run; **no GitHub remote yet** (he creates it — see §7).
+- **This folder:** `~/Projects/icsa-mobile` on Yasir's MacBook Pro (Apple silicon). **GitHub `skillyasir/icsa-mobile` (private), branch `main`** — created and first pushed 10 Nov 2026; Yasir pushes (`git push`).
 - **The AMS on the Mac:** `~/Projects/icsa-system` (read it for endpoints and rules; its own `CLAUDE.md` is long and authoritative).
 - **The AMS in production:** `/home/icsasystem/icsa-system` on the server, account `icsasystem`, pm2 app `icsa-server`, PostgreSQL 16 (`icsa_db`, test clone `icsa_subtest`), behind Cloudflare at `https://app.icsasystem.com`. GitHub `skillyasir/icsa-system`, branch `master`.
 
@@ -243,5 +256,5 @@ Rough sizes for one developer working with Claude; they move with the decisions 
   - a **D-U-N-S number** for the legal entity that owns ICSA (free from Dun & Bradstreet; Apple has a lookup tool);
   - **Apple Developer Program as an organization** (yearly fee);
   - **Google Play Console as an organization** (one-time fee). A *personal* Play account created after 13 Nov 2023 must run a closed test with **12 testers for 14 days** before it can publish.
-- **Create the GitHub repo** when you are ready (**Run on Mac:** `cd ~/Projects/icsa-mobile && gh repo create skillyasir/icsa-mobile --private --source . --push`).
-- **App Review needs demo logins on production** — there is no staging server. Plan a "Demo" branch with made-up students so reviewers never see real people.
+- ✅ **GitHub repo created** (10 Nov 2026): `skillyasir/icsa-mobile`, private.
+- ✅ **Demo login made** (9 Nov 2026): `appreview@icsa.us` in Future Branch — see "The stores" above. App Review signs in on production; there is no staging server.
