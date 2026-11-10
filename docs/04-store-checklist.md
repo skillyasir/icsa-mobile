@@ -16,7 +16,7 @@ Written 3 Nov 2026. Re-check every rule at release time — both stores change t
 - [ ] App name: **ICSA** (check it is free in both stores; fallback "ICSA Academy").
 - [ ] Bundle id / package name: suggestion **`us.icsa.app`** (reverse of `icsa.us`).
 - [ ] Icon: ICSA mark on brand blue, no text; 1024×1024 master.
-- [ ] Support URL, marketing URL `https://icsa.us`, privacy policy `https://icsa.us/privacy`.
+- [ ] Support URL, marketing URL `https://icsa.us`, privacy policy `https://icsa.us/privacy_policy` (`/privacy` is a 404).
 
 ## Build requirements (2026)
 

@@ -40,7 +40,7 @@ ICSA — Your Partner in Success
 
 ## App content (Policy › App content)
 
-- **Privacy policy:** https://icsa.us/privacy — **check first that it covers the app:** location read only at check-in; photos and files the person chooses (payment proofs, assignments); name, email and phone from their ICSA account; the sign-in kept on the phone; nothing sold, no ads.
+- **Privacy policy:** https://icsa.us/privacy_policy (`/privacy` is a 404 — checked 10 Nov 2026). **It covers the app since 10 Nov 2026** (clause 02, "The ICSA mobile app"): location read only at check-in; photos and files the person chooses (payment proofs, assignments); name, email and phone from their ICSA account; the sign-in kept on the phone; nothing sold, no ads.
 - **App access:** "All or some functionality is restricted" → add the **test22** login (typed by Yasir). Note for the reviewer: *Check-in works only inside an ICSA branch in Kuwait; everything else works anywhere.*
 - **Ads:** No.
 - **Content rating:** category **Education**. No violence, sexual content, drugs, gambling or bad language. *Users can interact* — **Yes** (students and teachers write comments on assignments). *Shares location* — the app reads location only at check-in and sends it to ICSA, not to other users → answer as the questionnaire words it.
