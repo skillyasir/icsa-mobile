@@ -23,8 +23,21 @@ import { pathFor } from './today';
 // a score out of the assignment's marks, a comment to the student, then
 // Return to redo or Mark reviewed — the AMS's needs_revision and approved.
 
-export function ReviewScreen() {
-  const { assignment, submission } = useLocalSearchParams<{ assignment?: string; submission?: string }>();
+/**
+ * The iPad draws this beside the list (AssignmentsScreen's `aside`): the ids
+ * come as props, there is no back link, and a sent review calls `onDone` (the
+ * list reloads and opens the next) instead of going back. A phone opens it as
+ * its own screen from the route, as before.
+ */
+export function ReviewScreen({
+  assignmentId,
+  submissionId,
+  embedded = false,
+  onDone,
+}: { assignmentId?: string; submissionId?: string; embedded?: boolean; onDone?: () => void } = {}) {
+  const params = useLocalSearchParams<{ assignment?: string; submission?: string }>();
+  const assignment = assignmentId ?? params.assignment;
+  const submission = submissionId ?? params.submission;
   const router = useRouter();
   const t = useAppTheme();
   const { user } = useSession();
@@ -49,7 +62,7 @@ export function ReviewScreen() {
 
   if (!row) {
     return (
-      <Screen title="Review" top={back}>
+      <Screen title="Review" top={embedded ? undefined : back} embedded={embedded}>
         {data.loading ? <Loading what="Loading the submission…" /> : null}
         {data.failure ? <LoadFailed failure={data.failure} onRetry={data.refresh} /> : null}
         {data.data ? (
@@ -83,7 +96,8 @@ export function ReviewScreen() {
         setMessage({ tone: 'danger', text: res.failure.message });
         return;
       }
-      router.back();
+      if (onDone) onDone();
+      else router.back();
     } catch (err) {
       console.warn('[review] could not send:', err instanceof Error ? err.message : String(err));
       setMessage({ tone: 'danger', text: 'The review could not be sent. Nothing was saved — try again.' });
@@ -93,7 +107,12 @@ export function ReviewScreen() {
   };
 
   return (
-    <Screen title={`Review — ${row.student_name}`} eyebrow={`${row.title} · submitted ${formatDay(row.submitted_at)}`} top={back}>
+    <Screen
+      title={`Review — ${row.student_name}`}
+      eyebrow={`${row.title} · submitted ${formatDay(row.submitted_at)}`}
+      top={embedded ? undefined : back}
+      embedded={embedded}
+    >
       {message ? <Notice tone={message.tone}>{message.text}</Notice> : null}
       <Card>
         {row.file_url ? (

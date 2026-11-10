@@ -27,11 +27,17 @@ const MARK: Record<Line['kind'], { glyph: string; bg: keyof Palette; fg: keyof P
   assignment: { glyph: '✎', bg: 'warningSoft', fg: 'onWarningSoft' },
 };
 
-export function SubjectScreen() {
+/**
+ * `subjectId` and `embedded`: the iPad draws this beside the subject list
+ * (LearnScreen's `aside`), with no back link; a phone opens it as its own
+ * screen from the route's ?subject= as before.
+ */
+export function SubjectScreen({ subjectId, embedded = false }: { subjectId?: string; embedded?: boolean } = {}) {
   const t = useAppTheme();
   const router = useRouter();
   const { user } = useSession();
-  const { subject } = useLocalSearchParams<{ subject?: string }>();
+  const params = useLocalSearchParams<{ subject?: string }>();
+  const subject = subjectId ?? params.subject;
   const data = useAmsGet<SubjectLessons>(pathFor(LEARN_API.items.path, { subjectId: subject ?? '' }), !user?.preview && !!subject);
   const d = data.data;
   const chapters = d ? chaptersOf(d.lessons) : [];
@@ -46,7 +52,14 @@ export function SubjectScreen() {
   );
 
   return (
-    <Screen title={d?.subject.subject_name ?? 'Subject'} eyebrow={d?.subject.course_name} top={back} refreshing={data.refreshing} onRefresh={data.refresh}>
+    <Screen
+      title={d?.subject.subject_name ?? 'Subject'}
+      eyebrow={d?.subject.course_name}
+      top={embedded ? undefined : back}
+      embedded={embedded}
+      refreshing={data.refreshing}
+      onRefresh={data.refresh}
+    >
       {data.loading && !d ? <Loading what="Loading the subject…" /> : null}
       {data.failure ? <LoadFailed failure={data.failure} onRetry={data.refresh} stale={!!d} /> : null}
 

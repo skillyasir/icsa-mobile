@@ -11,9 +11,11 @@ import { Card, Screen } from '@/components/Screen';
 import { LoadFailed, Loading } from '@/components/States';
 import { TextField } from '@/components/TextField';
 import { useSession } from '@/session/SessionContext';
+import { useLayout } from '@/layout/useLayout';
 import { useAppTheme } from '@/theme/useAppTheme';
 
 import { STATUS_TONE, coursesLine, listPath, searchParam, type StudentRow } from './students';
+import { StudentScreen } from './StudentScreen';
 
 // The teacher's Students tab (built 8 Nov 2026): the students he teaches —
 // the AMS lists only those, search or not — with their attendance status.
@@ -28,6 +30,10 @@ export function StudentsScreen() {
   const [search, setSearch] = useState<string | null>(null);
   const data = useAmsGet<{ count: number; students: StudentRow[] }>(listPath(search), live);
   const rows = data.data?.students ?? [];
+  // iPad with room (the approved design, mockup 18): the open student sits beside the list.
+  const { split } = useLayout();
+  const [openId, setOpenId] = useState<string | null>(null);
+  const open = split ? (rows.find((r) => r.id === openId) ?? rows[0] ?? null) : null;
 
   if (!live) {
     return (
@@ -40,7 +46,12 @@ export function StudentsScreen() {
   }
 
   return (
-    <Screen title="Students" refreshing={data.refreshing} onRefresh={data.refresh}>
+    <Screen
+      title="Students"
+      refreshing={data.refreshing}
+      onRefresh={data.refresh}
+      aside={split ? open ? <StudentScreen key={open.id} studentId={open.id} embedded /> : <View /> : undefined}
+    >
       <TextField
         label="Search your students"
         value={text}
@@ -69,10 +80,16 @@ export function StudentsScreen() {
         <Pressable
           key={s.id}
           accessibilityRole="button"
-          onPress={() => router.push({ pathname: '/teacher/students/profile', params: { id: s.id } })}
+          accessibilityState={{ selected: open?.id === s.id }}
+          onPress={() => (split ? setOpenId(s.id) : router.push({ pathname: '/teacher/students/profile', params: { id: s.id } }))}
           style={({ pressed }) => [
             styles.row,
-            { backgroundColor: pressed ? t.colors.surfaceMuted : t.colors.surface, borderColor: t.colors.border, borderRadius: t.radius.xl },
+            {
+              backgroundColor: open?.id === s.id ? t.colors.infoSoft : pressed ? t.colors.surfaceMuted : t.colors.surface,
+              borderColor: open?.id === s.id ? t.colors.primary : t.colors.border,
+              borderRadius: t.radius.xl,
+            },
+            open?.id === s.id && styles.openRow,
           ]}
         >
           <View style={[styles.flex, { gap: 2 }]}>
@@ -101,4 +118,5 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   row: { borderWidth: 1, padding: 14 },
+  openRow: { borderWidth: 2.5 },
 });

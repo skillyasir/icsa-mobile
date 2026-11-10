@@ -12,6 +12,7 @@ import { Pill } from '@/components/Pill';
 import { Card, Screen } from '@/components/Screen';
 import { LoadFailed, Loading } from '@/components/States';
 import { useSession } from '@/session/SessionContext';
+import { useLayout } from '@/layout/useLayout';
 import { mix, readableOn, tintedCard } from '@/theme/color';
 import { minTouch } from '@/theme/tokens';
 import { useAppTheme } from '@/theme/useAppTheme';
@@ -33,6 +34,7 @@ import {
   type Subject,
   type SubjectLessons,
 } from './learn';
+import { SubjectScreen } from './SubjectScreen';
 
 // The student's Learn tab (mockup 03, built 8 Nov 2026): the course, its
 // progress and grade so far (the AMS's figures), and its subjects — each with
@@ -49,6 +51,9 @@ export function LearnScreen() {
   const progress = useAmsGet<MyProgress>(LEARN_API.progress.path, live);
   const grades = useAmsGet<MyGrades>(LEARN_API.grades.path, live);
   const [chosen, setChosen] = useState<string | null>(null);
+  // iPad with room (the approved design): the open subject sits beside the list.
+  const { split } = useLayout();
+  const [openSubject, setOpenSubject] = useState<string | null>(null);
   const [picking, setPicking] = useState(false);
   const [subjects, setSubjects] = useState<Loaded[] | null>(null);
   const [failure, setFailure] = useState<Failure | null>(null);
@@ -112,9 +117,19 @@ export function LearnScreen() {
   }
 
   const summary = courseId ? courseSummary(courseId, progress.data, grades.data) : null;
+  // The subject open beside the list: the one chosen, else the one the
+  // student is part-way through, else the first that is open to them.
+  const usable = (subjects ?? []).filter((x) => !x.subject.frozen);
+  const inProgress = usable.find((x) => subjectChip(x.subject, x.lessons?.lessons ?? null, x.lessons?.resume_lesson_id ?? null)?.tone === 'info');
+  const openId = split ? (usable.some((x) => x.subject.id === openSubject) ? openSubject : ((inProgress ?? usable[0])?.subject.id ?? null)) : null;
 
   return (
-    <Screen title="Learn" refreshing={refreshing || courses.refreshing} onRefresh={refresh}>
+    <Screen
+      title="Learn"
+      refreshing={refreshing || courses.refreshing}
+      onRefresh={refresh}
+      aside={split ? openId ? <SubjectScreen key={openId} subjectId={openId} embedded /> : <View /> : undefined}
+    >
       {courses.loading && !courses.data ? <Loading what="Loading your courses…" /> : null}
       {courses.failure && !courses.data ? <LoadFailed failure={courses.failure} onRetry={courses.refresh} /> : null}
       {courses.data && list.length === 0 ? (
@@ -214,12 +229,14 @@ export function LearnScreen() {
                 key={s.id}
                 accessibilityRole="button"
                 disabled={s.frozen}
-                onPress={() => router.push({ pathname: '/student/learn/subject', params: { subject: s.id } })}
+                accessibilityState={{ selected: openId === s.id }}
+                onPress={() => (split ? setOpenSubject(s.id) : router.push({ pathname: '/student/learn/subject', params: { subject: s.id } }))}
                 style={({ pressed }) => [
                   styles.subject,
                   {
                     backgroundColor: pressed ? pressedCard : card,
-                    borderColor: mix(card, tint, 0.55),
+                    borderColor: openId === s.id ? tint : mix(card, tint, 0.55),
+                    borderWidth: openId === s.id ? 2.5 : 1.5,
                     borderRadius: t.radius.xl,
                     opacity: s.frozen ? 0.6 : 1,
                   },

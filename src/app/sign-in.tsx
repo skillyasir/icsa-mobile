@@ -18,6 +18,7 @@ import { AppText } from '@/components/AppText';
 import { CaptchaView, type CaptchaHandle } from '@/auth/CaptchaView';
 import { appleAvailable } from '@/auth/nativeSignIn';
 import type { Provider } from '@/auth/providerRoute';
+import { useLayout } from '@/layout/useLayout';
 import { useLock } from '@/lock/LockProvider';
 import { Button } from '@/components/Button';
 import { Notice } from '@/components/Notice';
@@ -53,6 +54,8 @@ const PREVIEW: { label: string; user: Omit<SessionUser, 'preview'> }[] = [
 
 export default function SignIn() {
   const t = useAppTheme();
+  // iPad (10 Nov 2026): the form is a centred column, never stretched across the screen.
+  const { wide } = useLayout();
   const router = useRouter();
   const { previewSignIn, signIn, signInWith, notice } = useSession();
   const lock = useLock();
@@ -122,7 +125,7 @@ export default function SignIn() {
               <View style={[styles.dot, styles.dotYellow]} />
               <View style={[styles.dot, styles.dotGreen]} />
             </View>
-            <SafeAreaView edges={['top']} style={styles.heroInner}>
+            <SafeAreaView edges={['top']} style={[styles.heroInner, wide && styles.narrow]}>
               <View style={styles.logoTile}>
                 <AppText variant="headline" style={styles.logoText}>
                   ICSA
@@ -135,7 +138,7 @@ export default function SignIn() {
             </SafeAreaView>
           </View>
 
-          <View style={[styles.form, { padding: t.space.xxl, gap: t.space.lg }]}>
+          <View style={[styles.form, { padding: t.space.xxl, gap: t.space.lg }, wide && styles.narrow]}>
             <TextField
               label="Username, email or student code"
               value={identifier}
@@ -307,6 +310,7 @@ const styles = StyleSheet.create({
   },
   logoText: { color: brand.blue },
   form: {},
+  narrow: { width: '100%', maxWidth: 560, alignSelf: 'center' },
   forgot: { alignSelf: 'flex-end', minHeight: minTouch, justifyContent: 'center' },
   orRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   rule: { flex: 1, height: StyleSheet.hairlineWidth * 2 },

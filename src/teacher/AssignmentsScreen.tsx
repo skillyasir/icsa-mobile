@@ -11,6 +11,7 @@ import { Card, Screen } from '@/components/Screen';
 import { LoadFailed, Loading } from '@/components/States';
 import { useSession } from '@/session/SessionContext';
 import type { Palette } from '@/theme/tokens';
+import { useLayout } from '@/layout/useLayout';
 import { useAppTheme } from '@/theme/useAppTheme';
 
 import {
@@ -25,6 +26,7 @@ import {
   type SubmissionsAnswer,
 } from './assignments';
 import { pathFor } from './today';
+import { ReviewScreen } from './ReviewScreen';
 
 // Check assignments (mockup 07, built 7 Nov 2026): every submission of the
 // assignments in this teacher's review queue, To check first. Tap one to
@@ -46,6 +48,9 @@ export function AssignmentsScreen() {
   const [failure, setFailure] = useState<Failure | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<Filter>('to_check');
+  // iPad with room (the approved design): the open submission sits beside the list.
+  const { split } = useLayout();
+  const [openRow, setOpenRow] = useState<string | null>(null);
   const latest = useRef(0);
 
   // The queue, then each assignment's submissions — the queue is a handful.
@@ -102,8 +107,33 @@ export function AssignmentsScreen() {
     { key: 'all', label: `All ${counts.all}` },
   ];
 
+  // The submission open beside the list: the one chosen, else the first shown.
+  const open = split ? (shown.find((r) => r.id === openRow) ?? shown[0] ?? null) : null;
+
   return (
-    <Screen title="Check assignments" refreshing={refreshing} onRefresh={() => load(true)}>
+    <Screen
+      title="Check assignments"
+      refreshing={refreshing}
+      onRefresh={() => load(true)}
+      aside={
+        split
+          ? open
+            ? (
+              <ReviewScreen
+                key={open.id}
+                assignmentId={open.assignment_id}
+                submissionId={open.id}
+                embedded
+                onDone={() => {
+                  setOpenRow(null);
+                  load(true);
+                }}
+              />
+            )
+            : <View />
+          : undefined
+      }
+    >
       <View style={styles.chips}>
         {chips.map((c) => {
           const on = c.key === filter;
@@ -142,12 +172,16 @@ export function AssignmentsScreen() {
           <Pressable
             key={r.id}
             accessibilityRole="button"
-            onPress={() => router.push({ pathname: '/teacher/assignments/review', params: { assignment: r.assignment_id, submission: r.id } })}
+            accessibilityState={{ selected: open?.id === r.id }}
+            onPress={() =>
+              split ? setOpenRow(r.id) : router.push({ pathname: '/teacher/assignments/review', params: { assignment: r.assignment_id, submission: r.id } })
+            }
             style={({ pressed }) => [
               styles.row,
               {
-                backgroundColor: pressed ? t.colors.surfaceMuted : t.colors.surface,
-                borderColor: r.status === 'submitted' ? t.colors.primary : t.colors.border,
+                backgroundColor: open?.id === r.id ? t.colors.infoSoft : pressed ? t.colors.surfaceMuted : t.colors.surface,
+                borderColor: open?.id === r.id || r.status === 'submitted' ? t.colors.primary : t.colors.border,
+                borderWidth: open?.id === r.id ? 2.5 : 1.5,
                 borderRadius: t.radius.xl,
                 padding: t.space.lg,
                 gap: t.space.xs,

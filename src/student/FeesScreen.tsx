@@ -8,6 +8,7 @@ import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
 import { Notice } from '@/components/Notice';
 import { Card, Screen } from '@/components/Screen';
+import { Column, WideRow } from '@/components/WideRow';
 import { LoadFailed, Loading } from '@/components/States';
 import { useSession } from '@/session/SessionContext';
 import type { Palette } from '@/theme/tokens';
@@ -59,7 +60,11 @@ export function FeesScreen() {
         fees.refresh();
         proofs.refresh();
       }}
+      width="full"
     >
+      {/* iPad: the fees beside sending a proof and the proofs sent (the approved design). */}
+      <WideRow ratios={[1.4, 1]}>
+      <Column>
       {fees.loading && !fees.data ? <Loading what="Loading your fees…" /> : null}
       {fees.failure ? <LoadFailed failure={fees.failure} onRetry={fees.refresh} stale={!!fees.data} /> : null}
       {fees.data && list.length === 0 ? (
@@ -109,7 +114,9 @@ export function FeesScreen() {
           ) : null}
         </View>
       ))}
+      </Column>
 
+      <Column>
       {fees.data ? (
         <View style={[styles.cta, { backgroundColor: t.colors.hero, borderRadius: t.radius.xl, padding: t.space.lg, gap: t.space.md }]}>
           <AppText variant="title" color="onHero">
@@ -141,6 +148,8 @@ export function FeesScreen() {
           </Card>
         </View>
       ) : null}
+      </Column>
+      </WideRow>
     </Screen>
   );
 }

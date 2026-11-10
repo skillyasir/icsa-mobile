@@ -28,6 +28,12 @@ export function ExperienceTabs({ experience }: { experience: Experience }) {
       // Every name, on both (Yasir, 5 Nov 2026): students and staff learn the
       // tabs by their names.
       labelVisibilityMode="labeled"
+      // iPad (Yasir, 10 Nov 2026 — the approved iPad designs): the tabs
+      // become iPadOS's own left sidebar, like the website's menu. Phones keep
+      // the bottom tabs (Yasir, 10 Nov 2026). iPadOS 18–26 shows the tabs at
+      // the top with a button to open the sidebar; 27 and later opens it.
+      sidebarAdaptable
+      preferredPlacement="sidebar"
     >
       {TABS[experience].map((tab) => (
         <NativeTabs.Trigger key={tab.name} name={tab.name}>

@@ -63,3 +63,18 @@ four changes and still show the old screens — re-export them from the canvas
 if a fresh sheet is needed.
 
 Changes go on the canvas first, then into the app.
+
+## iPad — approved 10 Nov 2026
+
+**Yasir ruled, 10 Nov 2026: "Full iPad layout first"**, and approved all six
+iPad screens the same day (canvas rows "iPad — students" and "iPad — teachers",
+iPad 13" landscape, 1376 × 1032): student Home, Learn, Attendance, Fees;
+teacher Today, Check assignments. Phones keep the bottom tabs (Yasir, 10 Nov
+2026: "Keep tabs on phones").
+
+In the app: the tabs become iPadOS's own sidebar; Learn, Check assignments and
+Students open their item beside the list (with room, `layout/breakpoints.ts`
+SPLIT_MIN); Home, Attendance, Fees and Today lay out in columns; every other
+screen is a centred column. `layout/layout.check.ts` holds it. The drawn
+sidebar's brand tile and name at the bottom are the mockup's; the app uses
+iPadOS's own sidebar.

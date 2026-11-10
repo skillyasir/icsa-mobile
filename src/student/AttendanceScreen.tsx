@@ -18,6 +18,7 @@ import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
 import { Notice } from '@/components/Notice';
 import { Card, Screen } from '@/components/Screen';
+import { Column, WideRow } from '@/components/WideRow';
 import { LoadFailed, Loading } from '@/components/States';
 import type { Palette } from '@/theme/tokens';
 import { useSession } from '@/session/SessionContext';
@@ -65,7 +66,10 @@ export function AttendanceScreen() {
   const records = hist.data?.records ?? [];
 
   return (
-    <Screen title="Attendance" refreshing={ctx.refreshing || hist.refreshing} onRefresh={refresh}>
+    <Screen title="Attendance" refreshing={ctx.refreshing || hist.refreshing} onRefresh={refresh} width="full">
+      {/* iPad: the classes beside the history (the approved design). */}
+      <WideRow ratios={[1, 1.15]}>
+      <Column>
       <AppText variant="label" color="textMuted">
         YOUR CLASSES
       </AppText>
@@ -81,7 +85,9 @@ export function AttendanceScreen() {
       ) : (
         classes.map((c) => <TodayCard key={c.enrollmentId} c={c} onOpen={(start) => open(c, start)} />)
       )}
+      </Column>
 
+      <Column>
       <AppText variant="label" color="textMuted">
         HISTORY
       </AppText>
@@ -138,6 +144,8 @@ export function AttendanceScreen() {
           {hist.failure ? <LoadFailed failure={hist.failure} onRetry={hist.refresh} stale /> : null}
         </>
       )}
+      </Column>
+      </WideRow>
     </Screen>
   );
 }

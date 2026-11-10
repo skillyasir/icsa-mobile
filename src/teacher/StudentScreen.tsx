@@ -20,11 +20,13 @@ import { STATUS_TONE, STUDENTS_API, attendanceLine, dialable, whatsappUrl, type 
 // Opened only from the teacher's own list, which the AMS scopes to the
 // students he teaches.
 
-export function StudentScreen() {
+/** The iPad draws this beside the list (StudentsScreen's `aside`), with no back link. */
+export function StudentScreen({ studentId, embedded = false }: { studentId?: string; embedded?: boolean } = {}) {
   const t = useAppTheme();
   const router = useRouter();
   const { user } = useSession();
-  const { id } = useLocalSearchParams<{ id?: string }>();
+  const params = useLocalSearchParams<{ id?: string }>();
+  const id = studentId ?? params.id;
   const live = !user?.preview && !!id;
   const one = useAmsGet<{ student: StudentRow }>(pathFor(STUDENTS_API.one.path, { id: id ?? '' }), live);
   const att = useAmsGet<AttendanceAnswer>(pathFor(STUDENTS_API.attendance.path, { id: id ?? '' }), live);
@@ -46,7 +48,14 @@ export function StudentScreen() {
   };
 
   return (
-    <Screen title={s?.full_name ?? 'Student'} eyebrow={s?.student_code ?? undefined} top={back} refreshing={one.refreshing || att.refreshing} onRefresh={refresh}>
+    <Screen
+      title={s?.full_name ?? 'Student'}
+      eyebrow={s?.student_code ?? undefined}
+      top={embedded ? undefined : back}
+      embedded={embedded}
+      refreshing={one.refreshing || att.refreshing}
+      onRefresh={refresh}
+    >
       {one.loading && !s ? <Loading what="Loading the student…" /> : null}
       {one.failure ? <LoadFailed failure={one.failure} onRetry={refresh} stale={!!s} /> : null}
 

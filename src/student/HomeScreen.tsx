@@ -23,6 +23,7 @@ import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
 import { Notice } from '@/components/Notice';
 import { Card, Screen } from '@/components/Screen';
+import { Column, WideRow } from '@/components/WideRow';
 import { LoadFailed, Loading } from '@/components/States';
 import { useSession } from '@/session/SessionContext';
 import { useAppTheme } from '@/theme/useAppTheme';
@@ -68,6 +69,7 @@ export function HomeScreen() {
       eyebrow={formatWeekdayDay(now)}
       refreshing={ctx.refreshing || dash.refreshing}
       onRefresh={live ? refresh : undefined}
+      width="full"
     >
       {!live ? (
         <Notice tone="warning" title="Developer preview">
@@ -106,6 +108,9 @@ export function HomeScreen() {
         </View>
       ) : null}
 
+      {/* iPad: where to continue beside what is due (the approved design). */}
+      <WideRow ratios={[2, 1]}>
+      <Column>
       {resume ? (
         <View style={{ gap: t.space.sm }}>
           <AppText variant="label" color="textMuted">
@@ -134,7 +139,8 @@ export function HomeScreen() {
           </Pressable>
         </View>
       ) : null}
-
+      </Column>
+      <Column>
       {d && d.due_soon.length > 0 ? (
         <View style={{ gap: t.space.sm }}>
           <AppText variant="label" color="textMuted">
@@ -162,6 +168,8 @@ export function HomeScreen() {
           </Card>
         </View>
       ) : null}
+      </Column>
+      </WideRow>
     </Screen>
   );
 }

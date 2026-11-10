@@ -9,6 +9,7 @@ import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
 import { Notice } from '@/components/Notice';
 import { Card, Screen } from '@/components/Screen';
+import { Column, WideRow } from '@/components/WideRow';
 import { LoadFailed, Loading } from '@/components/States';
 import { useSession } from '@/session/SessionContext';
 import type { Palette } from '@/theme/tokens';
@@ -140,6 +141,7 @@ export function TodayScreen() {
       eyebrow={[day, user?.branch_name].filter(Boolean).join(' · ')}
       refreshing={ctx.refreshing}
       onRefresh={refresh}
+      width="full"
     >
       {ctx.loading && !data ? <Loading what="Loading today’s check-ins…" /> : null}
       {ctx.failure && !data ? <LoadFailed failure={ctx.failure} onRetry={ctx.refresh} /> : null}
@@ -147,6 +149,9 @@ export function TodayScreen() {
       {readOnly ? <Notice tone="info">This is another day: marks can only be changed on the day itself.</Notice> : null}
       {outcome ? <Notice tone={outcome.tone}>{outcome.text}</Notice> : null}
 
+      {/* iPad: the check-ins waiting beside today's classes, then what was marked beside the counts (the approved design). */}
+      <WideRow ratios={[1.35, 1]}>
+      <Column>
       {data ? (
         waiting.length === 0 ? (
           <Card>
@@ -189,7 +194,9 @@ export function TodayScreen() {
           </View>
         )
       ) : null}
+      </Column>
 
+      <Column>
       {data ? (
         <View style={{ gap: t.space.sm }}>
           <AppText variant="headline">Classes</AppText>
@@ -208,7 +215,11 @@ export function TodayScreen() {
           )}
         </View>
       ) : null}
+      </Column>
+      </WideRow>
 
+      <WideRow ratios={[1.35, 1]}>
+      <Column>
       {data && done.length > 0 ? (
         <View style={{ gap: t.space.sm }}>
           <AppText variant="label" color="textMuted">
@@ -244,7 +255,9 @@ export function TodayScreen() {
           </Card>
         </View>
       ) : null}
+      </Column>
 
+      <Column>
       <View style={styles.tiles}>
         <Tile
           n={queue.data ? String(queue.data.total_pending ?? 0) : queue.failure ? '—' : '…'}
@@ -258,6 +271,8 @@ export function TodayScreen() {
           onPress={() => router.navigate('/teacher/classes')}
         />
       </View>
+      </Column>
+      </WideRow>
     </Screen>
   );
 }
