@@ -11,6 +11,8 @@ import { EXPERIENCE_LABEL } from '@/lib/roles';
 import { useLock } from '@/lock/LockProvider';
 import { LOCK_AFTER_MS } from '@/lock/lockRule';
 import { useSession } from '@/session/SessionContext';
+import { APPEARANCE_CHOICES } from '@/theme/appearance';
+import { useAppearance } from '@/theme/AppearanceProvider';
 import { minTouch } from '@/theme/tokens';
 import { useAppTheme } from '@/theme/useAppTheme';
 
@@ -28,6 +30,7 @@ export function MeScreen() {
   const lock = useLock();
   const router = useRouter();
   const t = useAppTheme();
+  const appearance = useAppearance();
   if (!user) return null;
   // What the AMS said about this person: their branch, and their student code
   // (given at sign-in) or email.
@@ -122,6 +125,41 @@ export function MeScreen() {
         </View>
       ) : null}
 
+      <View style={{ gap: t.space.sm }}>
+        <AppText variant="label" color="textMuted">
+          APPEARANCE
+        </AppText>
+        <Card>
+          <View style={[styles.segments, { backgroundColor: t.colors.surfaceMuted, borderRadius: t.radius.md }]} accessibilityRole="radiogroup">
+            {APPEARANCE_CHOICES.map((c) => {
+              const on = c.value === appearance.choice;
+              return (
+                <Pressable
+                  key={c.value}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: on }}
+                  onPress={() => {
+                    appearance.setChoice(c.value);
+                  }}
+                  style={[
+                    styles.segment,
+                    { borderRadius: t.radius.sm },
+                    on && { backgroundColor: t.colors.primary },
+                  ]}
+                >
+                  <AppText variant="bodyStrong" style={{ color: on ? t.colors.onPrimary : t.colors.text }} numberOfLines={1} adjustsFontSizeToFit>
+                    {c.label}
+                  </AppText>
+                </Pressable>
+              );
+            })}
+          </View>
+          <AppText variant="caption" color="textSubtle">
+            {appearance.choice === 'system' ? 'ICSA follows this phone’s Light or Dark setting.' : 'Kept on this phone, even after you sign out.'}
+          </AppText>
+        </Card>
+      </View>
+
       {!user.preview ? <SignInMethods email={user.email} /> : null}
 
       <AppText variant="caption" color="textSubtle" style={styles.centred}>
@@ -146,4 +184,6 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   row: { minHeight: minTouch, flexDirection: 'row', alignItems: 'center', gap: 12 },
   centred: { textAlign: 'center' },
+  segments: { flexDirection: 'row', padding: 4, gap: 4 },
+  segment: { flex: 1, minHeight: minTouch, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
 });

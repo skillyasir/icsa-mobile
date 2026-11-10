@@ -11,11 +11,22 @@ import { useEffect } from 'react';
 import { AppGate } from '@/gate/AppGate';
 import { LockProvider } from '@/lock/LockProvider';
 import { SessionProvider } from '@/session/SessionContext';
+import { AppearanceProvider, useAppearance } from '@/theme/AppearanceProvider';
 import { useAppTheme } from '@/theme/useAppTheme';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  // The Light / Dark choice wraps everything, so the splash can wait for it.
+  return (
+    <AppearanceProvider>
+      <Root />
+    </AppearanceProvider>
+  );
+}
+
+function Root() {
+  const appearance = useAppearance();
   const [fontsLoaded, fontError] = useFonts({
     Nunito_400Regular,
     Nunito_600SemiBold,
@@ -25,12 +36,15 @@ export default function RootLayout() {
   const t = useAppTheme();
 
   // Hide the splash once the fonts are in — or failed, in which case the
-  // system font is used rather than holding the app on the splash forever.
+  // system font is used rather than holding the app on the splash forever —
+  // and the phone's Light / Dark choice has been read, so a phone set to Dark
+  // never shows a light screen first.
+  const fontsDone = fontsLoaded || !!fontError;
   useEffect(() => {
-    if (fontsLoaded || fontError) SplashScreen.hideAsync();
-  }, [fontsLoaded, fontError]);
+    if (fontsDone && appearance.ready) SplashScreen.hideAsync();
+  }, [fontsDone, appearance.ready]);
 
-  if (!fontsLoaded && !fontError) return null;
+  if (!fontsDone || !appearance.ready) return null;
 
   const base = t.scheme === 'dark' ? DarkTheme : DefaultTheme;
   const navTheme = {
