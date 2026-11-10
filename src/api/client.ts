@@ -32,6 +32,14 @@ export const DEVICE: DeviceInfo = {
   appVersion: Constants.expoConfig?.version ?? null,
 };
 
+/**
+ * The build number (iPhone buildNumber, Android versionCode), shown in Me
+ * beside the version (10 Nov 2026): every TestFlight / Play test build is
+ * 1.0.0, so without it nobody can tell which build a phone is running.
+ */
+export const APP_BUILD: string | null =
+  (Platform.OS === 'android' ? Constants.expoConfig?.android?.versionCode?.toString() : Constants.expoConfig?.ios?.buildNumber) ?? null;
+
 /** The Keychain / Keystore, for anything else the app keeps on this phone. */
 export const phoneStore = secureStore;
 

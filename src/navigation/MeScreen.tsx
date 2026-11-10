@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Switch, View } from 'react-native';
 
-import { DEVICE } from '@/api/client';
+import { APP_BUILD, DEVICE } from '@/api/client';
 
 import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
@@ -164,6 +164,7 @@ export function MeScreen() {
 
       <AppText variant="caption" color="textSubtle" style={styles.centred}>
         ICSA app version {DEVICE.appVersion ?? 'unknown'}
+        {APP_BUILD ? ` (build ${APP_BUILD})` : ''}
       </AppText>
 
       <Button

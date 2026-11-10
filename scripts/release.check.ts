@@ -89,6 +89,11 @@ run('release.check — the Android release build is signed with ICSA\'s upload k
   // same build number, so it is set here and raised for every upload.
   const ios = (JSON.parse(readFileSync(new URL('app.json', ROOT), 'utf8')) as { expo: { ios: { buildNumber?: string } } }).expo.ios;
   h.check('§3 the iOS buildNumber is a whole number from 1, written as text (raise it for every upload)', typeof ios.buildNumber === 'string' && /^[1-9]\d*$/.test(ios.buildNumber), String(ios.buildNumber));
+  // Every test build is 1.0.0, so Me also shows the build (10 Nov 2026).
+  const client = readFileSync(new URL('src/api/client.ts', ROOT), 'utf8');
+  const me = readFileSync(new URL('src/navigation/MeScreen.tsx', ROOT), 'utf8');
+  h.check('§3 Me shows the build beside the version (iPhone buildNumber, Android versionCode)',
+    /expoConfig\?\.ios\?\.buildNumber/.test(client) && /expoConfig\?\.android\?\.versionCode/.test(client) && /\(build \$\{APP_BUILD\}\)/.test(me));
   h.check('§3 the package is us.icsa.app', a.package === 'us.icsa.app');
   h.check('§3 SYSTEM_ALERT_WINDOW is removed (the app never draws over other apps)', (a.blockedPermissions ?? []).includes('android.permission.SYSTEM_ALERT_WINDOW'));
   const picker = app.expo.plugins.find((p) => Array.isArray(p) && p[0] === 'expo-image-picker') as [string, Record<string, unknown>] | undefined;
