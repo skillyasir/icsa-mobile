@@ -3,14 +3,16 @@
 Written 8 Nov 2026 for the closed test (Yasir ruled, 8 Nov 2026: start it now).
 Copy these into Play Console. Re-read them against the app before the public release.
 
-## Store listing (Grow users › Store presence › Main store listing)
+## Store listing (Grow users › Store presence › Store listings › Default store listing)
+
+Entered and saved as a draft 11 Nov 2026. **Yasir ruled, 11 Nov 2026: no fees in the Play listing** (matching the App Store) — the fees line is gone from both descriptions.
 
 - **App name:** ICSA
-- **Short description** (71 of 80 characters):
-  Your ICSA classes, check-in, lessons, assignments and fees, in one app.
+- **Short description** (65 of 80 characters):
+  Your ICSA classes, check-in, lessons and assignments, in one app.
 - **App icon:** `store/play-icon-512.png`
 - **Feature graphic:** `store/play-feature-graphic.png`
-- **Phone screenshots:** at least 2 (up to 8), from the Android emulator or a phone, signed in as **test22** — never a real student's screen. Suggested: Home, Check in, Learn, a lesson, Fees.
+- **Phone screenshots:** 2–8, **exactly 9:16** (Play's rule in 2026), each side 320–3,840 px; 4 or more at 1080 px+ to be eligible for promotion. The set (Yasir, 11 Nov 2026): **Home, Learn, Word subject, Attendance, Me** from the Android emulator as the **demo student** (appreview@icsa.us) — **no fees screens**, never a real student. The emulator's 1344 × 2992 is too tall, so each is centred on a 9:16 canvas of the app's own background.
 - **Category:** Education. **Contact email:** the ICSA address you want students to write to. **Website:** https://icsa.us
 
 **Full description:**
@@ -23,7 +25,6 @@ For students
 • See your attendance, and fix the teacher if you checked in under the wrong one
 • Open your lessons, videos, interactive lessons and quizzes
 • Hand in assignments as a file or a photo, and read your teacher's comments
-• See your course fee, what you have paid and your instalments, and send a payment proof to reception
 
 For teachers
 • Today's classes, and the students waiting for you to confirm them
