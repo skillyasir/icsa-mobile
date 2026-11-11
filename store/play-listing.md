@@ -49,19 +49,31 @@ ICSA — Your Partner in Success
 
 ## Data safety (Policy › App content › Data safety)
 
-- **Does the app collect or share user data?** Yes, collects. **Shared with third parties:** No.
-- **Encrypted in transit:** Yes (HTTPS only).
-- **Can users ask for their data to be deleted?** Yes — by asking ICSA (accounts are made by ICSA staff, not in the app). Give the contact the privacy policy names.
+Filled in Play Console 11 Nov 2026 and saved as a draft; it is sent for review
+with the app once Target audience is done.
 
-| Data type | Collected | Why | Optional? |
-|---|---|---|---|
-| **Location — precise** | Yes, only when Check in is tapped | App functionality (confirm the student is at a branch) | Required for check-in only |
-| **Personal info — name, email, phone** | Yes (sign-in and the account shown) | App functionality, account management | Required |
-| **Personal info — user IDs** | Yes | App functionality, account management | Required |
-| **Financial info — other** (an amount paid, on a payment proof) | Yes, when sent | App functionality | Optional |
-| **Photos** | Yes, the ones chosen for a proof or an assignment | App functionality | Optional |
-| **Files and docs** | Yes, the ones handed in as an assignment | App functionality | Optional |
-| **Messages — other in-app messages** (assignment comments) | Yes | App functionality | Optional |
-| **Device or other IDs** (this phone's sign-in record) | Yes | App functionality, security | Required |
+- **Collects or shares user data:** Yes, collects. **Shared with third parties:** No.
+- **Encrypted in transit:** Yes (HTTPS only).
+- **Account creation:** the app does not let users create an account. Users sign
+  in with accounts made outside the app — "Out of app identification (service
+  subscription)": ICSA staff make the account when a student enrols.
+- **Data deletion:** Yes — Delete data URL `https://icsa.us/privacy_policy`
+  ("Deleting your account": email info@icsa.us).
+- **Name and phone are not listed:** the app shows them but never sends them.
+
+Every type below: collected, not shared, not processed ephemerally.
+
+| Data type | Why | Required or optional |
+|---|---|---|
+| **Location — precise** (only when Check in is tapped) | App functionality | Optional |
+| **Personal info — email address** | App functionality, account management | Required |
+| **Personal info — user IDs** | App functionality, account management | Required |
+| **Financial info — other** (the amount on a payment proof) | App functionality | Optional |
+| **Messages — other in-app messages** (assignment comments) | App functionality | Optional |
+| **Photos** (chosen for a proof or an assignment) | App functionality | Optional |
+| **Files and docs** (handed in as an assignment) | App functionality | Optional |
+| **App activity — app interactions** (lesson progress, in the lesson pages) | App functionality | Required |
+| **App activity — other user-generated content** (quiz answers, assignment work) | App functionality | Optional |
+| **Device or other IDs** (this phone's sign-in record) | App functionality; fraud prevention, security and compliance | Required |
 
 No data is used for advertising or analytics, and none is sold.
