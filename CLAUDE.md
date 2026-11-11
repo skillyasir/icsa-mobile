@@ -58,6 +58,6 @@ The ICSA app for iPhone, iPad, Mac and Android, on top of the ICSA AMS. Written 
 - **Money never queues offline.** Payment, enrolment and registration writes need a live connection and carry an idempotency key, so a retry on a weak signal cannot record a payment twice.
 - **Tokens live in the Keychain / Android Keystore** (`expo-secure-store`) — never AsyncStorage.
 - **No personal data on the lock screen** by default — push text says what happened, not the student's name, amount or Civil ID.
-- **Location only when needed:** for check-in, and (Yasir ruled, 3 Nov 2026) **student arrival reminders** by the phone's own geofence around each branch. **Never staff. Never sent to the server in the background. Never an automatic check-in** — the student taps.
+- **Location only when needed, read in the foreground at a tap:** a student's check-in; a staff member's four attendance taps and a manager's Add this router (with the office Wi-Fi address — Yasir, 11 Nov 2026). And (Yasir ruled, 3 Nov 2026) **student arrival reminders** by the phone's own geofence around each branch — **background reminders are students only, never staff. Nothing is sent to the server in the background. Never an automatic check-in** — the person taps.
 - **Respect the platform:** iOS tab bar and gestures on iPhone, Material 3 on Android, sidebar layouts on iPad/Mac. Dark mode, Dynamic Type, RTL-ready for Arabic.
 - **Every screen handles loading, empty, error and offline** — no blank screens, no silent failures. A failure names the server's error.
