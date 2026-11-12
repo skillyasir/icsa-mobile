@@ -35,6 +35,19 @@ const tryAdd = (s: string) => {
   }
 };
 
+/** The members R8's usage.txt says it removed from one class, over every block for it; a bare class line = the whole class went. */
+function removedMembers(usage: string, cls: string): string[] {
+  const out: string[] = [];
+  let inside = false;
+  for (const line of usage.split('\n')) {
+    const header = !/^\s/.test(line);
+    if (header) inside = line === `${cls}:`;
+    if (header && line === cls) out.push('the whole class');
+    else if (inside && !header && line.trim()) out.push(line.trim());
+  }
+  return out;
+}
+
 /** What a correctly signed build.gradle must say — the same questions for the fixture and the Mac's own file. */
 function holds(h: { check: (label: string, cond: boolean, detail?: string) => void }, where: string, out: string) {
   const signing = block(out, 'signingConfigs');
@@ -104,4 +117,37 @@ run('release.check — the Android release build is signed with ICSA\'s upload k
   // §4 the key never enters the repo
   const ignore = readFileSync(new URL('.gitignore', ROOT), 'utf8').split('\n');
   h.check('§4 git ignores keystores and android/', ignore.includes('*.keystore') && ignore.includes('*.jks') && ignore.includes('android/'));
+
+  // §5 the keep rules shrinking needs. 12 Nov 2026: the Play build crashed on
+  // every start — R8 removed the no-argument constructor Room calls by
+  // reflection to create WorkManager's database (react-native-maps brings it).
+  const rules = require('../plugins/withProguardRules.js') as { addProguardRules: (s: string) => string; MARK: string };
+  const KEEP = /^-keep class \* extends androidx\.room\.RoomDatabase \{ <init>\(\); \}$/m;
+  h.check('§5 the matcher finds the rule as its own line — not a comment mentioning it, not the class-only form',
+    KEEP.test('x\n-keep class * extends androidx.room.RoomDatabase { <init>(); }\n') &&
+    !KEEP.test('# -keep class * extends androidx.room.RoomDatabase { <init>(); }') &&
+    !KEEP.test('-keep class * extends androidx.room.RoomDatabase\n'));
+  h.check('§5 removedMembers reads every usage.txt block for the class, and only it',
+    JSON.stringify(removedMembers('a.B:\n    public void <init>()\nandroidx.work.impl.WorkDatabase_Impl:\n    public void <init>()\n    x\nc.D\nandroidx.work.impl.WorkDatabase_Impl:\n    y\n', 'androidx.work.impl.WorkDatabase_Impl')) === JSON.stringify(['public void <init>()', 'x', 'y']) &&
+    removedMembers('androidx.work.impl.WorkDatabase_Impl\n', 'androidx.work.impl.WorkDatabase_Impl')[0] === 'the whole class' &&
+    removedMembers('a.B:\n    x\n', 'androidx.work.impl.WorkDatabase_Impl').length === 0);
+  const pro = readFileSync(new URL('fixtures/expo58-proguard-rules.pro', import.meta.url), 'utf8');
+  h.check('§5 the fixture is the real Expo 58 proguard-rules.pro, without the rule', pro.length > 300 && /reanimated/.test(pro) && !KEEP.test(pro), String(pro.length));
+  const added = rules.addProguardRules(pro);
+  h.check('§5 the plugin adds the rule', KEEP.test(added));
+  h.check('§5 …keeps everything that was there, and running it twice changes nothing', added.startsWith(pro.replace(/\s*$/, '')) && rules.addProguardRules(added) === added);
+  h.check('§5 the plugin is in app.json', app.expo.plugins.includes('./plugins/withProguardRules'));
+  const realPro = new URL('android/app/proguard-rules.pro', ROOT);
+  if (existsSync(realPro)) {
+    h.check("§5 this machine's android/app/proguard-rules.pro: the plugin applies", KEEP.test(rules.addProguardRules(readFileSync(realPro, 'utf8'))));
+  }
+  // The last release build's own R8 report — the build itself, not the rule.
+  const usageUrl = new URL('android/app/build/outputs/mapping/release/usage.txt', ROOT);
+  if (existsSync(usageUrl)) {
+    const usage = readFileSync(usageUrl, 'utf8');
+    const removed = removedMembers(usage, 'androidx.work.impl.WorkDatabase_Impl');
+    h.check('§5 the last release build\'s R8 report is read whole', usage.length > 100000, String(usage.length));
+    h.check('§5 the last release build kept WorkDatabase_Impl and its constructor (red = that build predates the rule: prebuild and rebuild)',
+      !removed.some((m) => m === 'the whole class' || /\s<init>\(\)$/.test(m)), removed.join(' | '));
+  }
 });
