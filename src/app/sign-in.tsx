@@ -200,7 +200,10 @@ export default function SignIn() {
                   <SymbolView name="apple.logo" size={22} tintColor={t.colors.onAppleButton} />
                 </Pressable>
               ) : null}
-              <View style={[styles.logoButton, busy && styles.dim]}>
+              {/* Android: dimming must never switch this wrapper between drawn and flattened away —
+                  that moves Google's native button between parents, and the Play build crashed
+                  the moment a sign-in finished (12 Nov 2026; src/layout/flattening.check.ts). */}
+              <View collapsable={false} style={[styles.logoButton, busy && styles.dim]}>
                 <GoogleSigninButton
                   size={GoogleSigninButton.Size.Icon}
                   color={t.scheme}
