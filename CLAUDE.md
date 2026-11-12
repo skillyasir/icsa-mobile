@@ -50,6 +50,8 @@ The ICSA app for iPhone, iPad, Mac and Android, on top of the ICSA AMS. Written 
 ## Rules for this app
 
 - **Read `AGENTS.md` too** — Expo's own rules for this SDK (it came with the template on 3 Nov 2026): add packages with **`npx expo install`**, never `npm install <pkg>`; check the **versioned Expo docs** for SDK 58, not memory; never hand-edit `ios/` or `android/` (they are generated — configure in `app.json`). Before calling anything done: `npm run typecheck`, `npm run lint` and `npm run checks` — all three exit 0.
+- **Before every Play upload, test the RELEASE build on the emulator** (`./gradlew assembleRelease`, `adb install -r` the APK): sign in for real — never the developer preview — and open every screen. The debug build does not shrink code and the preview skips the real sign-in; on 12 Nov 2026 release 1 passed review and crashed on every phone, twice over (`HANDOVER.md`). A crash: `adb logcat -d -b crash`.
+- **A plain View that draws only sometimes is kept drawn on Android** (`collapsable={false}`): a dim, background or border added under a condition makes Fabric move its native children between parents, which crashed the Play build (`src/layout/flattening.check.ts`).
 - **Checks** are `*.check.ts` files beside the code (Node runs them with types stripped). Each starts with the harness self-test; a rule you add gets a check, and you prove it bites by planting the defect once.
 
 - **The server decides; the app displays.** An old app version stays on phones for months — far longer than a stale web bundle — so **any rule that must hold lives in the API**. The app's checks are convenience only.
