@@ -12,6 +12,7 @@ import { Card, Screen } from '@/components/Screen';
 import { Column, WideRow } from '@/components/WideRow';
 import { LoadFailed, Loading } from '@/components/States';
 import { useSession } from '@/session/SessionContext';
+import { StaffDayCard } from '@/staff/StaffDayCard';
 import type { Palette } from '@/theme/tokens';
 import { minTouch } from '@/theme/tokens';
 import { useAppTheme } from '@/theme/useAppTheme';
@@ -148,6 +149,7 @@ export function TodayScreen() {
       {ctx.failure && data ? <LoadFailed failure={ctx.failure} onRetry={ctx.refresh} stale /> : null}
       {readOnly ? <Notice tone="info">This is another day: marks can only be changed on the day itself.</Notice> : null}
       {outcome ? <Notice tone={outcome.tone}>{outcome.text}</Notice> : null}
+      <StaffDayCard />
 
       {/* iPad: the check-ins waiting beside today's classes, then what was marked beside the counts (the approved design). */}
       <WideRow ratios={[1.35, 1]}>

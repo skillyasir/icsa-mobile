@@ -97,6 +97,40 @@ export function MeScreen() {
         </View>
       ) : null}
 
+      {!user.preview && user.role !== 'student' ? (
+        <View style={{ gap: t.space.sm }}>
+          <AppText variant="label" color="textMuted">
+            ATTENDANCE
+          </AppText>
+          <Card>
+            <Pressable accessibilityRole="button" onPress={() => router.push('/my-day')} style={styles.row}>
+              <View style={styles.flex}>
+                <AppText variant="body">My day</AppText>
+                <AppText variant="caption" color="textSubtle">
+                  Check in, lunch and check out.
+                </AppText>
+              </View>
+              <AppText variant="bodyStrong" color="link">
+                ›
+              </AppText>
+            </Pressable>
+            {user.role === 'manager' ? (
+              <Pressable accessibilityRole="button" onPress={() => router.push('/office-wifi')} style={styles.row}>
+                <View style={styles.flex}>
+                  <AppText variant="body">Office Wi-Fi</AppText>
+                  <AppText variant="caption" color="textSubtle">
+                    Each branch’s routers, and Add this router.
+                  </AppText>
+                </View>
+                <AppText variant="bodyStrong" color="link">
+                  ›
+                </AppText>
+              </Pressable>
+            ) : null}
+          </Card>
+        </View>
+      ) : null}
+
       {!user.preview ? (
         <View style={{ gap: t.space.sm }}>
           <AppText variant="label" color="textMuted">

@@ -6,8 +6,13 @@ import { Button } from '@/components/Button';
 import { Card, Screen } from '@/components/Screen';
 import { AMS_WEB_URL } from '@/config';
 import { useSession } from '@/session/SessionContext';
+import { StaffDayCard } from '@/staff/StaffDayCard';
 
-/** For roles the app has no screens for yet — they keep using the AMS on the web. */
+/**
+ * For roles the app has no screens for yet — they keep using the AMS on the web.
+ * My day is here too (Yasir, 11 Nov 2026): the attendance machine is retired,
+ * so an accountant, CAP coordinator or invoice encoder checks in from the app.
+ */
 export default function WebOnly() {
   const { user, signOut } = useSession();
   const router = useRouter();
@@ -15,6 +20,7 @@ export default function WebOnly() {
 
   return (
     <Screen title="Use the AMS on the web">
+      <StaffDayCard />
       <Card>
         <AppText>
           Your role works in the full AMS on a computer. The app does not have screens for it yet.

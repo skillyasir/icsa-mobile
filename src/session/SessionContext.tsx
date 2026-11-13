@@ -6,6 +6,7 @@ import { appleToken, googleToken } from '@/auth/nativeSignIn';
 import { providerRoute, type Provider } from '@/auth/providerRoute';
 import { signInRoute } from '@/auth/signInRoute';
 import { experiencesFor, type Experience } from '@/lib/roles';
+import { clearReminders } from '@/staff/reminders';
 
 // Who is signed in, and which experience they are looking at.
 //
@@ -27,6 +28,7 @@ export type SessionUser = {
   role: string;
   overlay_roles: string[];
   email?: string | null;
+  branch_id?: string | null;
   branch_name?: string | null;
   student_code?: string | null;
   /** True for the developer preview: made-up person, no AMS account behind it. */
@@ -60,6 +62,7 @@ const fromAms = (u: AmsUser): SessionUser => ({
   role: u.role,
   overlay_roles: u.overlay_roles,
   email: u.email,
+  branch_id: u.branch_id,
   branch_name: u.branch_name,
   student_code: u.student_code,
   preview: false,
@@ -143,6 +146,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    // The next person to use this phone must not get this person's attendance reminders.
+    await clearReminders();
     setUser(null);
     setChosen(null);
     setNotice(null);
