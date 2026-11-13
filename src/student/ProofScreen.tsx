@@ -2,10 +2,11 @@ import { File, UploadType } from 'expo-file-system';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Image, Pressable, StyleSheet, View } from 'react-native';
 
 import { ams } from '@/api/client';
+import { IDEMPOTENCY_HEADER, PressKey } from '@/api/idempotency';
 import { failureOfAnswer, MESSAGES } from '@/api/session';
 import { formatDay, kd, kuwaitDay } from '@/attendance/rules';
 import { useAmsGet } from '@/attendance/useAmsGet';
@@ -74,6 +75,12 @@ export function ProofScreen() {
   const [busy, setBusy] = useState<'pick' | 'send' | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [openedAt] = useState(() => new Date().toISOString());
+  // One press, one proof (AMS S5): the same key for a retry of the same press; a new one once it has an answer.
+  const press = useRef(new PressKey());
+  // A changed form is a different press: its old key would replay the old answer.
+  useEffect(() => {
+    press.current.reset();
+  }, [photo, amount, note, chosen]);
   const today = kuwaitDay(openedAt) ?? '';
   const amountText = amount ?? suggestedAmount(enrolment);
 
@@ -130,13 +137,14 @@ export function ProofScreen() {
           fieldName: PROOF_FIELDS.file,
           mimeType: 'image/jpeg',
           parameters: f.fields,
-          headers: { Authorization: `Bearer ${tok.value}`, Accept: 'application/json' },
+          headers: { Authorization: `Bearer ${tok.value}`, Accept: 'application/json', [IDEMPOTENCY_HEADER]: press.current.current() },
           sessionType: 'foreground',
           signal: ac.signal,
         });
       } catch (err) {
         // Say what really happened in the log: the screen can only say "no answer".
         console.warn('[proof] the upload failed:', err instanceof Error ? err.message : String(err));
+        // No answer: the same press may be sent again with the same key.
         return setMessage(MESSAGES.offline);
       } finally {
         clearTimeout(timer);
@@ -147,7 +155,12 @@ export function ProofScreen() {
       } catch {
         // not JSON: the status decides
       }
-      if (res.status < 200 || res.status >= 300) return setMessage(failureOfAnswer(res.status, json).message);
+      if (res.status < 200 || res.status >= 300) {
+        const f = failureOfAnswer(res.status, json);
+        press.current.settle(f);
+        return setMessage(f.message);
+      }
+      press.current.settle(null);
       router.back();
     } finally {
       setBusy(null);

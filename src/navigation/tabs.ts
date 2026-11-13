@@ -64,7 +64,7 @@ export const TABS: Record<Experience, TabDef[]> = {
   reception: [
     { name: 'index', label: 'Today', sf: 'calendar', md: 'today', phase: 3,
       soon: "Today's figures and what needs reception." },
-    { name: 'students', label: 'Students', sf: { default: 'person.2', selected: 'person.2.fill' }, md: 'group', phase: 3,
+    { name: 'students', label: 'Students', sf: { default: 'person.2', selected: 'person.2.fill' }, md: 'group', phase: 3, built: true,
       soon: 'Find a student by name, phone, STU code or Civil ID.' },
     { name: 'new', label: 'New', sf: { default: 'plus.circle', selected: 'plus.circle.fill' }, md: 'add_circle', phase: 3,
       soon: 'Register a student, enrol, or take a payment.' },

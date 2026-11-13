@@ -2,7 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
 
 import { pathFor } from '@/api/paths';
-import { formatDay, statusWord } from '@/attendance/rules';
+import { formatDay, kd, statusWord } from '@/attendance/rules';
 import { useAmsGet } from '@/attendance/useAmsGet';
 import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
@@ -13,7 +13,18 @@ import { useSession } from '@/session/SessionContext';
 import { minTouch } from '@/theme/tokens';
 import { useAppTheme } from '@/theme/useAppTheme';
 
-import { STATUS_TONE, STUDENTS_API, attendanceLine, dialable, whatsappUrl, type AttendanceAnswer, type StudentRow } from './students';
+import {
+  STATUS_TONE,
+  STUDENTS_API,
+  STUDENTS_HOME,
+  attendanceLine,
+  dialable,
+  whatsappUrl,
+  type AttendanceAnswer,
+  type FeesAnswer,
+  type StudentRow,
+  type StudentsWho,
+} from './students';
 
 // One student, for the teacher (built 8 Nov 2026): call or WhatsApp, their
 // courses and teachers, and their attendance — the AMS's own counts and rate.
@@ -21,7 +32,7 @@ import { STATUS_TONE, STUDENTS_API, attendanceLine, dialable, whatsappUrl, type 
 // students he teaches.
 
 /** The iPad draws this beside the list (StudentsScreen's `aside`), with no back link. */
-export function StudentScreen({ studentId, embedded = false }: { studentId?: string; embedded?: boolean } = {}) {
+export function StudentScreen({ studentId, embedded = false, who = 'teacher' }: { studentId?: string; embedded?: boolean; who?: StudentsWho } = {}) {
   const t = useAppTheme();
   const router = useRouter();
   const { user } = useSession();
@@ -30,12 +41,15 @@ export function StudentScreen({ studentId, embedded = false }: { studentId?: str
   const live = !user?.preview && !!id;
   const one = useAmsGet<{ student: StudentRow }>(pathFor(STUDENTS_API.one.path, { id: id ?? '' }), live);
   const att = useAmsGet<AttendanceAnswer>(pathFor(STUDENTS_API.attendance.path, { id: id ?? '' }), live);
+  // Reception sees the fees (the AMS's payment summary); a teacher's screen never asks.
+  const reception = who === 'reception';
+  const fees = useAmsGet<FeesAnswer>(pathFor(STUDENTS_API.fees.path, { student_id: id ?? '' }), live && reception);
   const s = one.data?.student ?? null;
   const tel = dialable(s?.phone);
   const wa = whatsappUrl(s?.whatsapp || s?.phone);
 
   const back = (
-    <Pressable accessibilityRole="link" hitSlop={12} style={styles.back} onPress={() => (router.canGoBack() ? router.back() : router.replace('/teacher/students'))}>
+    <Pressable accessibilityRole="link" hitSlop={12} style={styles.back} onPress={() => (router.canGoBack() ? router.back() : router.replace(STUDENTS_HOME[who]))}>
       <AppText variant="bodyStrong" color="link">
         ‹ Students
       </AppText>
@@ -45,6 +59,7 @@ export function StudentScreen({ studentId, embedded = false }: { studentId?: str
   const refresh = () => {
     one.refresh();
     att.refresh();
+    if (reception) fees.refresh();
   };
 
   return (
@@ -81,6 +96,36 @@ export function StudentScreen({ studentId, embedded = false }: { studentId?: str
             ) : null}
           </View>
         </Card>
+      ) : null}
+
+      {s && reception ? (
+        <View style={{ gap: t.space.sm }}>
+          <AppText variant="label" color="textMuted">
+            FEES
+          </AppText>
+          {fees.failure ? <LoadFailed failure={fees.failure} onRetry={fees.refresh} stale={!!fees.data} /> : null}
+          {fees.data ? (
+            <Card>
+              <View style={styles.row}>
+                <AppText variant="headline" style={styles.flex}>
+                  Balance KD {kd(fees.data.balance_overall)}
+                </AppText>
+                <Pill text={Number(fees.data.balance_overall) > 0.0005 ? 'Owes' : 'Paid up'} tone={Number(fees.data.balance_overall) > 0.0005 ? 'warning' : 'success'} />
+              </View>
+              <AppText color="textMuted">Paid KD {kd(fees.data.total_paid_overall)}</AppText>
+              {fees.data.enrollments.map((f, i) => (
+                <View key={f.enrollment_id} style={[{ gap: 2 }, i === 0 && { borderTopWidth: 1, borderTopColor: t.colors.border, paddingTop: t.space.md }]}>
+                  <AppText variant="bodyStrong">{f.course_name ?? 'Course'}</AppText>
+                  <AppText variant="caption" color="textSubtle">
+                    {[f.enrollment_no, `fee KD ${kd(f.net_amount)}`, `paid KD ${kd(f.total_paid)}`, `balance KD ${kd(f.balance)}`].filter(Boolean).join(' · ')}
+                  </AppText>
+                </View>
+              ))}
+            </Card>
+          ) : fees.loading ? (
+            <Loading what="Loading the fees…" />
+          ) : null}
+        </View>
       ) : null}
 
       {s && (s.enrollments ?? []).length > 0 ? (

@@ -14,21 +14,27 @@ import { useSession } from '@/session/SessionContext';
 import { useLayout } from '@/layout/useLayout';
 import { useAppTheme } from '@/theme/useAppTheme';
 
-import { STATUS_TONE, coursesLine, listPath, searchParam, type StudentRow } from './students';
+import { STATUS_TONE, STUDENT_PROFILE, coursesLine, listPath, searchParam, type StudentRow, type StudentsWho } from './students';
 import { StudentScreen } from './StudentScreen';
 
 // The teacher's Students tab (built 8 Nov 2026): the students he teaches —
 // the AMS lists only those, search or not — with their attendance status.
 // Tap one for their contact, courses and attendance.
+//
+// Reception's Students tab (13 Nov 2026) is this screen with who="reception":
+// find any student (the AMS searches every branch for a supervisor), then
+// their profile with the fees.
 
-export function StudentsScreen() {
+export function StudentsScreen({ who = 'teacher' }: { who?: StudentsWho } = {}) {
   const t = useAppTheme();
   const router = useRouter();
   const { user } = useSession();
   const live = !user?.preview;
   const [text, setText] = useState('');
   const [search, setSearch] = useState<string | null>(null);
-  const data = useAmsGet<{ count: number; students: StudentRow[] }>(listPath(search), live);
+  // Reception lists nobody until it searches (every branch's students would come back).
+  const reception = who === 'reception';
+  const data = useAmsGet<{ count: number; students: StudentRow[] }>(listPath(search), live && (!reception || !!search));
   const rows = data.data?.students ?? [];
   // iPad with room (the approved design, mockup 18): the open student sits beside the list.
   const { split } = useLayout();
@@ -50,30 +56,33 @@ export function StudentsScreen() {
       title="Students"
       refreshing={data.refreshing}
       onRefresh={data.refresh}
-      aside={split ? open ? <StudentScreen key={open.id} studentId={open.id} embedded /> : <View /> : undefined}
+      aside={split ? open ? <StudentScreen key={open.id} studentId={open.id} who={who} embedded /> : <View /> : undefined}
     >
       <TextField
-        label="Search your students"
+        label={reception ? 'Find a student' : 'Search your students'}
         value={text}
         onChangeText={setText}
         onSubmitEditing={() => setSearch(searchParam(text))}
         returnKeyType="search"
         autoCorrect={false}
         autoCapitalize="none"
-        placeholder="Name, student code or phone"
+        placeholder={reception ? 'Name, phone, STU code or Civil ID' : 'Name, student code or phone'}
         clearButtonMode="while-editing"
         onEndEditing={() => setSearch(searchParam(text))}
       />
-      {data.loading && !data.data ? <Loading what="Loading your students…" /> : null}
+      {reception && !search ? (
+        <AppText color="textMuted">Search by name, phone, STU or EN code, or Civil ID — any branch.</AppText>
+      ) : null}
+      {data.loading && !data.data && (!reception || search) ? <Loading what={reception ? 'Searching…' : 'Loading your students…'} /> : null}
       {data.failure ? <LoadFailed failure={data.failure} onRetry={data.refresh} stale={!!data.data} /> : null}
       {data.data ? (
         <AppText variant="caption" color="textSubtle">
-          {search ? `${rows.length} found for “${search}”` : `${rows.length} student${rows.length === 1 ? '' : 's'} you teach`}
+          {search ? `${rows.length} found for “${search}”` : reception ? '' : `${rows.length} student${rows.length === 1 ? '' : 's'} you teach`}
         </AppText>
       ) : null}
       {data.data && rows.length === 0 ? (
         <Card>
-          <AppText color="textMuted">{search ? 'None of your students match.' : 'You have no students yet.'}</AppText>
+          <AppText color="textMuted">{search ? (reception ? 'No student matches.' : 'None of your students match.') : 'You have no students yet.'}</AppText>
         </Card>
       ) : null}
       {rows.map((s) => (
@@ -81,7 +90,7 @@ export function StudentsScreen() {
           key={s.id}
           accessibilityRole="button"
           accessibilityState={{ selected: open?.id === s.id }}
-          onPress={() => (split ? setOpenId(s.id) : router.push({ pathname: '/teacher/students/profile', params: { id: s.id } }))}
+          onPress={() => (split ? setOpenId(s.id) : router.push({ pathname: STUDENT_PROFILE[who], params: { id: s.id } }))}
           style={({ pressed }) => [
             styles.row,
             {

@@ -43,7 +43,7 @@ run('fees.check — the student Fees agree with the AMS', (h) => {
     h.check(`§1 ${e.method} /api${e.path} is in the student firewall`, new RegExp(`method: '${e.method}',\\s*path: '/api${e.path.replace(/\//g, '\\/')}'`).test(fw));
   }
   h.check('§1 the fees route', /router\.get\('\/student\/fees', auth, studentPortal\.getMyFees\);/.test(authR));
-  h.check('§1 the proof routes: upload.single(\'proof\'), and mine', /router\.post\('\/', auth, upload\.single\('proof'\), c\.submitProof/.test(proofR) && /router\.get\('\/mine', auth, c\.getMyProofs\);/.test(proofR));
+  h.check('§1 the proof routes: upload.single(\'proof\') (then the S5 key check), and mine', /router\.post\('\/', auth, upload\.single\('proof'\), (idempotent, )?c\.submitProof/.test(proofR) && /router\.get\('\/mine', auth, c\.getMyProofs\);/.test(proofR));
 
   // §2 the figures are the AMS's
   const portal = strip(readAmsFile('server/src/controllers/studentPortalController.js'));

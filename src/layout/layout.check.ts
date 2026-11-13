@@ -41,7 +41,8 @@ run('layout.check — the iPad layout, and phones unchanged', (h) => {
   const splits = [
     { file: '../student/LearnScreen.tsx', detail: 'SubjectScreen', route: "'/student/learn/subject'" },
     { file: '../teacher/AssignmentsScreen.tsx', detail: 'ReviewScreen', route: "'/teacher/assignments/review'" },
-    { file: '../teacher/StudentsScreen.tsx', detail: 'StudentScreen', route: "'/teacher/students/profile'" },
+    // Teacher and reception share it (13 Nov 2026): the profile route is the map students.ts names, per view.
+    { file: '../teacher/StudentsScreen.tsx', detail: 'StudentScreen', route: 'STUDENT_PROFILE\\[who\\]' },
   ];
   h.check('§4 the split screens (cardinality: 3)', splits.length === 3);
   for (const sp of splits) {

@@ -152,8 +152,8 @@ export class SessionClient {
 
   // ---------------------------------------------------------------------------
   // The wire. Every call goes through here: one timeout, one JSON rule.
-  private async call(method: string, path: string, body?: unknown, bearer?: string, timeoutMs = this.d.timeoutMs): Promise<Answer> {
-    const headers: Record<string, string> = { Accept: 'application/json' };
+  private async call(method: string, path: string, body?: unknown, bearer?: string, timeoutMs = this.d.timeoutMs, extra?: Record<string, string>): Promise<Answer> {
+    const headers: Record<string, string> = { Accept: 'application/json', ...(extra ?? {}) };
     if (body !== undefined) headers['Content-Type'] = 'application/json';
     if (bearer) headers.Authorization = `Bearer ${bearer}`;
     const ac = typeof AbortController !== 'undefined' ? new AbortController() : null;
@@ -318,19 +318,24 @@ export class SessionClient {
     return fail(failureOf(a, 'server'));
   }
 
-  /** An AMS call as the signed-in person. Refreshes first if the token is nearly out. */
-  async request<T = Record<string, unknown>>(method: string, path: string, body?: unknown): Promise<Outcome<T>> {
+  /**
+   * An AMS call as the signed-in person. Refreshes first if the token is nearly out.
+   * `idempotencyKey` (api/idempotency.ts): the press's key, sent as Idempotency-Key —
+   * the 401 retry below re-sends the SAME key, so it can never write twice.
+   */
+  async request<T = Record<string, unknown>>(method: string, path: string, body?: unknown, opts?: { idempotencyKey?: string }): Promise<Outcome<T>> {
+    const extra = opts?.idempotencyKey ? { 'Idempotency-Key': opts.idempotencyKey } : undefined;
     if (!this.access || this.access.expiresAt - this.d.now() < REFRESH_MARGIN_MS) {
       const r = await this.refresh();
       if (!r.ok) return fail(r.failure);
     }
-    let a = await this.call(method, path, body, this.access?.token);
+    let a = await this.call(method, path, body, this.access?.token, undefined, extra);
     if (a.status === 401) {
       // The token was refused early (deactivated, rotated elsewhere): one fresh
       // token and one retry. Never a loop.
       const r = await this.refresh();
       if (!r.ok) return fail(r.failure);
-      a = await this.call(method, path, body, this.access?.token);
+      a = await this.call(method, path, body, this.access?.token, undefined, extra);
     }
     if (a.status >= 200 && a.status < 300) return ok(a.json as T);
     return fail(failureOf(a, 'refused'));

@@ -11,7 +11,38 @@ export const STUDENTS_API = {
   list: { method: 'GET', path: '/students' },
   one: { method: 'GET', path: '/students/:id' },
   attendance: { method: 'GET', path: '/students/:id/attendance' },
+  // Reception (13 Nov 2026): the fee, paid and balance per enrolment, as the
+  // AMS's payment summary computes them (services/enrollmentBalance.js).
+  fees: { method: 'GET', path: '/payments/student/:student_id/summary' },
 } as const;
+
+/**
+ * Who is looking (13 Nov 2026): the teacher's Students tab, or reception's.
+ * Reception finds ANY student — the AMS searches across branches for a
+ * supervisor — so its list waits for a search instead of listing the branch.
+ */
+export type StudentsWho = 'teacher' | 'reception';
+export const STUDENTS_HOME: Record<StudentsWho, '/teacher/students' | '/reception/students'> = {
+  teacher: '/teacher/students',
+  reception: '/reception/students',
+};
+export const STUDENT_PROFILE: Record<StudentsWho, '/teacher/students/profile' | '/reception/students/profile'> = {
+  teacher: '/teacher/students/profile',
+  reception: '/reception/students/profile',
+};
+
+/** One enrolment's fee as the payment summary sends it — amounts as text with 3 decimals. */
+export type FeeLine = {
+  enrollment_id: string;
+  enrollment_no: string | null;
+  course_name: string | null;
+  status: string | null;
+  net_amount: string;
+  total_paid: string;
+  balance: string;
+};
+export type FeesAnswer = { enrollments: FeeLine[]; total_paid_overall: string; balance_overall: string };
+
 
 export type Enrolment = {
   id: string;

@@ -41,7 +41,7 @@ run('tabs.check — every tab has its screen, every screen its tab', (h) => {
         ? src.includes('<MeScreen />')
         : tab.built
           // a built tab shows its real screen and no placeholder at all
-          ? !placeholder && /return <[A-Z][A-Za-z]+Screen \/>;/.test(src) && src.includes(`Tab: ${exp}/${tab.name}`)
+          ? !placeholder && /return <[A-Z][A-Za-z]+Screen( who="[a-z]+")? \/>;/.test(src) && src.includes(`Tab: ${exp}/${tab.name}`)
           : placeholder && src.includes(`experience="${exp}"`) && src.includes(`name="${tab.name}"`);
       h.check(`§3 ${exp}/${tab.name} shows its own tab${tab.built ? ' (built)' : ''}`, ok);
     }

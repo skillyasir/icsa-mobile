@@ -1,7 +1,9 @@
 import { readAmsFile } from '../../scripts/ams.ts';
 import { runAsync } from '../../scripts/check-harness.ts';
 
-import { STATUS_TONE, STUDENTS_API, attendanceLine, coursesLine, dialable, listPath, searchParam, waNumber, whatsappUrl } from './students.ts';
+import { existsSync, readFileSync } from 'node:fs';
+
+import { STATUS_TONE, STUDENTS_API, STUDENTS_HOME, STUDENT_PROFILE, attendanceLine, coursesLine, dialable, listPath, searchParam, waNumber, whatsappUrl } from './students.ts';
 
 // The teacher's Students tab (8 Nov 2026) against the AMS: a teacher may call
 // every endpoint, the list is scoped by the AMS to the students he teaches,
@@ -12,7 +14,7 @@ import { STATUS_TONE, STUDENTS_API, attendanceLine, coursesLine, dialable, listP
 const strip = (s: string) => s.replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1').replace(/\/\*[\s\S]*?\*\//g, '');
 const body = (src: string, name: string) => new RegExp(`const ${name} = async[\\s\\S]*?\\n};`).exec(src)?.[0] ?? '';
 
-runAsync('students.check — the teacher\'s Students agree with the AMS', async (h) => {
+runAsync('students.check — the teacher\'s and reception\'s Students agree with the AMS', async (h) => {
   h.check('§0 body() finds a function and stops at its end', body('const a = async (x) => {\n  y;\n};\nconst b = 1;', 'a') === 'const a = async (x) => {\n  y;\n};');
 
   // §1 routed, and a teacher may call each
@@ -60,4 +62,16 @@ runAsync('students.check — the teacher\'s Students agree with the AMS', async 
   const differ = table.filter((p) => waNumber(p) !== ams.waNumber(p));
   h.check(`§4 waNumber agrees with the AMS on all ${table.length} numbers`, differ.length === 0, differ.join(' | '));
   h.check('§4 a bare Kuwaiti mobile gets 965; a foreign local is never guessed', whatsappUrl('50420435') === 'https://wa.me/96550420435' && whatsappUrl('0917 123 4567') === 'https://wa.me/09171234567' && whatsappUrl(null) === null);
-});
+
+
+  // §5 reception's Students (13 Nov 2026): the same screens, any branch, with the fees
+  const payRoutes = strip(readAmsFile('server/src/routes/payments.js'));
+  h.check('§5 the fee summary is routed, and reception (supervisor) may read it', /router\.get\('\/student\/:student_id\/summary', auth, authorize\([^)]*'supervisor'[^)]*\), getStudentPaymentSummary\)/.test(payRoutes));
+  const ctlP = strip(readAmsFile('server/src/controllers/paymentsController.js'));
+  h.check('§5 it answers the per-enrolment net, paid and balance this screen reads', /enrollment_no: enr\.enrollment_no/.test(ctlP) && /net_amount: enrNetAmount\.toFixed\(3\)/.test(ctlP) && /total_paid: enrTotalPaid\.toFixed\(3\)/.test(ctlP) && /balance: enrBalance\.toFixed\(3\)/.test(ctlP) && /total_paid_overall:/.test(ctlP) && /balance_overall:/.test(ctlP));
+  const appDir = new URL('../app/', import.meta.url).pathname;
+  h.check('§5 each view’s Students and profile route exist', (['teacher', 'reception'] as const).every((w) => existsSync(appDir + STUDENTS_HOME[w].slice(1) + '/index.tsx') && existsSync(appDir + STUDENT_PROFILE[w].slice(1) + '.tsx')));
+  const listSrc = readFileSync(new URL('./StudentsScreen.tsx', import.meta.url), 'utf8');
+  h.check('§5 reception lists nobody until it searches (every branch would come back)', /live && \(!reception \|\| !!search\)/.test(listSrc));
+  const oneSrc = readFileSync(new URL('./StudentScreen.tsx', import.meta.url), 'utf8');
+  h.check('§5 only reception asks for the fees', /STUDENTS_API\.fees\.path[^;]*live && reception\)/.test(oneSrc));});
