@@ -135,9 +135,31 @@ export function lateMinutes(tapHHMM: string, startHHMM: string, graceMin: number
   return after > graceMin ? after : 0;
 }
 
-/** "on time" / "7 min late" — what a check-in at `nowHHMM` would be. */
+/** "on time" / "7 min late" / "4 h 32 min late" — the AMS counts minutes; an hour or more reads as hours. */
 export function lateWord(lateMin: number): string {
-  return lateMin > 0 ? `${lateMin} min late` : 'on time';
+  if (lateMin <= 0) return 'on time';
+  if (lateMin < 60) return `${lateMin} min late`;
+  const h = Math.floor(lateMin / 60);
+  const m = lateMin % 60;
+  return m ? `${h} h ${m} min late` : `${h} h late`;
+}
+
+/** A tap as a noun, for "Your check-in is saved." */
+export const KIND_NOUN: Record<TapKind, string> = {
+  in: 'check-in',
+  lunch_out: 'lunch out',
+  lunch_in: 'return from lunch',
+  out: 'check-out',
+};
+
+/**
+ * The AMS's review reason, without the "Kept for review:" its card heading
+ * already says — "Office Wi-Fi not recognised." The AMS's own words otherwise.
+ */
+export function reasonLine(reason: string | null | undefined): string | null {
+  if (!reason) return null;
+  const r = reason.replace(/^Kept for review:\s*/i, '').trim();
+  return r ? r[0].toUpperCase() + r.slice(1) : null;
 }
 
 /** "9:30 AM – 6:30 PM". */

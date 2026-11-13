@@ -19,6 +19,7 @@ import { useAppTheme } from '@/theme/useAppTheme';
 import { applyReminders } from './reminders';
 import {
   KIND_LABEL,
+  KIND_NOUN,
   NOT_WORKING,
   STAFF_API,
   WIFI_NOTES,
@@ -29,6 +30,7 @@ import {
   lunchNow,
   pendingTaps,
   proofBody,
+  reasonLine,
   reminderPlan,
   tapBody,
   tapButton,
@@ -52,7 +54,7 @@ import { readWifi } from './wifi';
 // person taps — before a tap the screen says what will be checked, after it
 // what the AMS found.
 
-type Outcome = { tone: 'success' | 'warning' | 'danger'; title?: string; text: string };
+type Outcome = { tone: 'success' | 'info' | 'warning' | 'danger'; title?: string; text: string };
 
 /** Both proofs, read at a tap. Never refuses on the phone: the AMS keeps a doubtful tap for review. */
 async function readProofs(): Promise<{ fix: Fix | null; wifi: Wifi; notes: string[]; settings: boolean }> {
@@ -70,16 +72,11 @@ async function readProofs(): Promise<{ fix: Fix | null; wifi: Wifi; notes: strin
   return { fix, wifi: { bssid: w.bssid, ssid: w.ssid }, notes, settings };
 }
 
+/** What the AMS recorded. A tap kept for review says only that here — its own card below explains it. */
 function tapOutcome(a: TapAnswer, kind: TapKind): Outcome {
   const t = a.tap;
-  const when = `${KIND_LABEL[kind]} recorded at ${formatClock(t.time)}${kind === 'in' ? ` · ${lateWord(t.late_min)}` : ''}.`;
-  if (t.review !== 'pending') return { tone: 'success', text: when };
-  const both = t.location_ok === false && t.wifi_ok === false;
-  return {
-    tone: 'warning',
-    title: 'Kept for review',
-    text: `${when} ${both ? 'Neither office check passed' : 'Only one office check passed'}, so a manager will look at it.${t.review_reason ? ` (${t.review_reason})` : ''}`,
-  };
+  const text = `${KIND_LABEL[kind]} recorded at ${formatClock(t.time)}${kind === 'in' ? ` · ${lateWord(t.late_min)}` : ''}.`;
+  return t.review === 'pending' ? { tone: 'info', text } : { tone: 'success', text };
 }
 
 export function MyDayScreen() {
@@ -246,9 +243,9 @@ function DayBody({
           <AppText>
             Location {x.location_ok ? '✓' : '✗'} · Office Wi-Fi {x.wifi_ok ? '✓' : '✗'}
           </AppText>
-          {x.review_reason ? <AppText color="textMuted">{x.review_reason}</AppText> : null}
+          {reasonLine(x.review_reason) ? <AppText color="textMuted">{reasonLine(x.review_reason)}</AppText> : null}
           <Notice tone="warning">
-            {`Your ${KIND_LABEL[x.kind].toLowerCase()} is saved. ${x.location_ok === false && x.wifi_ok === false ? 'Neither office check passed' : 'Only one office check passed'}, so a manager will look at it.`}
+            {`Your ${KIND_NOUN[x.kind]} is saved. ${x.location_ok === false && x.wifi_ok === false ? 'Neither office check passed' : 'Only one office check passed'}, so a manager will look at it.`}
           </Notice>
           <Button title="Check the Wi-Fi again" variant="outline" busy={busy === `recheck-${x.id}`} disabled={busy !== null} onPress={() => onRecheck(x)} />
           <AppText variant="caption" color="textSubtle">

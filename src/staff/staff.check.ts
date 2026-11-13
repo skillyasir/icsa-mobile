@@ -12,9 +12,11 @@ import {
   STAFF_API,
   addRouterBody,
   lateMinutes,
+  lateWord,
   lunchNow,
   nextTap,
   proofBody,
+  reasonLine,
   reminderPlan,
   tapBody,
   tapButton,
@@ -149,6 +151,8 @@ run('staff.check — My day, Office Wi-Fi and the reminders agree with the AMS',
 
   // §4 the screen follows the AMS's order and words
   h.check('§4 the one button is the first tap the AMS allows', nextTap(DAY) === 'in' && nextTap({ ...DAY, next: [] }) === null && nextTap({ ...DAY, working: false }) === null);
+  h.check('§4 lateness reads in minutes, and in hours from an hour', lateWord(0) === 'on time' && lateWord(7) === '7 min late' && lateWord(60) === '1 h late' && lateWord(272) === '4 h 32 min late');
+  h.check('§4 a review reason drops the heading its card already says', reasonLine('Kept for review: office Wi-Fi not recognised.') === 'Office Wi-Fi not recognised.' && reasonLine('Neither office check passed: no location from the phone.') === 'Neither office check passed: no location from the phone.' && reasonLine(null) === null);
   h.check('§4 an online day starts and finishes work', tapButton('in', 'online') === 'Start work' && tapButton('out', 'online') === 'Finish work' && tapButton('lunch_out', 'online') === 'Lunch out');
   h.check('§4 four timeline rows with a break, two without', timeline(DAY).length === 4 && timeline({ ...DAY, day: { ...DAY.day!, break_minutes: 0 } }).map((r) => r.kind).join() === 'in,out');
   const onLunch: MyDay = { ...DAY, now: '13:50', taps: [tap('in', '09:24'), tap('lunch_out', '13:32')], next: ['lunch_in'] };
