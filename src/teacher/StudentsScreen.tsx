@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -30,8 +30,21 @@ export function StudentsScreen({ who = 'teacher' }: { who?: StudentsWho } = {}) 
   const router = useRouter();
   const { user } = useSession();
   const live = !user?.preview;
-  const [text, setText] = useState('');
-  const [search, setSearch] = useState<string | null>(null);
+  // Reception's Today hands its search over (?q=): searched as soon as the tab
+  // opens, and again when Today hands over another (the tab stays mounted, so
+  // the new one is taken during render — React's own pattern, no effect).
+  const { q } = useLocalSearchParams<{ q?: string }>();
+  const handed = typeof q === 'string' && q.trim() ? q : null;
+  const [text, setText] = useState(handed ?? '');
+  const [search, setSearch] = useState<string | null>(handed ? searchParam(handed) : null);
+  const [taken, setTaken] = useState(handed);
+  if (handed !== taken) {
+    setTaken(handed);
+    if (handed) {
+      setText(handed);
+      setSearch(searchParam(handed));
+    }
+  }
   // Reception lists nobody until it searches (every branch's students would come back).
   const reception = who === 'reception';
   const data = useAmsGet<{ count: number; students: StudentRow[] }>(listPath(search), live && (!reception || !!search));

@@ -1,5 +1,6 @@
-import { TabPlaceholder } from '@/navigation/TabPlaceholder';
+import { FollowupsScreen } from '@/reception/FollowupsScreen';
 
+// Tab: reception/followups
 export default function ReceptionFollowups() {
-  return <TabPlaceholder experience="reception" name="followups" />;
+  return <FollowupsScreen />;
 }

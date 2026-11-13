@@ -1,5 +1,6 @@
-import { TabPlaceholder } from '@/navigation/TabPlaceholder';
+import { TodayScreen } from '@/reception/TodayScreen';
 
+// Tab: reception/index
 export default function ReceptionHome() {
-  return <TabPlaceholder experience="reception" name="index" />;
+  return <TodayScreen />;
 }
