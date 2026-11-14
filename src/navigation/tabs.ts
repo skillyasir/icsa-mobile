@@ -73,7 +73,7 @@ export const TABS: Record<Experience, TabDef[]> = {
     ME,
   ],
   marketer: [
-    { name: 'index', label: 'Leads', sf: { default: 'person.crop.rectangle.stack', selected: 'person.crop.rectangle.stack.fill' }, md: 'contacts', phase: 4,
+    { name: 'index', label: 'Leads', sf: { default: 'person.crop.rectangle.stack', selected: 'person.crop.rectangle.stack.fill' }, md: 'contacts', phase: 4, built: true,
       soon: 'Your leads, their stage and the next step.' },
     { name: 'followups', label: 'Follow-ups', sf: { default: 'phone', selected: 'phone.fill' }, md: 'call', phase: 4,
       soon: 'Calls and WhatsApp follow-ups due today.' },

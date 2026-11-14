@@ -31,6 +31,7 @@ import { ATTENDANCE_API } from '../attendance/rules.ts';
 import { STAFF_API } from '../staff/rules.ts';
 import { RECEPTION_API } from '../reception/rules.ts';
 import { MONEY_API } from '../reception/money.ts';
+import { LEADS_API } from '../marketer/leads.ts';
 import { STUDENT_ASSIGNMENT_API } from '../student/assignment.ts';
 import { FEES_API } from '../student/fees.ts';
 import { LEARN_API } from '../student/learn.ts';
@@ -113,6 +114,7 @@ run('teacher/today.check — Today and Mark class agree with the AMS', (h) => {
     STAFF_API,
     RECEPTION_API,
     MONEY_API,
+    LEADS_API,
   };
   const namesOf = (path: string) => path.split('/').filter((seg) => seg.startsWith(':')).map((seg) => seg.slice(1));
   const apiPaths = Object.entries(TABLES).flatMap(([t, tab]) => Object.entries(tab).map(([k, v]) => ({ id: `${t}.${k}`, path: v.path })));
