@@ -112,10 +112,14 @@ run('staff.check — My day, Office Wi-Fi and the reminders agree with the AMS',
     ...[...prove.matchAll(/body(?:\s*&&\s*body)?\.(\w+)/g)].map((m) => m[1]),
     ...[...tapFn.matchAll(/req\.body(?:\s*&&\s*req\.body)?\.(\w+)/g)].map((m) => m[1]),
   ]);
-  const want = ['kind', 'latitude', 'longitude', 'accuracy', 'mocked', 'bssid', 'ssid', 'app_platform'];
+  // `client` (AMS ce93ec75, 13 Nov 2026): 'web' marks a WEBSITE tap (office network or a
+  // registered PC); absent is the app — so the app reads as the app by NOT sending it.
+  const want = ['kind', 'latitude', 'longitude', 'accuracy', 'mocked', 'bssid', 'ssid', 'app_platform', 'client'];
   h.check('§2 the AMS reads exactly these tap fields', want.every((k) => amsReads.has(k)) && [...amsReads].every((k) => want.includes(k)), [...amsReads].sort().join());
   const body = tapBody('in', { lat: 29.37, lng: 47.97, accuracy: 12, mocked: false }, { bssid: 'a4:2b:b0:7e:1:3c', ssid: 'ICSA-City' }, 'ios');
-  h.check('§2 a tap sends every field the AMS reads, and nothing else', Object.keys(body).sort().join() === [...want].sort().join(), Object.keys(body).join());
+  const appSends = want.filter((k) => k !== 'client');
+  h.check('§2 a tap sends every field the AMS reads, and nothing else', Object.keys(body).sort().join() === [...appSends].sort().join(), Object.keys(body).join());
+  h.check('§2 …and never `client`: the app must not read as a website tap', !('client' in body) && /client === 'web'/.test(readAmsFile('server/src/controllers/staffAttendanceController.js')));
   h.check('§2 …the position as latitude / longitude, never lat / lng', body.latitude === 29.37 && body.longitude === 47.97 && !('lat' in body) && !('lng' in body));
   h.check('§2 …the router address exactly as the phone gave it (the AMS normalises it)', body.bssid === 'a4:2b:b0:7e:1:3c');
   h.check('§2 …mocked is a boolean the AMS compares with === true', body.mocked === false && /body\.mocked === true/.test(prove));
