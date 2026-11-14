@@ -149,6 +149,8 @@ export function TakePaymentScreen() {
               <>
                 <Label>{next ? `BALANCE · NEXT DUE ${houseDay(kuwaitDay(next.due)).toUpperCase()}` : 'BALANCE'}</Label>
                 <AppText variant="title">{`KD ${kd(enrolment.balance)}`}</AppText>
+                {/* The receipt as it stands, without taking money — also the first check of S10 on a phone. */}
+                <ReceiptButton enrollmentId={enrolment.enrollment_id} enrollmentNo={enrolment.enrollment_no} />
               </>
             ) : null}
           </Card>
