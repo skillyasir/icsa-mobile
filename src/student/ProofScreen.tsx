@@ -1,5 +1,4 @@
 import { File, UploadType } from 'expo-file-system';
-import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -15,6 +14,7 @@ import { Button } from '@/components/Button';
 import { Notice } from '@/components/Notice';
 import { Card, Screen } from '@/components/Screen';
 import { LoadFailed, Loading } from '@/components/States';
+import { shrinkPhoto, type Photo } from '@/files/shrinkPhoto';
 import { TextField } from '@/components/TextField';
 import { AMS_API_URL } from '@/config';
 import { useSession } from '@/session/SessionContext';
@@ -24,10 +24,6 @@ import { useAppTheme } from '@/theme/useAppTheme';
 import {
   FEES_API,
   PROOF_FIELDS,
-  PROOF_MAX_BYTES,
-  PROOF_QUALITY,
-  PROOF_SECOND_QUALITY,
-  fitWithin,
   proofFields,
   suggestedAmount,
   type FeeEnrolment,
@@ -46,20 +42,6 @@ import {
 // fees.check §6 holds the screen to this.
 
 const UPLOAD_TIMEOUT_MS = 60_000;
-
-type Photo = { uri: string; width: number; height: number };
-
-async function shrink(p: Photo): Promise<string | { error: string }> {
-  const size = fitWithin(p.width, p.height);
-  for (const q of [PROOF_QUALITY, PROOF_SECOND_QUALITY]) {
-    const ctx = ImageManipulator.manipulate(p.uri);
-    if (size.width !== p.width || size.height !== p.height) ctx.resize(size);
-    const img = await ctx.renderAsync();
-    const out = await img.saveAsync({ compress: q, format: SaveFormat.JPEG });
-    if (new File(out.uri).size <= PROOF_MAX_BYTES) return out.uri;
-  }
-  return { error: 'This photo is too large to send even after shrinking. Try a screenshot instead.' };
-}
 
 export function ProofScreen() {
   const router = useRouter();
@@ -119,7 +101,7 @@ export function ProofScreen() {
     try {
       let small: string | { error: string };
       try {
-        small = await shrink(photo);
+        small = await shrinkPhoto(photo);
       } catch (err) {
         console.warn('[proof] shrinking failed:', err instanceof Error ? err.message : String(err));
         return setMessage('The photo could not be prepared. Try another one.');

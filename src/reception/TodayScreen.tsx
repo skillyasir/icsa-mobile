@@ -58,9 +58,9 @@ export function TodayScreen() {
   const branch = dash.data?.scope.branch_name ?? user?.branch_name ?? null;
 
   const actions: Action[] = [
-    { label: 'Register student', tone: 'primary', go: () => router.push('/reception/new') },
-    { label: 'Take payment', tone: 'success', go: () => router.push('/reception/new') },
-    { label: 'Enrol in a course', tone: 'plain', go: () => router.push('/reception/new') },
+    { label: 'Register student', tone: 'primary', go: () => router.push('/register') },
+    { label: 'Take payment', tone: 'success', go: () => router.push('/take-payment') },
+    { label: 'Enrol in a course', tone: 'plain', go: () => router.push('/enrol') },
     { label: 'Log a follow-up', tone: 'plain', go: () => router.push('/reception/followups') },
   ];
   const openNeed = (r: NeedsRow) => {
