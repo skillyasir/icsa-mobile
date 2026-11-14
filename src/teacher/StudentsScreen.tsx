@@ -46,7 +46,8 @@ export function StudentsScreen({ who = 'teacher' }: { who?: StudentsWho } = {}) 
     }
   }
   // Reception lists nobody until it searches (every branch's students would come back).
-  const reception = who === 'reception';
+  // The front-desk mode — reception and a manager: any branch, a search first, the fees.
+  const reception = who !== 'teacher';
   const data = useAmsGet<{ count: number; students: StudentRow[] }>(listPath(search), live && (!reception || !!search));
   const rows = data.data?.students ?? [];
   // iPad with room (the approved design, mockup 18): the open student sits beside the list.

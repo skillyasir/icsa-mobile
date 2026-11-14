@@ -86,9 +86,9 @@ export const TABS: Record<Experience, TabDef[]> = {
   manager: [
     { name: 'index', label: 'Dashboard', sf: { default: 'chart.bar', selected: 'chart.bar.fill' }, md: 'bar_chart', phase: 4,
       soon: 'Today and this month across the branches.' },
-    { name: 'approvals', label: 'Approvals', sf: { default: 'checkmark.seal', selected: 'checkmark.seal.fill' }, md: 'verified', phase: 4,
+    { name: 'approvals', label: 'Approvals', sf: { default: 'checkmark.seal', selected: 'checkmark.seal.fill' }, md: 'verified', phase: 4, built: true,
       soon: 'Refunds, discounts, certificates, transfers and payment proofs to approve.' },
-    { name: 'students', label: 'Students', sf: { default: 'person.2', selected: 'person.2.fill' }, md: 'group', phase: 4,
+    { name: 'students', label: 'Students', sf: { default: 'person.2', selected: 'person.2.fill' }, md: 'group', phase: 4, built: true,
       soon: 'Find any student and open their profile.' },
     { name: 'reports', label: 'Reports', sf: { default: 'doc.text.magnifyingglass', selected: 'doc.text.magnifyingglass' }, md: 'summarize', phase: 4,
       soon: 'The key reports, read-only. The full report builder stays on the web.' },

@@ -21,14 +21,17 @@ export const STUDENTS_API = {
  * Reception finds ANY student — the AMS searches across branches for a
  * supervisor — so its list waits for a search instead of listing the branch.
  */
-export type StudentsWho = 'teacher' | 'reception';
-export const STUDENTS_HOME: Record<StudentsWho, '/teacher/students' | '/reception/students'> = {
+// A manager's Students tab (14 Nov 2026) is the front-desk one: any branch, a search first, the fees.
+export type StudentsWho = 'teacher' | 'reception' | 'manager';
+export const STUDENTS_HOME: Record<StudentsWho, '/teacher/students' | '/reception/students' | '/manager/students'> = {
   teacher: '/teacher/students',
   reception: '/reception/students',
+  manager: '/manager/students',
 };
-export const STUDENT_PROFILE: Record<StudentsWho, '/teacher/students/profile' | '/reception/students/profile'> = {
+export const STUDENT_PROFILE: Record<StudentsWho, '/teacher/students/profile' | '/reception/students/profile' | '/manager/students/profile'> = {
   teacher: '/teacher/students/profile',
   reception: '/reception/students/profile',
+  manager: '/manager/students/profile',
 };
 
 /** One enrolment's fee as the payment summary sends it — amounts as text with 3 decimals. */

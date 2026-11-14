@@ -42,7 +42,8 @@ export function StudentScreen({ studentId, embedded = false, who = 'teacher' }: 
   const one = useAmsGet<{ student: StudentRow }>(pathFor(STUDENTS_API.one.path, { id: id ?? '' }), live);
   const att = useAmsGet<AttendanceAnswer>(pathFor(STUDENTS_API.attendance.path, { id: id ?? '' }), live);
   // Reception sees the fees (the AMS's payment summary); a teacher's screen never asks.
-  const reception = who === 'reception';
+  // The front-desk mode — reception and a manager: any branch, a search first, the fees.
+  const reception = who !== 'teacher';
   const fees = useAmsGet<FeesAnswer>(pathFor(STUDENTS_API.fees.path, { student_id: id ?? '' }), live && reception);
   const s = one.data?.student ?? null;
   const tel = dialable(s?.phone);
