@@ -6,6 +6,8 @@ import type { Failure } from '@/api/session';
 
 export type Loaded<T> = {
   data: T | null;
+  /** The path `data` answered — a screen whose path changed shows nothing older as its own. */
+  dataPath: string | null;
   failure: Failure | null;
   /** True until the first answer (or failure). */
   loading: boolean;
@@ -24,6 +26,7 @@ export type Loaded<T> = {
  */
 export function useAmsGet<T>(path: string, enabled = true): Loaded<T> {
   const [data, setData] = useState<T | null>(null);
+  const [dataPath, setDataPath] = useState<string | null>(null);
   const [failure, setFailure] = useState<Failure | null>(null);
   const [loading, setLoading] = useState(enabled);
   const [refreshing, setRefreshing] = useState(false);
@@ -38,6 +41,7 @@ export function useAmsGet<T>(path: string, enabled = true): Loaded<T> {
       if (mine !== latest.current) return;
       if (r.ok) {
         setData(r.value);
+        setDataPath(path);
         setFailure(null);
       } else {
         setFailure(r.failure);
@@ -56,6 +60,7 @@ export function useAmsGet<T>(path: string, enabled = true): Loaded<T> {
 
   return {
     data,
+    dataPath,
     failure,
     loading,
     refreshing,
