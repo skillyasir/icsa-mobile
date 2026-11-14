@@ -33,6 +33,7 @@ import {
   type MineAnswer,
   type OutcomeChoice,
 } from './rules';
+import { BackLink } from './ui';
 
 // Follow-ups (mockup 12, approved 3 Nov 2026; built 13 Nov 2026): the
 // Follow-up Centre's cases this person works — due today, overdue, upcoming —
@@ -40,7 +41,7 @@ import {
 // case, opens and closes them, and checks every promise; the app logs what
 // happened, in the website's own words.
 
-export function FollowupsScreen() {
+export function FollowupsScreen({ back = false }: { back?: boolean }) {
   const t = useAppTheme();
   const { user } = useSession();
   const live = !user?.preview;
@@ -61,7 +62,7 @@ export function FollowupsScreen() {
 
   if (!live) {
     return (
-      <Screen title="Follow-ups">
+      <Screen title="Follow-ups" top={back ? <BackLink label="‹ Follow-ups" fallback="/marketer/followups" /> : undefined}>
         <Notice tone="warning" title="Developer preview">
           This person has no AMS account, so there are no follow-ups to show.
         </Notice>
@@ -74,7 +75,7 @@ export function FollowupsScreen() {
   const today = kuwaitDay(new Date()) ?? '';
 
   return (
-    <Screen title="Follow-ups" refreshing={mine.refreshing} onRefresh={mine.refresh}>
+    <Screen title="Follow-ups" top={back ? <BackLink label="‹ Follow-ups" fallback="/marketer/followups" /> : undefined} refreshing={mine.refreshing} onRefresh={mine.refresh}>
       <View style={[styles.tabs, { backgroundColor: t.colors.surfaceMuted, borderRadius: t.radius.lg }]} accessibilityRole="tablist">
         {FOLLOWUP_TABS.map((x) => {
           const on = x.key === tab;

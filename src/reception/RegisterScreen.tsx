@@ -42,6 +42,9 @@ export function RegisterScreen() {
   const router = useRouter();
   const { user } = useSession();
   const branchId = user?.branch_id ?? null;
+  // A marketer registers; only reception (manager, supervisor) enrols — POST /enrollments/full.
+  const reception = user?.role !== 'marketer';
+  const home = reception ? '/reception/new' : '/marketer/new';
   const [f, setF] = useState<RegisterForm>(EMPTY_REGISTER);
   const [step, setStep] = useState<1 | 2>(1);
   const [busy, setBusy] = useState(false);
@@ -111,19 +114,19 @@ export function RegisterScreen() {
         </AppText>
       </Pressable>
     ) : (
-      <BackLink fallback="/reception/new" />
+      <BackLink fallback={home} />
     );
 
   if (done) {
     return (
-      <Screen title="Student registered" top={<BackLink fallback="/reception/new" />}>
+      <Screen title="Student registered" top={<BackLink fallback={home} />}>
         <Card>
           <AppText variant="title">{done.name}</AppText>
           {done.code ? <AppText color="textMuted">{done.code}</AppText> : null}
-          <AppText>Registered today, {houseDay(kuwaitDay(new Date()))}. Enrol them in a course next — the fee and the first payment are taken there.</AppText>
-          <Button title="Enrol in a course" variant="primary" onPress={() => router.replace({ pathname: '/enrol', params: { studentId: done.id } })} />
-          <Button title="Open the student" variant="outline" onPress={() => router.replace({ pathname: '/reception/students/profile', params: { id: done.id } })} />
-          <Button title="Done" variant="outline" onPress={() => router.replace('/reception/new')} />
+          <AppText>{reception ? `Registered today, ${houseDay(kuwaitDay(new Date()))}. Enrol them in a course next — the fee and the first payment are taken there.` : `Registered today, ${houseDay(kuwaitDay(new Date()))}. Reception enrols them and takes the fee.`}</AppText>
+          {reception ? <Button title="Enrol in a course" variant="primary" onPress={() => router.replace({ pathname: '/enrol', params: { studentId: done.id } })} /> : null}
+          {reception ? <Button title="Open the student" variant="outline" onPress={() => router.replace({ pathname: '/reception/students/profile', params: { id: done.id } })} /> : null}
+          <Button title="Done" variant="outline" onPress={() => router.replace(home)} />
         </Card>
       </Screen>
     );

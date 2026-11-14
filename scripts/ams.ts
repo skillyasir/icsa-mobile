@@ -40,3 +40,83 @@ export function amsFirewallAdmits(): (method: string, path: string) => boolean {
   if (entries.length < 30) throw new Error(`the AMS firewall's allowlist read as ${entries.length} entries`);
   return (method, path) => entries.some((e) => e.method === method && pathMatches(e.path, path));
 }
+
+// ── Reading one declaration out of an AMS file (moved here from money.check.ts,
+// 14 Nov 2026, so every check that runs AMS code uses the one extractor;
+// money.check §0 self-tests it on the awkward shapes before any use).
+
+/** Index just past the bracket that closes the one at `i`, skipping strings, templates and comments. */
+export function closeOf(src: string, i: number): number {
+  const pairs: Record<string, string> = { '(': ')', '[': ']', '{': '}' };
+  const stack: string[] = [];
+  for (let k = i; k < src.length; k++) {
+    const c = src[k];
+    if (c === '/' && src[k + 1] === '/') {
+      k = src.indexOf('\n', k);
+      if (k < 0) return -1;
+      continue;
+    }
+    if (c === '/' && src[k + 1] === '*') {
+      k = src.indexOf('*/', k) + 1;
+      continue;
+    }
+    if (c === "'" || c === '"') {
+      k++;
+      while (k < src.length && src[k] !== c) {
+        if (src[k] === '\\') k++;
+        k++;
+      }
+      continue;
+    }
+    if (c === '`') {
+      k++;
+      while (k < src.length && src[k] !== '`') {
+        if (src[k] === '\\') k += 2;
+        else if (src[k] === '$' && src[k + 1] === '{') k = closeOf(src, k + 1);
+        else k++;
+      }
+      continue;
+    }
+    if (pairs[c]) stack.push(pairs[c]);
+    else if (c === ')' || c === ']' || c === '}') {
+      if (stack.pop() !== c) return -1;
+      if (stack.length === 0) return k + 1;
+    }
+  }
+  return -1;
+}
+
+/** A top-level declaration's whole source by name: `[export] [async] function name(…) {…}` or `[export] const name = …;`. */
+export function declOf(src: string, name: string): string {
+  const fn = new RegExp(`(?:export\\s+)?(?:async\\s+)?function\\s+${name}\\s*\\(`).exec(src);
+  if (fn) {
+    const paramsEnd = closeOf(src, fn.index + fn[0].length - 1);
+    if (paramsEnd < 0) return '';
+    const open = src.indexOf('{', paramsEnd);
+    const end = closeOf(src, open);
+    return end < 0 ? '' : src.slice(fn.index, end).replace(/^export\s+/, '');
+  }
+  const cn = new RegExp(`(?:export\\s+)?const\\s+${name}\\s*=`).exec(src);
+  if (!cn) return '';
+  for (let k = cn.index + cn[0].length; k < src.length; k++) {
+    const c = src[k];
+    if (c === '(' || c === '[' || c === '{') {
+      const e = closeOf(src, k);
+      if (e < 0) return '';
+      k = e - 1;
+      continue;
+    }
+    if (c === "'" || c === '"' || c === '`') {
+      // a string at the top level of the expression: skip to its closing quote
+      k++;
+      while (k < src.length && src[k] !== c) {
+        if (src[k] === '\\') k++;
+        k++;
+      }
+      continue;
+    }
+    if (c === ';') return src.slice(cn.index, k + 1).replace(/^export\s+/, '');
+  }
+  return '';
+}
+

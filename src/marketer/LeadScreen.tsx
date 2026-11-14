@@ -15,10 +15,11 @@ import { TextField } from '@/components/TextField';
 import { houseDay, parseHouseDate } from '@/reception/money';
 import { BackLink, Chips, Label } from '@/reception/ui';
 import { useSession } from '@/session/SessionContext';
-import { dialable, whatsappUrl } from '@/teacher/students';
+import { dialable } from '@/teacher/students';
 import { useAppTheme } from '@/theme/useAppTheme';
 
 import { LEADS_API, MOVES, OUTCOMES, STAGES, WHEN_OPTIONS, logBody, offeredReasons, type ActivityRow, type Lead, type LostReason, type When } from './leads';
+import { waUrl } from './more';
 
 // One lead (mockup 14, approved 3 Nov 2026; built 14 Nov 2026): call or
 // WhatsApp in one tap, where it stands, what happened so far, and logging what
@@ -47,7 +48,7 @@ export function LeadScreen() {
 
   const moving = MOVES.find((m) => m.value === choice) ?? null;
   const phone = dialable(p?.phone);
-  const wa = whatsappUrl(p?.whatsapp || p?.phone);
+  const wa = waUrl(p?.whatsapp || p?.phone, p?.full_name);
   const open = p ? p.status === 'new' || p.status === 'contacted' : false;
 
   const save = async () => {
