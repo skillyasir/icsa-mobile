@@ -7,8 +7,10 @@
 // Every figure is the AMS's, never added up on the phone. The AMS scopes it:
 // a manager sees every branch, or one when he names it (?branch_id=).
 //
-// The dashboard's periods are the AMS's own: today, this month, this year.
-// (The mockup drew "This week"; the AMS has no week.)
+// Periods — Yasir, 14 Nov 2026: Today · This week · This month (no Year).
+// ICSA's week is Friday to Wednesday; Thursday is off. The AMS has no week
+// yet (asked in docs/10-app-asks-ams-dashboard-week.md), so the chips are the
+// AMS's today and month until it does; the words for a week are ready.
 
 import { formatWeekdayDay, kuwaitDay } from '../attendance/rules.ts';
 import { houseDay } from '../reception/money.ts';
@@ -54,14 +56,14 @@ export function branchLabel(list: readonly Branch[] | null | undefined, branch: 
 
 // ── Dashboard ───────────────────────────────────────────────────────────────
 
-export type Period = 'today' | 'month' | 'year';
+export type Period = 'today' | 'week' | 'month';
+/** Only periods the AMS answers: This week joins when the AMS has it (docs/10). */
 export const PERIOD_CHIPS: { value: Period; label: string }[] = [
   { value: 'today', label: 'Today' },
   { value: 'month', label: 'This month' },
-  { value: 'year', label: 'This year' },
 ];
-const PERIOD_WORD: Record<Period, string> = { today: 'today', month: 'this month', year: 'this year' };
-const isPeriod = (v: unknown): v is Period => v === 'today' || v === 'month' || v === 'year';
+const PERIOD_WORD: Record<Period, string> = { today: 'today', week: 'this week', month: 'this month' };
+const isPeriod = (v: unknown): v is Period => v === 'today' || v === 'week' || v === 'month';
 
 export function dashboardPath(period: Period, branch: string): string {
   return withQuery(REPORTS_API.dashboard.path, { period, branch_id: branchParam(branch) });

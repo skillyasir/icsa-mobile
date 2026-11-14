@@ -77,7 +77,10 @@ run('reports.check — the manager Dashboard and Reports as the AMS answers them
   const gd = declOf(dc, 'getDashboard');
   h.check('§2 getDashboard extracts (floor)', gd.length > 15000, String(gd.length));
   const valid = /const validPeriods = \[([^\]]*)\];/.exec(gd)?.[1] ?? '';
-  h.check('§2 the AMS’s periods are today, month and year — and the chips are exactly those', valid.replace(/\s/g, '') === "'today','month','year'" && PERIOD_CHIPS.map((c) => c.value).join() === 'today,month,year', valid);
+  const amsPeriods = valid.split(',').map((x) => x.trim().replace(/'/g, ''));
+  h.check('§2 the AMS’s periods were read (floor: today and month)', amsPeriods.includes('today') && amsPeriods.includes('month'), valid);
+  h.check('§2 every chip is a period the AMS answers (a week chip waits for docs/10)', PERIOD_CHIPS.every((c) => amsPeriods.includes(c.value)), `${PERIOD_CHIPS.map((c) => c.value).join()} vs ${amsPeriods.join()}`);
+  h.check('§2 the chips are Yasir’s, in order, less any the AMS lacks (14 Nov 2026: Today · This week · This month)', PERIOD_CHIPS.map((c) => c.value).join() === ['today', 'week', 'month'].filter((p) => amsPeriods.includes(p)).join() && PERIOD_CHIPS.map((c) => c.label).join() === ['Today', 'This week', 'This month'].filter((_, i) => amsPeriods.includes(['today', 'week', 'month'][i])).join());
   h.check('§2 an unknown period is answered as month (so the screen labels what came back, not what it asked)', /: 'month';/.test(gd) && /period,\s*\n?\s*branch_id: scopedBranchId/.test(gd));
   h.check('§2 a manager’s branch is ?branch_id=, and none means every branch', /role === 'manager' \? \(req\.query\.branch_id \|\| null\) : null/.test(gd));
   h.check('§2 the path: period, then branch_id only for one branch', dashboardPath('month', ALL) === '/dashboard?period=month' && dashboardPath('today', 'b/1') === '/dashboard?period=today&branch_id=b%2F1');
@@ -92,7 +95,8 @@ run('reports.check — the manager Dashboard and Reports as the AMS answers them
   // §3 the dashboard on the phone
   const tiles = dashboardTiles(dash(), 'today');
   h.check('§3 four tiles, labelled for the period the AMS answered (not the one asked)', tiles.map((t) => `${t.label}=${t.value}/${t.sub}`).join('|') === 'Collected=17,340.000/KD this month|Enrolments=62/this month|Check-ins=81/in class today|Outstanding=9,120.500/KD still owed', tiles.map((t) => `${t.label}=${t.value}/${t.sub}`).join('|'));
-  h.check('§3 an unknown period in the answer falls back to the one asked', dashboardTiles(dash({ period: 'week' }), 'year')[0].sub === 'KD this year');
+  h.check('§3 a period the app does not offer, in the answer, falls back to the one asked', dashboardTiles(dash({ period: 'year' }), 'today')[0].sub === 'KD today');
+  h.check('§3 a week answer is labelled this week (ready for docs/10)', dashboardTiles(dash({ period: 'week' }), 'month').map((t) => t.sub).slice(0, 2).join() === 'KD this week,this week');
   h.check('§3 Outstanding is the one red tile', tiles.filter((t) => t.tone === 'danger').map((t) => t.label).join() === 'Outstanding');
   const bars = branchBars({ total: 0, branches: [{ id: 'f', name: 'Future', value: 1300 }, { id: 'k', name: 'Kuwait City', value: 11200 }, { id: 'm', name: 'Mahboula', value: 6160 }] });
   h.check('§3 branch bars: largest first, the largest full length', bars.map((b) => `${b.name}:${b.share.toFixed(2)}`).join() === 'Kuwait City:1.00,Mahboula:0.55,Future:0.12' && bars[0].amount === '11,200.000', bars.map((b) => `${b.name}:${b.share.toFixed(2)}`).join());
