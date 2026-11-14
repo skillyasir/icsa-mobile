@@ -245,7 +245,7 @@ Rough sizes for one developer working with Claude; they move with the decisions 
 
 ### Deferred — raise when the current piece is done
 
-- **Supervisors and leads (14 Nov 2026):** a supervisor without the marketer role sees no leads in the app; on the website she sees her team's leads. Decide in the Managers/Supervisors piece whether the app shows them.
+- ✅ **Supervisors and leads — Yasir ruled, 14 Nov 2026: website only.** A supervisor works her team's leads on the website; the app's Reception view gets no team-leads screen (one who also holds the marketer role switches to the Marketer view for her own).
 - **Reception (14 Nov 2026):** Take payment and Enrol buttons on the reception student profile's FEES (today they start from Today or New and search). Discounts and coupons at enrolment stay web-only until Yasir says otherwise.
 - ✅ **AMS, found 8 Nov 2026 — Yasir: "fix it" — FIXED and LIVE 8 Nov 2026 (AMS `cfb6095`, `main.52d98594.js`): the website never showed a student the teacher's review comment.** `getMyAssignment` sends `feedback`; `StudentAssignmentView.js` never reads it (not asserted in a check on purpose: a check that the defect is present would go red on its fix). A teacher who types a comment in the review dialog is talking to nobody on the web. The app shows it.
 - ✅ **Android permissions (8 Nov 2026):** `SYSTEM_ALERT_WINDOW` removed (`android.blockedPermissions`). `READ`/`WRITE_EXTERNAL_STORAGE` are the image picker's, for Android 12 and older only — keep them.
