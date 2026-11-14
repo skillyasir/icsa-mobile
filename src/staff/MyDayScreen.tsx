@@ -18,6 +18,7 @@ import { useAppTheme } from '@/theme/useAppTheme';
 
 import { applyReminders } from './reminders';
 import {
+  locationCheckLine,
   KIND_LABEL,
   KIND_NOUN,
   NOT_WORKING,
@@ -283,7 +284,7 @@ function DayBody({
               <AppText variant="label" color="textMuted">
                 EACH TAP CHECKS
               </AppText>
-              <AppText>Location — inside {day.branch?.name ?? 'your branch'}</AppText>
+              <AppText>{locationCheckLine(day.branch)}</AppText>
               <AppText>Office Wi-Fi — the branch’s router</AppText>
               <AppText variant="caption" color="textSubtle">
                 Read only when you tap — never in the background.

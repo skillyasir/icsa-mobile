@@ -328,6 +328,17 @@ export function reminderPlan(day: MyDay | null): Reminder[] {
 
 export const REMINDER_PREFIX = 'staff-';
 
+/**
+ * "Location — within 250 m of City Branch": the staff check-in area as the AMS
+ * sends it on /me/today (branch.radius_m — one staff area for every branch,
+ * set on Rules & offices; AMS 5183bc65, 14 Nov 2026). Never a number of the
+ * app's own: the server decides, and keeps every tap.
+ */
+export function locationCheckLine(branch: { name: string; radius_m: number | null } | null): string {
+  const name = branch?.name ?? 'your branch';
+  return branch && Number(branch.radius_m) > 0 ? `Location — within ${Math.round(Number(branch.radius_m))} m of ${name}` : `Location — inside ${name}`;
+}
+
 // ── Location and Wi-Fi notes, in the person's words ─────────────────────────
 
 export type WifiNote = 'not_available' | 'not_wifi' | 'no_address';
