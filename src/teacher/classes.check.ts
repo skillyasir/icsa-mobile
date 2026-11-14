@@ -1,12 +1,11 @@
 import { readAmsFile } from '../../scripts/ams.ts';
 import { run } from '../../scripts/check-harness.ts';
+import { strip } from '../../scripts/strip.ts';
 
 import { CLASSES_API, STATUS_WORDS, classChips, classTitle, quizLine, stuckLine, type ClassSummary } from './classes.ts';
 
 // The teacher's Classes (7 Nov 2026) against progressService: the route, the
 // shape my-classes answers, and its own status words.
-
-const strip = (s: string) => s.replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1').replace(/\/\*[\s\S]*?\*\//g, '');
 
 run('classes.check — the teacher\'s Classes agree with the AMS', (h) => {
   const r = strip(readAmsFile('server/src/routes/progress.js'));

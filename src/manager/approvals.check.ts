@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 
 import { declOf, readAmsFile } from '../../scripts/ams.ts';
 import { run } from '../../scripts/check-harness.ts';
+import { strip } from '../../scripts/strip.ts';
 
 import {
   APPROVALS_API,
@@ -20,7 +21,6 @@ import {
 // the AMS's routes (refunds.js, payments.js, certificates.js, dashboard.js), the
 // controllers' own refusals, and the certificate workflow's stages.
 
-const strip = (s: string) => s.replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1').replace(/\/\*[\s\S]*?\*\//g, '');
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8');
 
 run('approvals.check — refunds, discounts and certificates as the AMS decides them (Managers bunch 1)', (h) => {

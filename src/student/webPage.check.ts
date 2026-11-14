@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 
 import { readAmsFile } from '../../scripts/ams.ts';
 import { run } from '../../scripts/check-harness.ts';
+import { strip } from '../../scripts/strip.ts';
 
 import {
   AMS_ORIGIN,
@@ -25,8 +26,6 @@ import {
 // that read it) — and the scripts the app hands the page run only on the AMS's
 // address, carry their values through JSON, and set nothing else. The scripts
 // are RUN here, in a fake page, not read.
-
-const strip = (s: string) => s.replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1').replace(/\/\*[\s\S]*?\*\//g, '');
 
 /** Run a script the way the web view would, in a page at `origin`. Returns what it stored. */
 function runIn(script: string, origin: string): { session: Record<string, string>; local: Record<string, string> } {

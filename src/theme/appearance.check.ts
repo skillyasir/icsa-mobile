@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 
 import { run } from '../../scripts/check-harness.ts';
+import { strip } from '../../scripts/strip.ts';
 
 import { APPEARANCE_CHOICES, APPEARANCE_KEY, DEFAULT_APPEARANCE, overrideFor, parseAppearance } from './appearance.ts';
 
@@ -8,7 +9,6 @@ import { APPEARANCE_CHOICES, APPEARANCE_KEY, DEFAULT_APPEARANCE, overrideFor, pa
 // phone keeps the choice; React Native's own override applies it, so every
 // useColorScheme() follows — and nothing shows the phone's Dark Mode first.
 
-const strip = (s: string) => s.replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1').replace(/\/\*[\s\S]*?\*\//g, '');
 const read = (rel: string) => strip(readFileSync(new URL(rel, import.meta.url), 'utf8'));
 
 run('appearance.check — light by default, a switch in Me, kept on the phone', (h) => {

@@ -1,5 +1,6 @@
 import { readAmsFile } from '../../scripts/ams.ts';
 import { run } from '../../scripts/check-harness.ts';
+import { strip } from '../../scripts/strip.ts';
 
 import {
   ATTENDANCE_API,
@@ -43,7 +44,6 @@ import {
 //   dates and times                ↔ Kuwait (the AMS database runs in Asia/Kuwait)
 // This check reads the AMS copy beside this repo; missing is COULD NOT RUN.
 
-const strip = (s: string) => s.replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1').replace(/\/\*[\s\S]*?\*\//g, '');
 const body = (src: string, name: string) => new RegExp(`const ${name} = async[\\s\\S]*?\\n};`).exec(src)?.[0] ?? '';
 const list = (src: string) => [...src.matchAll(/'([a-z_]+)'/g)].map((m) => m[1]);
 

@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 
 import { declOf, readAmsFile } from '../../scripts/ams.ts';
 import { run } from '../../scripts/check-harness.ts';
+import { strip } from '../../scripts/strip.ts';
 
 import { waNumber } from '../teacher/students.ts';
 import {
@@ -31,7 +32,6 @@ import {
 // message (couponUi.shareText) and WhatsApp links (lib/waLink.js) RUN beside
 // the app's copies; its referral order (lib/referrals.js) vendored verbatim.
 
-const strip = (s: string) => s.replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1').replace(/\/\*[\s\S]*?\*\//g, '');
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8');
 
 run('more.check — Follow-ups, New and Referrals as the AMS and the website keep them (Marketers bunch 2)', (h) => {

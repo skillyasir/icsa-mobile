@@ -1,5 +1,6 @@
 import { readAmsFile } from '../../scripts/ams.ts';
 import { runAsync } from '../../scripts/check-harness.ts';
+import { strip } from '../../scripts/strip.ts';
 
 import { existsSync, readFileSync } from 'node:fs';
 
@@ -11,7 +12,6 @@ import { STATUS_TONE, STUDENTS_API, STUDENTS_HOME, STUDENT_PROFILE, attendanceLi
 // getStudentAttendance's, and the WhatsApp number is the AMS's own waNumber —
 // run side by side on a table of numbers, not compared by eye.
 
-const strip = (s: string) => s.replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1').replace(/\/\*[\s\S]*?\*\//g, '');
 const body = (src: string, name: string) => new RegExp(`const ${name} = async[\\s\\S]*?\\n};`).exec(src)?.[0] ?? '';
 
 runAsync('students.check — the teacher\'s and reception\'s Students agree with the AMS', async (h) => {
@@ -62,7 +62,6 @@ runAsync('students.check — the teacher\'s and reception\'s Students agree with
   const differ = table.filter((p) => waNumber(p) !== ams.waNumber(p));
   h.check(`§4 waNumber agrees with the AMS on all ${table.length} numbers`, differ.length === 0, differ.join(' | '));
   h.check('§4 a bare Kuwaiti mobile gets 965; a foreign local is never guessed', whatsappUrl('50420435') === 'https://wa.me/96550420435' && whatsappUrl('0917 123 4567') === 'https://wa.me/09171234567' && whatsappUrl(null) === null);
-
 
   // §5 reception's Students (13 Nov 2026): the same screens, any branch, with the fees
   const payRoutes = strip(readAmsFile('server/src/routes/payments.js'));

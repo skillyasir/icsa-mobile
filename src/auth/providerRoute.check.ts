@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 
 import { readAmsFile } from '../../scripts/ams.ts';
 import { run } from '../../scripts/check-harness.ts';
+import { strip } from '../../scripts/strip.ts';
 import { GOOGLE_IOS_CLIENT_ID, GOOGLE_WEB_CLIENT_ID } from '../config.ts';
 
 import { PROVIDER_ROUTES, googleUrlScheme, providerRoute } from './providerRoute.ts';
@@ -16,7 +17,6 @@ import { PROVIDER_ROUTES, googleUrlScheme, providerRoute } from './providerRoute
 //   the bundle id in app.json   ↔  the audience the AMS checks Apple's token for
 // This check reads the AMS copy beside this repo; missing is COULD NOT RUN.
 
-const strip = (s: string) => s.replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1').replace(/\/\*[\s\S]*?\*\//g, '');
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8');
 
 /** The quoted client ids in a block of source, in order. */

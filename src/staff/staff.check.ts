@@ -4,6 +4,7 @@ import { join, resolve } from 'node:path';
 
 import { amsDir, amsFirewallAdmits, readAmsFile } from '../../scripts/ams.ts';
 import { run } from '../../scripts/check-harness.ts';
+import { strip } from '../../scripts/strip.ts';
 
 import {
   KINDS,
@@ -29,7 +30,6 @@ import {
 // (server/src/routes/staffAttendance.js, controllers/staffAttendanceController.js,
 // services/staffAttendance.js — the one owner of the rules).
 
-const strip = (s: string) => s.replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1').replace(/\/\*[\s\S]*?\*\//g, '');
 const read = (rel: string) => strip(readFileSync(new URL(rel, import.meta.url), 'utf8'));
 /** A function's body by name: past its parameters (parentheses matched, so a destructured one is skipped), then its braces. */
 function bodyOf(src: string, name: string): string {
@@ -206,5 +206,5 @@ run('staff.check — My day, Office Wi-Fi and the reminders agree with the AMS',
   h.check('§7 Me: My day for every member of staff, Office Wi-Fi for a manager', /user\.role !== 'student'[\s\S]*'\/my-day'/.test(me) && /user\.role === 'manager'[\s\S]*'\/office-wifi'/.test(me));
   h.check('§7 My day is on a view’s first tab, the teacher’s Today and the web-only screen',
     /name === 'index' \? <StaffDayCard \/>/.test(read('../navigation/TabPlaceholder.tsx')) && /<StaffDayCard \/>/.test(read('../teacher/TodayScreen.tsx')) && /<StaffDayCard \/>/.test(read('../app/web-only.tsx')));
-  h.check('§7 a placeholder never says "Phase" to a member of staff', !/Phase/.test(read('../navigation/TabPlaceholder.tsx').replace(/\/\*[\s\S]*?\*\//g, '')));
+  h.check('§7 a placeholder never says "Phase" to a member of staff', !/Phase/.test(strip(read('../navigation/TabPlaceholder.tsx'))));
 });

@@ -3,6 +3,7 @@ import { join } from 'node:path';
 
 import { amsFirewallAdmits, readAmsFile } from '../../scripts/ams.ts';
 import { run } from '../../scripts/check-harness.ts';
+import { strip } from '../../scripts/strip.ts';
 
 import {
   ASSIGNMENT_MAX_MB,
@@ -25,7 +26,6 @@ import {
 // rule is the website's (StudentAssignmentView.js), the teacher's comment is
 // sent — and nothing in the app uploads by fetch + FormData.
 
-const strip = (s: string) => s.replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1').replace(/\/\*[\s\S]*?\*\//g, '');
 const body = (src: string, name: string) => new RegExp(`const ${name} = async[\\s\\S]*?\\n};`).exec(src)?.[0] ?? '';
 const concrete = (p: string) => '/api' + p.replace(/:[A-Za-z_]\w*/g, '0b1c');
 

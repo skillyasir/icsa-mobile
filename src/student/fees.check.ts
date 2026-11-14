@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 
 import { readAmsFile } from '../../scripts/ams.ts';
 import { run } from '../../scripts/check-harness.ts';
+import { strip } from '../../scripts/strip.ts';
 
 import { formatDay, kd, kuwaitDay } from '../attendance/rules.ts';
 import {
@@ -26,7 +27,6 @@ import {
 // getMyFees as computed there, the proof form sends the fields the AMS reads,
 // and the photo is shrunk exactly as the website shrinks it.
 
-const strip = (s: string) => s.replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1').replace(/\/\*[\s\S]*?\*\//g, '');
 const body = (src: string, name: string) => new RegExp(`const ${name} = async[\\s\\S]*?\\n};`).exec(src)?.[0] ?? '';
 
 run('fees.check — the student Fees agree with the AMS', (h) => {

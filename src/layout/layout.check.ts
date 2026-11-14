@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 
 import { run } from '../../scripts/check-harness.ts';
+import { strip } from '../../scripts/strip.ts';
 
 import { COLUMN_MAX, LIST_PANE, SPLIT_MIN, WIDE_MIN, layoutFor } from './breakpoints.ts';
 
@@ -9,7 +10,6 @@ import { COLUMN_MAX, LIST_PANE, SPLIT_MIN, WIDE_MIN, layoutFor } from './breakpo
 // "Keep tabs on phones"). This holds the breakpoints, the sidebar, the split
 // screens and the dashboards — and that a phone takes the path it took before.
 
-const strip = (s: string) => s.replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1').replace(/\/\*[\s\S]*?\*\//g, '');
 const read = (rel: string) => strip(readFileSync(new URL(rel, import.meta.url), 'utf8'));
 
 run('layout.check — the iPad layout, and phones unchanged', (h) => {

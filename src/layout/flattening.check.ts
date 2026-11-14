@@ -2,6 +2,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 import { run } from '../../scripts/check-harness.ts';
+import { strip } from '../../scripts/strip.ts';
 
 // Android's renderer (Fabric) leaves out — "flattens" — a plain View that draws
 // nothing, and puts its children straight into the nearest View that is drawn.
@@ -22,8 +23,6 @@ import { run } from '../../scripts/check-harness.ts';
 
 const ROOT = new URL('../../', import.meta.url).pathname;
 const VISUAL = /\b(opacity|backgroundColor|borderWidth|borderColor|borderRadius|transform|elevation|shadow\w*)\b/;
-
-const strip = (s: string) => s.replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1').replace(/\/\*[\s\S]*?\*\//g, '');
 
 function tsxFiles(dir: string, out: string[] = []): string[] {
   for (const name of readdirSync(dir)) {

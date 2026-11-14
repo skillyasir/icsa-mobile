@@ -2,6 +2,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { run } from '../../scripts/check-harness.ts';
+import { strip } from '../../scripts/strip.ts';
 
 import { locationCheckLine } from './rules.ts';
 
@@ -10,8 +11,6 @@ import { locationCheckLine } from './rules.ts';
 // manager), sent on /me/today as branch.radius_m. The app draws what the AMS
 // sends, never a number of its own, and never sends anyone to the website to
 // check in.
-
-const strip = (s: string) => s.replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1').replace(/\/\*[\s\S]*?\*\//g, '');
 
 run('appOnly.check — the staff area as the AMS sends it, and no website check-in (AMS note 08)', (h) => {
   h.check('§1 the area is the AMS’s radius, said in metres', locationCheckLine({ name: 'City Branch', radius_m: 250 }) === 'Location — within 250 m of City Branch');

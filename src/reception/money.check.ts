@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 
 import { amsDir, declOf, readAmsFile } from '../../scripts/ams.ts';
 import { runAsync } from '../../scripts/check-harness.ts';
+import { strip } from '../../scripts/strip.ts';
 
 import { IDEMPOTENT_ROUTES, PressKey } from '../api/idempotency.ts';
 import * as VENDORED from '../vendor/ams/countries.ts';
@@ -48,7 +49,6 @@ import {
 // the Mac, RUNS them, and requires the app's copies to give the same answers
 // on the same inputs — including the exact body POST /enrollments/full is sent.
 
-const strip = (s: string) => s.replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1').replace(/\/\*[\s\S]*?\*\//g, '');
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8');
 
 const canon = (v: unknown): string =>

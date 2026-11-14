@@ -3,6 +3,7 @@ import { join } from 'node:path';
 
 import { readAmsFile } from '../../scripts/ams.ts';
 import { runAsync } from '../../scripts/check-harness.ts';
+import { strip } from '../../scripts/strip.ts';
 
 import { IDEMPOTENCY_HEADER, IDEMPOTENT_ROUTES, PressKey, V4_RE, mayAlreadyBeSaved, newIdempotencyKey, sameKeyMayRetry } from './idempotency.ts';
 import { SessionClient, type Failure } from './session.ts';
@@ -11,7 +12,6 @@ import { SessionClient, type Failure } from './session.ts';
 // to the AMS's own middleware (server/src/middleware/idempotency.js) and to the
 // routes that take one.
 
-const strip = (s: string) => s.replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1').replace(/\/\*[\s\S]*?\*\//g, '');
 const fail = (f: Partial<Failure>): Failure => ({ kind: 'refused', message: 'x', ...f });
 
 runAsync('idempotency.check — one press, one write, as the AMS takes it', async (h) => {

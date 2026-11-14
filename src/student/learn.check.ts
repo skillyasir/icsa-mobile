@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 
 import { amsFirewallAdmits, readAmsFile } from '../../scripts/ams.ts';
 import { run } from '../../scripts/check-harness.ts';
+import { strip } from '../../scripts/strip.ts';
 
 import { formatDay } from '../attendance/rules.ts';
 import {
@@ -29,7 +30,6 @@ import { palettes } from '../theme/tokens.ts';
 // controller sends, and the words and counts are the website's own subject
 // page (client/src/pages/student/StudentSubjectLessons.js).
 
-const strip = (s: string) => s.replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1').replace(/\/\*[\s\S]*?\*\//g, '');
 const body = (src: string, name: string) => new RegExp(`const ${name} = async[\\s\\S]*?\\n};`).exec(src)?.[0] ?? '';
 
 const concrete = (p: string) => '/api' + p.replace(/:[A-Za-z_]\w*/g, '0b1c');

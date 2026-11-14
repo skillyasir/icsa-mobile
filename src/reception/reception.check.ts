@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 
 import { amsFirewallAdmits, readAmsFile } from '../../scripts/ams.ts';
 import { run } from '../../scripts/check-harness.ts';
+import { strip } from '../../scripts/strip.ts';
 
 import {
   ALREADY_REVIEWED,
@@ -31,7 +32,6 @@ import {
 // pickers (client/src/components/followups/fuUi.js). Reception is the
 // supervisor (lib/roles.ts).
 
-const strip = (s: string) => s.replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1').replace(/\/\*[\s\S]*?\*\//g, '');
 const read = (rel: string) => strip(readFileSync(new URL(rel, import.meta.url), 'utf8'));
 /** A function's body by name: past its parameters (parentheses matched, so a destructured one is skipped), then its braces. */
 function bodyOf(src: string, name: string): string {

@@ -1,5 +1,6 @@
 import { readAmsFile } from '../../scripts/ams.ts';
 import { run } from '../../scripts/check-harness.ts';
+import { strip } from '../../scripts/strip.ts';
 
 import {
   ASSIGNMENT_API,
@@ -16,7 +17,6 @@ import {
 // the review body and its two outcomes, the score range, and the website's
 // words for a submission's status.
 
-const strip = (s: string) => s.replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1').replace(/\/\*[\s\S]*?\*\//g, '');
 const body = (src: string, name: string) => new RegExp(`const ${name} = async[\\s\\S]*?\\n};`).exec(src)?.[0] ?? '';
 
 const sub = (over: Partial<Submission>): Submission => ({

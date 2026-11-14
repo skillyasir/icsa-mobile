@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 
 import { readAmsFile } from '../../scripts/ams.ts';
 import { run } from '../../scripts/check-harness.ts';
+import { strip } from '../../scripts/strip.ts';
 
 import {
   LEADS_API,
@@ -26,7 +27,6 @@ import {
 // logProspectFollowup), the lead filter (services/prospectFilter.js), the
 // website's LogContactForm and the vendored lib/leadExpiry.js.
 
-const strip = (s: string) => s.replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1').replace(/\/\*[\s\S]*?\*\//g, '');
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8');
 /** The JS array literal assigned to `name`, evaluated (strings and plain objects only). */
 function arrayOf(src: string, name: string): unknown[] | null {

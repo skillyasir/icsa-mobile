@@ -3,6 +3,7 @@ import { join } from 'node:path';
 
 import { readAmsFile } from '../../scripts/ams.ts';
 import { run } from '../../scripts/check-harness.ts';
+import { strip } from '../../scripts/strip.ts';
 
 import {
   SETTABLE,
@@ -47,7 +48,6 @@ import { STUDENTS_API } from './students.ts';
 // they accept, and the website's own teacher card for order and wording.
 // Reads the AMS copy beside this repo; missing is COULD NOT RUN.
 
-const strip = (s: string) => s.replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1').replace(/\/\*[\s\S]*?\*\//g, '');
 const body = (src: string, name: string) => new RegExp(`const ${name} = async[\\s\\S]*?\\n};`).exec(src)?.[0] ?? '';
 const words = (s: string) => [...s.matchAll(/['"]([a-z_]+)['"]/g)].map((m) => m[1]);
 
