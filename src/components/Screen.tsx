@@ -56,6 +56,13 @@ export function Screen({
   const body = (
     <ScrollView
       style={sideBySide ? [styles.pane, { borderRightColor: t.colors.border }] : undefined}
+      // iPhone (Yasir, 15 Nov 2026 — TestFlight 1.1.0 build 5: Me's Sign out sat
+      // under the floating tab bar at the end of the scroll). The list ends above
+      // the tab bar and the home indicator: said here, not left to the tab
+      // screen's search for "the first scroll view", which did not reach it.
+      // The top is already the SafeAreaView's, so only the bottom changes.
+      // Android ignores it (its tabs pad the screen themselves).
+      contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={[styles.content, pad, { gap: t.space.lg }, column]}
       refreshControl={onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.colors.textSubtle} /> : undefined}
     >

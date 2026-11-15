@@ -32,6 +32,7 @@ run('layout.check — the iPad layout, and phones unchanged', (h) => {
   h.check('§2 on an iPad a single-column screen is centred at COLUMN_MAX, never stretched', /const column = wide && width === 'column' && !sideBySide \? styles\.column : null;/.test(screen) && /column: \{ width: '100%', maxWidth: COLUMN_MAX, alignSelf: 'center' \}/.test(screen));
   h.check('§2 the open item sits beside the list only with room for both', /const sideBySide = split && aside !== undefined;/.test(screen));
   h.check('§2 an embedded screen takes no safe area of its own (its list has it)', /edges=\{embedded \? \[\] :/.test(screen));
+  h.check('§2 on iPhone the list ends above the floating tab bar (Me’s Sign out was under it, 15 Nov 2026): automatic insets on the ScrollView itself, and a tab screen’s safe area is the top only (no double space)', /<ScrollView\b[^>]*\bcontentInsetAdjustmentBehavior="automatic"/.test(screen) && /footer \? \['top', 'bottom'\] : \['top'\]/.test(screen));
 
   // §3 the sidebar
   const tabs = read('../navigation/ExperienceTabs.tsx');
