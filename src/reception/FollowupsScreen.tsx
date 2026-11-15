@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, type Href } from 'expo-router';
 import { useState } from 'react';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
 
@@ -41,7 +41,8 @@ import { BackLink } from './ui';
 // case, opens and closes them, and checks every promise; the app logs what
 // happened, in the website's own words.
 
-export function FollowupsScreen({ back = false }: { back?: boolean }) {
+/** `back`: where its back link leads when there is no history — the marketer's Follow-ups tab, the teacher's Today; none for reception's own tab. */
+export function FollowupsScreen({ back, backLabel = '‹ Back' }: { back?: Href; backLabel?: string }) {
   const t = useAppTheme();
   const { user } = useSession();
   const live = !user?.preview;
@@ -62,7 +63,7 @@ export function FollowupsScreen({ back = false }: { back?: boolean }) {
 
   if (!live) {
     return (
-      <Screen title="Follow-ups" top={back ? <BackLink label="‹ Follow-ups" fallback="/marketer/followups" /> : undefined}>
+      <Screen title="Follow-ups" top={back ? <BackLink label={backLabel} fallback={back} /> : undefined}>
         <Notice tone="warning" title="Developer preview">
           This person has no AMS account, so there are no follow-ups to show.
         </Notice>
@@ -75,7 +76,7 @@ export function FollowupsScreen({ back = false }: { back?: boolean }) {
   const today = kuwaitDay(new Date()) ?? '';
 
   return (
-    <Screen title="Follow-ups" top={back ? <BackLink label="‹ Follow-ups" fallback="/marketer/followups" /> : undefined} refreshing={mine.refreshing} onRefresh={mine.refresh}>
+    <Screen title="Follow-ups" top={back ? <BackLink label={backLabel} fallback={back} /> : undefined} refreshing={mine.refreshing} onRefresh={mine.refresh}>
       <View style={[styles.tabs, { backgroundColor: t.colors.surfaceMuted, borderRadius: t.radius.lg }]} accessibilityRole="tablist">
         {FOLLOWUP_TABS.map((x) => {
           const on = x.key === tab;

@@ -10,11 +10,12 @@ import { Pill } from '@/components/Pill';
 import { Card, Screen } from '@/components/Screen';
 import { LoadFailed, Loading } from '@/components/States';
 import { TextField } from '@/components/TextField';
+import { minePath, type MineAnswer } from '@/reception/rules';
 import { useSession } from '@/session/SessionContext';
 import { useLayout } from '@/layout/useLayout';
 import { useAppTheme } from '@/theme/useAppTheme';
 
-import { STATUS_TONE, STUDENT_PROFILE, coursesLine, listPath, searchParam, type StudentRow, type StudentsWho } from './students';
+import { STATUS_TONE, STUDENT_PROFILE, TEACHER_FOLLOWUPS, coursesLine, followupsDue, followupsRowLine, listPath, searchParam, type StudentRow, type StudentsWho } from './students';
 import { StudentScreen } from './StudentScreen';
 
 // The teacher's Students tab (built 8 Nov 2026): the students he teaches —
@@ -49,6 +50,9 @@ export function StudentsScreen({ who = 'teacher' }: { who?: StudentsWho } = {}) 
   // The front-desk mode — reception and a manager: any branch, a search first, the fees.
   const reception = who !== 'teacher';
   const data = useAmsGet<{ count: number; students: StudentRow[] }>(listPath(search), live && (!reception || !!search));
+  // A teacher's follow-ups row (15 Nov 2026): the AMS's counts; reception has its own Follow-ups tab.
+  const followups = useAmsGet<MineAnswer>(minePath(null, 5), live && !reception);
+  const due = followupsDue(followups.data?.counts);
   const rows = data.data?.students ?? [];
   // iPad with room (the approved design, mockup 18): the open student sits beside the list.
   const { split } = useLayout();
@@ -72,6 +76,25 @@ export function StudentsScreen({ who = 'teacher' }: { who?: StudentsWho } = {}) 
       onRefresh={data.refresh}
       aside={split ? open ? <StudentScreen key={open.id} studentId={open.id} who={who} embedded /> : <View /> : undefined}
     >
+      {!reception && live ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Follow-ups, ${followupsRowLine(due)}`}
+          accessibilityHint="Opens your students' follow-ups"
+          onPress={() => router.push(TEACHER_FOLLOWUPS)}
+          style={({ pressed }) => [styles.followups, { backgroundColor: t.colors.surface, borderColor: t.colors.border, borderRadius: t.radius.lg, opacity: pressed ? 0.85 : 1 }]}
+        >
+          <AppText variant="headline" style={styles.followupsLabel}>
+            Follow-ups
+          </AppText>
+          <AppText variant="bodyStrong" color={due > 0 ? 'onWarningSoft' : 'textSubtle'}>
+            {followupsRowLine(due)}
+          </AppText>
+          <AppText variant="headline" color="textSubtle">
+            ›
+          </AppText>
+        </Pressable>
+      ) : null}
       <TextField
         label={reception ? 'Find a student' : 'Search your students'}
         value={text}
@@ -138,6 +161,8 @@ export function StudentsScreen({ who = 'teacher' }: { who?: StudentsWho } = {}) 
 }
 
 const styles = StyleSheet.create({
+  followups: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, paddingHorizontal: 14, minHeight: 52 },
+  followupsLabel: { flex: 1 },
   flex: { flex: 1 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   row: { borderWidth: 1, padding: 14 },

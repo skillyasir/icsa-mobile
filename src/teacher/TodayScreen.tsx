@@ -11,8 +11,10 @@ import { Notice } from '@/components/Notice';
 import { Card, Screen } from '@/components/Screen';
 import { Column, WideRow } from '@/components/WideRow';
 import { LoadFailed, Loading } from '@/components/States';
+import { minePath, type MineAnswer } from '@/reception/rules';
 import { useSession } from '@/session/SessionContext';
 import { StaffDayCard } from '@/staff/StaffDayCard';
+import { TEACHER_FOLLOWUPS, followupsDue } from '@/teacher/students';
 import type { Palette } from '@/theme/tokens';
 import { minTouch } from '@/theme/tokens';
 import { useAppTheme } from '@/theme/useAppTheme';
@@ -58,6 +60,9 @@ export function TodayScreen() {
   const ctx = useAmsGet<StaffContext>(TEACHER_API.context.path, live);
   const queue = useAmsGet<{ total_pending?: number }>(TEACHER_API.reviewQueue.path, live);
   const classes = useAmsGet<{ needs?: { stuck?: { student_id: string }[] } }>(TEACHER_API.myClasses.path, live);
+  // His follow-ups: the AMS's counts only (a page of 5 — the counts cover them all).
+  const followups = useAmsGet<MineAnswer>(minePath(null, 5), live);
+  const due = followupsDue(followups.data?.counts);
   const [busy, setBusy] = useState<string | null>(null);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [showAll, setShowAll] = useState(false);
@@ -121,6 +126,7 @@ export function TodayScreen() {
     ctx.refresh();
     queue.refresh();
     classes.refresh();
+    followups.refresh();
   };
 
   if (!live) {
@@ -150,6 +156,27 @@ export function TodayScreen() {
       {readOnly ? <Notice tone="info">This is another day: marks can only be changed on the day itself.</Notice> : null}
       {outcome ? <Notice tone={outcome.tone}>{outcome.text}</Notice> : null}
       <StaffDayCard />
+      {due > 0 ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Follow-ups due, ${due}`}
+          accessibilityHint="Opens your students' follow-ups"
+          onPress={() => router.push(TEACHER_FOLLOWUPS)}
+          style={({ pressed }) => [styles.followups, { backgroundColor: t.colors.warningSoft, borderRadius: t.radius.xl, opacity: pressed ? 0.85 : 1 }]}
+        >
+          <View style={styles.followupsText}>
+            <AppText variant="headline" color="onWarningSoft">
+              Follow-ups due
+            </AppText>
+            <AppText variant="caption" color="onWarningSoft">
+              Your students to call or message
+            </AppText>
+          </View>
+          <AppText variant="title" color="onWarningSoft">
+            {String(due)}
+          </AppText>
+        </Pressable>
+      ) : null}
 
       {/* iPad: the check-ins waiting beside today's classes, then what was marked beside the counts (the approved design). */}
       <WideRow ratios={[1.35, 1]}>
@@ -377,6 +404,8 @@ function Tile({ n, label, alert = false, onPress }: { n: string; label: string; 
 }
 
 const styles = StyleSheet.create({
+  followups: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, minHeight: minTouch },
+  followupsText: { flex: 1, gap: 2 },
   flex: { flex: 1 },
   wait: { borderWidth: 1, overflow: 'hidden' },
   waitHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },

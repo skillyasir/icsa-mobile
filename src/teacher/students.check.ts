@@ -4,7 +4,7 @@ import { strip } from '../../scripts/strip.ts';
 
 import { existsSync, readFileSync } from 'node:fs';
 
-import { STATUS_TONE, STUDENTS_API, STUDENTS_HOME, STUDENT_PROFILE, attendanceLine, coursesLine, dialable, listPath, owesAny, payParams, searchParam, waNumber, whatsappUrl } from './students.ts';
+import { STATUS_TONE, STUDENTS_API, STUDENTS_HOME, STUDENT_PROFILE, TEACHER_FOLLOWUPS, attendanceLine, coursesLine, dialable, followupsDue, followupsRowLine, listPath, owesAny, payParams, searchParam, waNumber, whatsappUrl } from './students.ts';
 
 // The teacher's Students tab (8 Nov 2026) against the AMS: a teacher may call
 // every endpoint, the list is scoped by the AMS to the students he teaches,
@@ -84,5 +84,22 @@ runAsync('students.check — the teacher\'s and reception\'s Students agree with
   h.check('§6 Take payment opens on the enrolment when exactly one owes, else on the student', JSON.stringify(payParams('s1', fee('30', [['e1', '0.000'], ['e2', '30.000']]))) === '{"studentId":"s1","enrollmentId":"e2"}' && JSON.stringify(payParams('s1', fee('60', [['e1', '30.000'], ['e2', '30.000']]))) === '{"studentId":"s1"}' && JSON.stringify(payParams('s1', fee('0', []))) === '{"studentId":"s1"}');
   const tp = strip(readFileSync(new URL('../reception/TakePaymentScreen.tsx', import.meta.url), 'utf8'));
   const en = strip(readFileSync(new URL('../reception/EnrolScreen.tsx', import.meta.url), 'utf8'));
+  // §7 a teacher's follow-ups (15 Nov 2026 — in the scope since 3 Nov 2026, missed when Teachers was built; found by Yasir)
+  const fuRoutes = strip(readAmsFile('server/src/routes/followups.js'));
+  const fuCtl = strip(readAmsFile('server/src/controllers/followupsController.js'));
+  const fuSvc = strip(readAmsFile('server/src/services/followupCases.js'));
+  h.check('§7 anyone signed in reads their own list and logs on a case (the controller decides which)', /router\.get\('\/mine', auth, c\.getMine\)/.test(fuRoutes) && /router\.post\('\/cases\/:id\/log', auth, c\.logCase\)/.test(fuRoutes));
+  h.check('§7 an attendance case is opened owned by the student’s teacher', /SELECT COALESCE\(e\.assigned_teacher_id, cs\.teacher_id\) AS teacher_id/.test(fuSvc) && /own\.teacher_id AS owner_id/.test(fuSvc));
+  h.check('§7 his list holds the cases he owns and the fee cases of the students he teaches', /const vis = `\(fc\.owner_id = \$1/.test(fuCtl) && /teacherStudentScopeSql\(\{ studentCol: 's\.id', teacherParam: '\$1'/.test(fuCtl));
+  h.check('§7 he may log on a fee case of his student (canAccess), as the AMS words it', /if \(c\.kind === 'payment'\) \{\s*return c\.owner_id === req\.user\.id \|\| isDesk\(req\) \|\| await canAccess\(req\.user, c\.student_id\)/.test(fuCtl) && fuCtl.includes('logged by the payment desk, the teacher, or the staff member who enrolled the student'));
+  h.check('§7 due is overdue and today — reception’s own reading', followupsDue({ overdue: 2, today: 3 }) === 5 && followupsDue({ overdue: 0, today: 0 }) === 0 && followupsDue(null) === 0 && /const due = f\.overdue \+ f\.today;/.test(strip(readFileSync(new URL('../reception/rules.ts', import.meta.url), 'utf8'))));
+  h.check('§7 the row’s words', followupsRowLine(3) === '3 due' && followupsRowLine(0) === 'Nothing due');
+  const fuRoute = readFileSync(new URL('../app/teacher-followups.tsx', import.meta.url), 'utf8');
+  h.check('§7 his route is the approved Follow-ups screen, its way back his Today', TEACHER_FOLLOWUPS === '/teacher-followups' && /return <FollowupsScreen back="\/teacher" \/>;/.test(fuRoute) && /export function FollowupsScreen\(\{ back, backLabel = '‹ Back' \}: \{ back\?: Href; backLabel\?: string \}\)/.test(strip(readFileSync(new URL('../reception/FollowupsScreen.tsx', import.meta.url), 'utf8'))));
+  const today = strip(readFileSync(new URL('./TodayScreen.tsx', import.meta.url), 'utf8'));
+  h.check('§7 Today: a card only when some are due, opening his follow-ups; pull-to-refresh asks again', /const followups = useAmsGet<MineAnswer>\(minePath\(null, 5\), live\);/.test(today) && /\{due > 0 \? \(/.test(today) && /router\.push\(TEACHER_FOLLOWUPS\)/.test(today) && /followups\.refresh\(\);/.test(today));
+  const listStripped = strip(listSrc);
+  h.check('§7 Students: the row is the teacher’s only (reception has its own tab), always there, opening his follow-ups', /useAmsGet<MineAnswer>\(minePath\(null, 5\), live && !reception\)/.test(listStripped) && /\{!reception && live \? \(/.test(listStripped) && /router\.push\(TEACHER_FOLLOWUPS\)/.test(listStripped));
+
   h.check('§6 both screens open with what the buttons send', /useLocalSearchParams<\{ studentId\?: string; enrollmentId\?: string \}>\(\)/.test(tp) && /useState<string \| null>\(params\.studentId \?\? null\)/.test(tp) && /useState<string \| null>\(params\.enrollmentId \?\? null\)/.test(tp) && /useLocalSearchParams<\{ studentId\?: string \}>\(\)/.test(en) && /useState<string \| null>\(params\.studentId \?\? null\)/.test(en));
 });

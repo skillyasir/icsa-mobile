@@ -133,7 +133,7 @@ run('more.check — Follow-ups, New and Referrals as the AMS and the website kee
     const route = read(`../app/marketer/${name}.tsx`);
     h.check(`§8 marketer/${name} is built, its own screen`, new RegExp(`name: '${name}',[^\\n]*\\n?[^\\n]*phase: 4, built: true`).test(tabs.slice(tabs.indexOf('marketer: ['))) && route.includes(`Tab: marketer/${name}`) && !route.includes('TabPlaceholder'));
   }
-  h.check('§8 her students’ follow-ups open the Follow-up Centre with a way back', existsSync(new URL('../app/student-followups.tsx', import.meta.url)) && /<FollowupsScreen back \/>/.test(read('../app/student-followups.tsx')));
+  h.check('§8 her students’ follow-ups open the Follow-up Centre with a way back', existsSync(new URL('../app/student-followups.tsx', import.meta.url)) && /<FollowupsScreen back="\/marketer\/followups" backLabel="‹ Follow-ups" \/>/.test(read('../app/student-followups.tsx')));
   const newScreen = strip(read('./MarketerNewScreen.tsx'));
   h.check('§8 no lead is typed in (Yasir, 14 Nov 2026): New neither offers nor sends one', newScreen.length > 4000 && !/Add a lead/i.test(newScreen) && !/referrals\/prospects/.test(newScreen) && !/LEADS_API/.test(newScreen));
   const reg = strip(read('../reception/RegisterScreen.tsx'));

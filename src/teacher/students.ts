@@ -50,6 +50,20 @@ export type FeesAnswer = { enrollments: FeeLine[]; total_paid_overall: string; b
 // before the every-role test, 15 Nov 2026): Take payment and Enrol open with
 // the student chosen. The AMS's figures decide; nothing is added up here.
 
+// A teacher's follow-ups (15 Nov 2026 — in the scope since 3 Nov, missed when
+// Teachers was built): the Follow-up Centre's own list (GET /followups/mine),
+// which the AMS fills for him — his students' attendance cases (he owns them)
+// and their fee cases. Opened from Today's card and the Students tab's row.
+
+/** The route both open. */
+export const TEACHER_FOLLOWUPS = '/teacher-followups' as const;
+
+/** Due: overdue and today — as reception's Today counts them (needsYou). */
+export const followupsDue = (c: { overdue?: number; today?: number } | null | undefined): number => (c ? (c.overdue || 0) + (c.today || 0) : 0);
+
+/** The Students row's right-hand words. */
+export const followupsRowLine = (n: number): string => (n > 0 ? `${n} due` : 'Nothing due');
+
 /** Owes anything — the same reading as the profile's Owes pill. */
 export const owesAny = (f: Pick<FeesAnswer, 'balance_overall'> | null | undefined): boolean => !!f && Number(f.balance_overall) > 0.0005;
 
