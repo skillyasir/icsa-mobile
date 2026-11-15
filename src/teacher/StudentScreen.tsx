@@ -19,6 +19,8 @@ import {
   STUDENTS_HOME,
   attendanceLine,
   dialable,
+  owesAny,
+  payParams,
   whatsappUrl,
   type AttendanceAnswer,
   type FeesAnswer,
@@ -44,6 +46,8 @@ export function StudentScreen({ studentId, embedded = false, who = 'teacher' }: 
   // Reception sees the fees (the AMS's payment summary); a teacher's screen never asks.
   // The front-desk mode — reception and a manager: any branch, a search first, the fees.
   const reception = who !== 'teacher';
+  // Reception's own profile only: Take payment and Enrol open reception's screens.
+  const desk = who === 'reception';
   const fees = useAmsGet<FeesAnswer>(pathFor(STUDENTS_API.fees.path, { student_id: id ?? '' }), live && reception);
   const s = one.data?.student ?? null;
   const tel = dialable(s?.phone);
@@ -125,6 +129,18 @@ export function StudentScreen({ studentId, embedded = false, who = 'teacher' }: 
             </Card>
           ) : fees.loading ? (
             <Loading what="Loading the fees…" />
+          ) : null}
+          {desk && id && fees.data ? (
+            <View style={[styles.row, { gap: t.space.sm }]}>
+              {owesAny(fees.data) ? (
+                <View style={styles.flex}>
+                  <Button title="Take payment" onPress={() => router.push({ pathname: '/take-payment', params: payParams(id, fees.data ?? { enrollments: [] }) })} />
+                </View>
+              ) : null}
+              <View style={styles.flex}>
+                <Button title="Enrol" variant="outline" onPress={() => router.push({ pathname: '/enrol', params: { studentId: id } })} />
+              </View>
+            </View>
           ) : null}
         </View>
       ) : null}

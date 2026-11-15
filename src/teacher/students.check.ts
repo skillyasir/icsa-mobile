@@ -4,7 +4,7 @@ import { strip } from '../../scripts/strip.ts';
 
 import { existsSync, readFileSync } from 'node:fs';
 
-import { STATUS_TONE, STUDENTS_API, STUDENTS_HOME, STUDENT_PROFILE, attendanceLine, coursesLine, dialable, listPath, searchParam, waNumber, whatsappUrl } from './students.ts';
+import { STATUS_TONE, STUDENTS_API, STUDENTS_HOME, STUDENT_PROFILE, attendanceLine, coursesLine, dialable, listPath, owesAny, payParams, searchParam, waNumber, whatsappUrl } from './students.ts';
 
 // The teacher's Students tab (8 Nov 2026) against the AMS: a teacher may call
 // every endpoint, the list is scoped by the AMS to the students he teaches,
@@ -73,4 +73,16 @@ runAsync('students.check — the teacher\'s and reception\'s Students agree with
   const listSrc = readFileSync(new URL('./StudentsScreen.tsx', import.meta.url), 'utf8');
   h.check('§5 reception lists nobody until it searches (every branch would come back)', /live && \(!reception \|\| !!search\)/.test(listSrc));
   const oneSrc = readFileSync(new URL('./StudentScreen.tsx', import.meta.url), 'utf8');
-  h.check('§5 only reception asks for the fees', /STUDENTS_API\.fees\.path[^;]*live && reception\)/.test(oneSrc));});
+  h.check('§5 only reception asks for the fees', /STUDENTS_API\.fees\.path[^;]*live && reception\)/.test(oneSrc));
+
+  // §6 reception's profile buttons (deferred 14 Nov 2026; built 15 Nov 2026)
+  const one = strip(oneSrc);
+  h.check('§6 the buttons are reception’s own profile only (a manager’s has no way back into reception’s screens)', /const desk = who === 'reception';/.test(one) && /\{desk && id && fees\.data \? \(/.test(one));
+  h.check('§6 Take payment only when something is owed; Enrol always', /\{owesAny\(fees\.data\) \? \(/.test(one) && /<Button title="Take payment" onPress=\{\(\) => router\.push\(\{ pathname: '\/take-payment', params: payParams\(id, /.test(one) && /<Button title="Enrol" variant="outline" onPress=\{\(\) => router\.push\(\{ pathname: '\/enrol', params: \{ studentId: id \} \}\)\}/.test(one));
+  const fee = (bal: string, lines: [string, string][]) => ({ balance_overall: bal, total_paid_overall: '0', enrollments: lines.map(([enrollment_id, balance]) => ({ enrollment_id, enrollment_no: null, course_name: null, status: null, net_amount: '0', total_paid: '0', balance })) });
+  h.check('§6 owes reads the AMS’s balance as the Owes pill does (half a fils is nothing)', owesAny(fee('12.500', [])) && !owesAny(fee('0.000', [])) && !owesAny(fee('0.0004', [])) && !owesAny(null) && /Number\(fees\.data\.balance_overall\) > 0\.0005 \? 'Owes'/.test(one));
+  h.check('§6 Take payment opens on the enrolment when exactly one owes, else on the student', JSON.stringify(payParams('s1', fee('30', [['e1', '0.000'], ['e2', '30.000']]))) === '{"studentId":"s1","enrollmentId":"e2"}' && JSON.stringify(payParams('s1', fee('60', [['e1', '30.000'], ['e2', '30.000']]))) === '{"studentId":"s1"}' && JSON.stringify(payParams('s1', fee('0', []))) === '{"studentId":"s1"}');
+  const tp = strip(readFileSync(new URL('../reception/TakePaymentScreen.tsx', import.meta.url), 'utf8'));
+  const en = strip(readFileSync(new URL('../reception/EnrolScreen.tsx', import.meta.url), 'utf8'));
+  h.check('§6 both screens open with what the buttons send', /useLocalSearchParams<\{ studentId\?: string; enrollmentId\?: string \}>\(\)/.test(tp) && /useState<string \| null>\(params\.studentId \?\? null\)/.test(tp) && /useState<string \| null>\(params\.enrollmentId \?\? null\)/.test(tp) && /useLocalSearchParams<\{ studentId\?: string \}>\(\)/.test(en) && /useState<string \| null>\(params\.studentId \?\? null\)/.test(en));
+});

@@ -46,6 +46,19 @@ export type FeeLine = {
 };
 export type FeesAnswer = { enrollments: FeeLine[]; total_paid_overall: string; balance_overall: string };
 
+// Reception's profile buttons (deferred 14 Nov 2026; Yasir chose to build them
+// before the every-role test, 15 Nov 2026): Take payment and Enrol open with
+// the student chosen. The AMS's figures decide; nothing is added up here.
+
+/** Owes anything — the same reading as the profile's Owes pill. */
+export const owesAny = (f: Pick<FeesAnswer, 'balance_overall'> | null | undefined): boolean => !!f && Number(f.balance_overall) > 0.0005;
+
+/** Take payment opens with the student — and the enrolment too, when exactly one owes. */
+export function payParams(studentId: string, f: Pick<FeesAnswer, 'enrollments'>): Record<string, string> {
+  const owing = f.enrollments.filter((e) => Number(e.balance) > 0.0005);
+  return owing.length === 1 ? { studentId, enrollmentId: owing[0].enrollment_id } : { studentId };
+}
+
 
 export type Enrolment = {
   id: string;
