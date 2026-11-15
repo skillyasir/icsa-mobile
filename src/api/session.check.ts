@@ -26,7 +26,7 @@ class FakeAms {
   calls: Call[] = [];
   faults = new Map<string, Fault>();
   private n = 0;
-  private access = new Map<string, { userId: string; expires: number }>();
+  private access = new Map<string, { userId: string; expires: number; phone: boolean }>();
   devices: { userId: string; current: string; prev: string | null; rotatedAt: number; revoked: string | null }[] = [];
   users: Record<string, { id: string; full_name: string; email: string; role: string; branch_name: string; overlay_roles: string[]; student_code?: string }> = {
     'maria@example.com': { id: 'u-staff', full_name: 'Maria Santos', email: 'maria@example.com', role: 'teacher', branch_name: 'Kuwait City', overlay_roles: ['marketer'] },
@@ -37,11 +37,18 @@ class FakeAms {
     this.n++;
     return `${prefix}${String(this.n).padStart(40 - prefix.length, '0')}xyz`;
   }
-  private issueAccess(userId: string) {
+  private issueAccess(userId: string, phone = false) {
     const t = this.token('acc-');
-    this.access.set(t, { userId, expires: this.clock + 10 * 60_000 + 120_000 });
+    this.access.set(t, { userId, expires: this.clock + 10 * 60_000 + 120_000, phone });
     return t;
   }
+  /** The device claim (docs/13): a token minted for a signed-in phone, never the login reply's. */
+  private minted(auth: string | null) {
+    const a = auth ? this.access.get(auth) : undefined;
+    return !!a && a.phone && a.expires > this.clock;
+  }
+  /** When true, /mobile/session hands back a phone-minted access token too (the AMS change asked in docs/13). */
+  bindReturnsToken = false;
   private who(auth: string | null) {
     const a = auth ? this.access.get(auth) : undefined;
     return a && a.expires > this.clock ? a.userId : null;
@@ -73,7 +80,7 @@ class FakeAms {
       if (!uid) return reply(401, { error: 'No token' });
       const rt = this.token('rt-');
       this.devices.push({ userId: uid, current: rt, prev: null, rotatedAt: 0, revoked: null });
-      return reply(201, { device_id: 'd' + this.devices.length, refresh_token: rt, session_days: 30 });
+      return reply(201, { device_id: 'd' + this.devices.length, refresh_token: rt, session_days: 30, ...(this.bindReturnsToken ? { token: this.issueAccess(uid, true), session } : {}) });
     }
     if (path === '/mobile/session/refresh') {
       const t = String(body.refresh_token);
@@ -92,7 +99,7 @@ class FakeAms {
         d.rotatedAt = this.clock;
       }
       d.current = next;
-      return reply(200, { token: this.issueAccess(d.userId), refresh_token: next, session });
+      return reply(200, { token: this.issueAccess(d.userId, true), refresh_token: next, session });
     }
     if (path === '/mobile/session/signout') {
       const t = String(body.refresh_token);
@@ -103,6 +110,10 @@ class FakeAms {
     if (path === '/auth/me') {
       const uid = this.who(auth);
       return uid ? reply(200, { user: this.userById(uid) }) : reply(401, { error: 'Token expired' });
+    }
+    if (path === '/staff/tap') {
+      if (!this.who(auth)) return reply(401, { error: 'Token expired' });
+      return this.minted(auth) ? reply(201, { ok: true }) : reply(403, { code: 'APP_ONLY', error: 'Staff check in with the ICSA app only — not on the website.' });
     }
     if (path === '/probe') {
       return this.who(auth) ? reply(200, { fine: true }) : reply(401, { error: 'Token expired' });
@@ -163,7 +174,7 @@ async function main(h: Harness) {
     h.check('§1 the refresh token is saved, and it is the only thing saved', store.data.get(REFRESH_TOKEN_KEY) === ams.devices[0].current && store.data.size === 1);
     h.check('§1 the password goes to the login and nowhere else', ams.calls.filter((c) => JSON.stringify(c.body).includes('right')).map((c) => c.path).join() === '/auth/login');
     const probe = await client.request('GET', '/probe');
-    h.check('§1 a request straight after uses the access token, no refresh', probe.ok && ams.count('/mobile/session/refresh') === 0);
+    h.check('§1 straight after sign-in the login token is swapped, once, for one minted for this phone (the device claim, docs/13)', probe.ok && ams.count('/mobile/session/refresh') === 1);
   }
 
   // §2 sign in, student
@@ -215,12 +226,13 @@ async function main(h: Harness) {
     const { client, ams, store } = setup();
     await client.signIn(staff);
     const first = store.data.get(REFRESH_TOKEN_KEY);
+    const base = ams.count('/mobile/session/refresh');
     ams.clock += 11 * 60_000 + 30_000; // inside the last minute of the 12
     const r = await client.request('GET', '/probe');
-    h.check('§6 near the end, a request renews first and then succeeds', r.ok && ams.count('/mobile/session/refresh') === 1);
+    h.check('§6 near the end, a request renews first and then succeeds', r.ok && ams.count('/mobile/session/refresh') === base + 1);
     const now = store.data.get(REFRESH_TOKEN_KEY);
     h.check('§6 the rotated refresh token is saved at once', !!now && now !== first && now === ams.devices[0].current);
-    const refresh = ams.calls.find((c) => c.path === '/mobile/session/refresh');
+    const refresh = ams.calls.filter((c) => c.path === '/mobile/session/refresh').at(-1);
     h.check('§6 the refresh carries the token in the body, never the URL, and no access token', !!refresh && refresh.body.refresh_token === first && !refresh.auth);
   }
 
@@ -228,9 +240,10 @@ async function main(h: Harness) {
   {
     const { client, ams } = setup();
     await client.signIn(staff);
+    const base = ams.count('/mobile/session/refresh');
     ams.clock += 13 * 60_000;
     const all = await Promise.all([1, 2, 3, 4, 5].map(() => client.request('GET', '/probe')));
-    h.check('§7 five requests with a lapsed token → exactly one refresh', ams.count('/mobile/session/refresh') === 1, String(ams.count('/mobile/session/refresh')));
+    h.check('§7 five requests with a lapsed token → exactly one refresh', ams.count('/mobile/session/refresh') === base + 1, String(ams.count('/mobile/session/refresh') - base));
     h.check('§7 …and all five succeed', all.every((x) => x.ok));
     h.check('§7 …and the server never saw an old token come back (no token_reuse)', ams.devices[0].revoked === null);
   }
@@ -425,6 +438,36 @@ async function main(h: Harness) {
     h.check('§17 an upload\'s refusal reads like any other: the AMS\'s words', f.kind === 'refused' && f.message === 'A valid amount is required' && f.status === 400);
     h.check('§17 no answer at all is offline', failureOfAnswer(0, {}).kind === 'offline');
   }
+
+  // §18 the device claim (Yasir, 15 Nov 2026; docs/13): a staff tap carries a token minted for this phone
+  {
+    const { client } = setup();
+    await client.signIn(staff);
+    const tap = await client.request('POST', '/staff/tap', { kind: 'in' });
+    h.check('§18 a staff tap straight after sign-in passes the claim (the login token was swapped)', tap.ok, tap.ok ? '' : tap.failure.message);
+  }
+  {
+    const { client, ams } = setup();
+    ams.bindReturnsToken = true;
+    await client.signIn(staff);
+    const tap = await client.request('POST', '/staff/tap', { kind: 'in' });
+    h.check('§18 when /mobile/session hands back a phone token, it is used at once — no swap needed', tap.ok && ams.count('/mobile/session/refresh') === 0);
+  }
+  {
+    const { ams } = setup();
+    const login = await ams.fetch('https://ams.test/api/auth/login', { method: 'POST', headers: {}, body: JSON.stringify(staff.body) });
+    const tok = String((JSON.parse(await login.text()) as { token?: string }).token);
+    const forged = await ams.fetch('https://ams.test/api/staff/tap', { method: 'POST', headers: { Authorization: `Bearer ${tok}` }, body: '{}' });
+    h.check('§18 CONTROL: the login reply’s own token is refused (APP_ONLY) — the stand-in really enforces the claim', forged.status === 403 && /APP_ONLY/.test(await forged.text()));
+  }
+  {
+    const { client, ams } = setup();
+    await client.signIn(staff);
+    ams.clock += 13 * 60_000;
+    const tap = await client.request('POST', '/staff/tap', { kind: 'out' });
+    h.check('§18 after a renewal the tap still carries the claim', tap.ok);
+  }
+
 }
 
 runAsync('session.check — the app stays signed in, safely', main);

@@ -237,7 +237,15 @@ export class SessionClient {
       await this.call('POST', '/mobile/session/signout', { refresh_token: refreshToken });
       return fail({ kind: 'storage', message: MESSAGES.storage });
     }
+    // A PHONE-MINTED access token from the first request on (Yasir, 15 Nov 2026 —
+    // the device claim, docs/13): the AMS is to accept a staff tap only with a
+    // token minted for a signed-in phone, never the login reply's. When
+    // /mobile/session hands one back it is used at once; until then the login
+    // token is swapped for one straight away. A swap that fails keeps the login
+    // token — the next request near its end renews, as always.
+    if (this.keepAccess(bind.json)) return ok(user);
     this.keepAccess(login.json);
+    await this.refresh();
     return ok(user);
   }
 
