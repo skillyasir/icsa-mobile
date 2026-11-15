@@ -20,6 +20,8 @@ And change **Last Updated** to the day it is published.
 
 ## 2. Google Play — Data safety (Policy › App content › Data safety)
 
+✅ **Saved in Play Console 15 Nov 2026** (Yasir approved): Name, Address, Phone number, Other info added (collected · not shared · not ephemeral · users can choose · App functionality); account creation also ticks **Through employment, or enterprise accounts** (staff); **"Committed to follow the Play Families policy" shown** (Yasir). Waiting in **Publishing overview**, to send for review with the 1.1.0 release.
+
 Unchanged from 1.0: **collects data: Yes · shared with third parties: No** (opening WhatsApp with a message the person chose to send is a user-initiated transfer, not sharing) · **encrypted in transit: Yes** · **account creation: out of app** · **deletion: https://icsa.us/privacy_policy**.
 
 **Remove** the 1.0 note "Name and phone are not listed: the app shows them but never sends them" — it is no longer true.
