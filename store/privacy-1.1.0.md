@@ -8,7 +8,7 @@
 
 ## 1. Privacy policy — lines to add to clause 02 "The ICSA mobile app" (for Yasir's approval)
 
-Add after the "Attendance reminders (staff)" line. **Publish once AMS `d9b15467` is live** (the voucher line names the age; the AMS chat's wording, 15 Nov 2026):
+✅ **Published 15 Nov 2026** (Last Updated 15 Nov 2026), in the page's style: bold title, then "—". Added after the "Attendance reminders (staff)" line. **Published once AMS `d9b15467` was live** (the voucher line names the age; the AMS chat's wording, 15 Nov 2026):
 
 > **Vouchers for a friend (students aged 18 and over).** If you give a friend an ICSA voucher in the app, you enter your friend's name and WhatsApp number. ICSA keeps them with the voucher: to check that your friend is new to ICSA, so that only that number can use it, and to show you how your friend is getting on. You never see your friend's fee or payments. Only give a friend's details if they are happy for you to share them with ICSA. Sending the voucher opens WhatsApp on your phone; the message is sent by you, from your WhatsApp.
 
