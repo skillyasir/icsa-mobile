@@ -24,6 +24,8 @@ import { clearReminders } from '@/staff/reminders';
 //   signedIn
 
 export type SessionUser = {
+  /** The AMS user id (absent in the developer preview) — e.g. to know one's own check-in among a manager's reviews. */
+  id?: string | null;
   full_name: string;
   role: string;
   overlay_roles: string[];
@@ -58,6 +60,7 @@ type Session = {
 const SessionContext = createContext<Session | null>(null);
 
 const fromAms = (u: AmsUser): SessionUser => ({
+  id: u.id,
   full_name: u.full_name,
   role: u.role,
   overlay_roles: u.overlay_roles,
