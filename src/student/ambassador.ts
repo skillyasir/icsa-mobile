@@ -21,6 +21,8 @@ export const AMBASSADOR_API = {
   // link's preview, and the picture itself for the share sheet.
   card: { method: 'GET', path: '/coupons/:id/card' },
   image: { method: 'GET', path: '/coupons/:id/image' },
+  // The student's own profile: its date of birth decides who is offered the programme.
+  profile: { method: 'GET', path: '/auth/student/profile' },
 } as const;
 
 export type Status = 'issued' | 'shared' | 'used' | 'waiting' | 'cooling' | 'earned' | 'refunded' | 'expired' | 'void' | 'live' | 'off' | 'review';
@@ -184,3 +186,32 @@ export function homeCard(m: Pick<Mine, 'rule' | 'wallet'> | null | undefined): {
     earned: m?.wallet ? kdShort(m.wallet.balance) : null,
   };
 }
+
+// ── Adults only (Yasir, 15 Nov 2026) ────────────────────────────────────────
+// The Ambassador asks for another person's name and WhatsApp number, with a
+// reward, and Play's audience includes children (Families policy). So it is
+// for students aged 18 and over; a student with no date of birth on file is
+// not offered it until the front desk adds one. The AMS is to enforce it
+// (docs/12, code AMBASSADOR_ADULTS_ONLY); until then the app shows it only to
+// an adult, and once the AMS refuses, the app honours that too.
+
+export const ADULT_AGE = 18;
+export const ADULTS_ONLY_CODE = 'AMBASSADOR_ADULTS_ONLY';
+
+/** 18 or over on `today` (Kuwait, 'YYYY-MM-DD'); no date, or a date that does not read, is not. A 29 Feb birthday comes of age on 1 Mar. */
+export function isAdult(dob: string | null | undefined, today: string): boolean {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(dob ?? '');
+  if (!m || !/^\d{4}-\d{2}-\d{2}/.test(today)) return false;
+  const comesOfAge = `${Number(m[1]) + ADULT_AGE}-${m[2]}-${m[3]}`;
+  return comesOfAge <= today.slice(0, 10);
+}
+
+/** Why the programme is not offered, in words for the screen (if it is ever reached). */
+export function notOfferedWords(dob: string | null | undefined): string {
+  return dob
+    ? 'The Ambassador programme is for students aged 18 and over.'
+    : 'The Ambassador programme is for students aged 18 and over. Ask the front desk to add your date of birth.';
+}
+
+/** The AMS's own refusal (once docs/12 is built): the programme is not offered. */
+export const refusedAsUnder18 = (f: { code?: string } | null | undefined): boolean => f?.code === ADULTS_ONLY_CODE;

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Linking, StyleSheet, View } from 'react-native';
 
 import { ams } from '@/api/client';
+import { kuwaitDay } from '@/attendance/rules';
 import { useAmsGet } from '@/attendance/useAmsGet';
 import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
@@ -31,10 +32,13 @@ import {
   fromOldSystem,
   historyLine,
   imageUrl,
+  isAdult,
   issueBody,
   monthLine,
+  notOfferedWords,
   offerLine,
   progressPct,
+  refusedAsUnder18,
   rewardOf,
   shareMessage,
   soonest,
@@ -54,7 +58,11 @@ export function AmbassadorScreen() {
   const t = useAppTheme();
   const { user } = useSession();
   const live = !user?.preview;
-  const mine = useAmsGet<Mine>(AMBASSADOR_API.me.path, live);
+  // Students 18 and over only (Yasir, 15 Nov 2026): the profile's date of birth decides.
+  const profile = useAmsGet<{ profile: { date_of_birth: string | null } }>(AMBASSADOR_API.profile.path, live);
+  const dob = profile.data?.profile?.date_of_birth ?? null;
+  const adult = isAdult(dob, kuwaitDay(new Date()) ?? '');
+  const mine = useAmsGet<Mine>(AMBASSADOR_API.me.path, live && adult);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [saving, setSaving] = useState(false);
@@ -132,6 +140,21 @@ export function AmbassadorScreen() {
       setSaving(false);
     }
   };
+
+  if (!profile.data) {
+    return (
+      <Screen title="Ambassador" top={top} refreshing={profile.refreshing} onRefresh={profile.refresh}>
+        {profile.failure ? <LoadFailed failure={profile.failure} onRetry={profile.refresh} /> : <Loading what="Loading…" />}
+      </Screen>
+    );
+  }
+  if (!adult || refusedAsUnder18(mine.failure)) {
+    return (
+      <Screen title="Ambassador" top={top}>
+        <Notice tone="info">{notOfferedWords(dob)}</Notice>
+      </Screen>
+    );
+  }
 
   const m = mine.data;
   if (!m) {

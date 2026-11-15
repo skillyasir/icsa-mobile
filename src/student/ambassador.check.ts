@@ -6,6 +6,8 @@ import { strip } from '../../scripts/strip.ts';
 import { COUPON_TERMS, PUBLIC_SITE, kdShort } from '../marketer/more.ts';
 
 import {
+  ADULTS_ONLY_CODE,
+  ADULT_AGE,
   AMBASSADOR_API,
   LINE_KIND,
   STATUS_WORD,
@@ -20,10 +22,13 @@ import {
   historyLine,
   homeCard,
   imageUrl,
+  isAdult,
   issueBody,
   monthLine,
+  notOfferedWords,
   offerLine,
   progressPct,
+  refusedAsUnder18,
   rewardOf,
   shareMessage,
   soonest,
@@ -122,10 +127,27 @@ run('ambassador.check — the Student Ambassador as the AMS and the website run 
   const scr = strip(read('./AmbassadorScreen.tsx'));
   const home = strip(read('./HomeScreen.tsx'));
   h.check('§6 the route is its own screen', /return <AmbassadorScreen \/>;/.test(read('../app/ambassador.tsx')));
-  h.check('§6 Home reads the programme and opens it', /const amb = useAmsGet<Mine>\(AMBASSADOR_API\.me\.path, live\);/.test(home) && /router\.push\('\/ambassador'\)/.test(home) && /amb\.refresh\(\);/.test(home));
+  h.check('§6 Home reads the programme and opens it', /const amb = useAmsGet<Mine>\(AMBASSADOR_API\.me\.path, live && adult\);/.test(home) && /router\.push\('\/ambassador'\)/.test(home) && /amb\.refresh\(\);/.test(home));
   h.check('§6 Send on WhatsApp: the website’s message to the friend’s number, then said as shared', /await Linking\.openURL\(waShareUrl\(shareMessage\(c, AMS_WEB_URL\), c\.friend_whatsapp\)\);\s*markShared\(c\);/.test(scr) && /ams\.request\('POST', AMBASSADOR_API\.shared\.path, \{ id: c\.id \}\)/.test(scr));
   h.check('§6 …and so is a shared picture', /await Sharing\.shareAsync\(file\.uri, [^;]*\);\s*markShared\(c\);/.test(scr));
   h.check('§6 Share the picture: the Status-size picture to the share sheet, with no sign-in sent', /File\.downloadFileAsync\(imageUrl\(AMS_WEB_URL, c\.id\), dest, \{ headers: \{ Accept: 'image\/png' \}, idempotent: true \}\)/.test(scr) && !/Authorization/.test(scr) && /Sharing\.shareAsync\(file\.uri, \{ mimeType: 'image\/png'/.test(scr));
   h.check('§6 a new code: issueBody’s body, and the AMS’s refusal shown as it says it', /const b = issueBody\(name, phone\);/.test(scr) && /ams\.request<[^>]*>\('POST', AMBASSADOR_API\.issue\.path, b\.body\)/.test(scr) && /setOutcome\(\{ tone: 'danger', text: r\.failure\.message \}\)/.test(scr));
   h.check('§6 the month’s limit or a paused programme replaces the form with the AMS’s words', /\{a\?\.blocked \? \(/.test(scr));
+
+  // §7 adults only (Yasir, 15 Nov 2026): 18 and over; no date of birth on file, not offered until added
+  const authRoutes = strip(readAmsFile('server/src/routes/auth.js'));
+  const portal = strip(readAmsFile('server/src/controllers/studentPortalController.js'));
+  const prof = declOf(portal, 'getMyProfile');
+  h.check('§7 the student’s own profile is routed, on the firewall’s allowlist, and sends the date of birth as a day', /router\.get\('\/student\/profile', auth, studentPortal\.getMyProfile\);/.test(authRoutes) && /\{ method: 'GET',\s+path: '\/api\/auth\/student\/profile' \}/.test(fw) && /s\.date_of_birth::text AS date_of_birth/.test(prof) && /res\.json\(\{ profile: r\.rows\[0\] \}\)/.test(prof) && AMBASSADOR_API.profile.path === '/auth/student/profile');
+  const D = '2026-11-15';
+  h.check('§7 18 on the birthday itself, not the day before', ADULT_AGE === 18 && isAdult('2008-11-15', D) && !isAdult('2008-11-16', D) && isAdult('1990-01-01', D) && !isAdult('2015-06-01', D));
+  h.check('§7 a 29 Feb birthday comes of age on 1 Mar', !isAdult('2008-02-29', '2026-02-28') && isAdult('2008-02-29', '2026-03-01'));
+  h.check('§7 no date of birth, or one that does not read: not offered', !isAdult(null, D) && !isAdult('', D) && !isAdult('15/11/2000', D) && !isAdult('2000-11-15', ''));
+  h.check('§7 the words say why — and what to do when the date is missing', notOfferedWords('2010-01-01') === 'The Ambassador programme is for students aged 18 and over.' && notOfferedWords(null).endsWith('Ask the front desk to add your date of birth.'));
+  h.check('§7 the AMS’s own refusal (docs/12) is honoured by its code', refusedAsUnder18({ code: 'AMBASSADOR_ADULTS_ONLY' }) && !refusedAsUnder18({ code: 'OTHER' }) && !refusedAsUnder18(null) && ADULTS_ONLY_CODE === 'AMBASSADOR_ADULTS_ONLY');
+  h.check('§7 Home asks the programme only for an adult, and shows the card only when it is offered', /const profile = useAmsGet<\{ profile: \{ date_of_birth: string \| null \} \}>\(AMBASSADOR_API\.profile\.path, live\);/.test(home) && /const offered = adult && !refusedAsUnder18\(amb\.failure\);/.test(home) && /\{live && offered \? \(/.test(home) && /profile\.refresh\(\);/.test(home));
+  h.check('§7 the screen too: nothing asked, and the words shown, for anyone not offered it', /const mine = useAmsGet<Mine>\(AMBASSADOR_API\.me\.path, live && adult\);/.test(scr) && /if \(!adult \|\| refusedAsUnder18\(mine\.failure\)\) \{/.test(scr) && /\{notOfferedWords\(dob\)\}/.test(scr));
+  // Tripwire: once the AMS enforces it (docs/12), its code and age are the app's.
+  const amsRule = rc.includes('AMBASSADOR_ADULTS_ONLY');
+  h.check('§7 the AMS’s adults-only rule, once built, uses the app’s code and 18', !amsRule || (rc.includes(`'${ADULTS_ONLY_CODE}'`) && /\b18\b/.test(rc)), amsRule ? 'the AMS has it' : 'not in the AMS yet (docs/12)');
 });
