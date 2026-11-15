@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Linking, StyleSheet, View } from 'react-native';
 
 import { ams } from '@/api/client';
-import { kuwaitDay } from '@/attendance/rules';
 import { useAmsGet } from '@/attendance/useAmsGet';
 import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
@@ -21,6 +20,7 @@ import { useAppTheme } from '@/theme/useAppTheme';
 
 import {
   AMBASSADOR_API,
+  ageOf,
   codeFor,
   createLabel,
   currentCode,
@@ -32,13 +32,10 @@ import {
   fromOldSystem,
   historyLine,
   imageUrl,
-  isAdult,
   issueBody,
   monthLine,
-  notOfferedWords,
   offerLine,
   progressPct,
-  refusedAsUnder18,
   rewardOf,
   shareMessage,
   soonest,
@@ -58,11 +55,7 @@ export function AmbassadorScreen() {
   const t = useAppTheme();
   const { user } = useSession();
   const live = !user?.preview;
-  // Students 18 and over only (Yasir, 15 Nov 2026): the profile's date of birth decides.
-  const profile = useAmsGet<{ profile: { date_of_birth: string | null } }>(AMBASSADOR_API.profile.path, live);
-  const dob = profile.data?.profile?.date_of_birth ?? null;
-  const adult = isAdult(dob, kuwaitDay(new Date()) ?? '');
-  const mine = useAmsGet<Mine>(AMBASSADOR_API.me.path, live && adult);
+  const mine = useAmsGet<Mine>(AMBASSADOR_API.me.path, live);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [saving, setSaving] = useState(false);
@@ -141,21 +134,6 @@ export function AmbassadorScreen() {
     }
   };
 
-  if (!profile.data) {
-    return (
-      <Screen title="Ambassador" top={top} refreshing={profile.refreshing} onRefresh={profile.refresh}>
-        {profile.failure ? <LoadFailed failure={profile.failure} onRetry={profile.refresh} /> : <Loading what="Loading…" />}
-      </Screen>
-    );
-  }
-  if (!adult || refusedAsUnder18(mine.failure)) {
-    return (
-      <Screen title="Ambassador" top={top}>
-        <Notice tone="info">{notOfferedWords(dob)}</Notice>
-      </Screen>
-    );
-  }
-
   const m = mine.data;
   if (!m) {
     return (
@@ -179,6 +157,9 @@ export function AmbassadorScreen() {
   const soon = soonest(codes);
   const first = (m.name || '').split(/\s+/)[0];
   const a = m.allowance;
+  // The AMS's age rule (students aged 18 and over): when not eligible, no offer and no form —
+  // its message where the form was (allowance.blocked carries it). Earlier codes and the wallet still show.
+  const age = ageOf(m);
   const valid = !!name.trim() && phone.replace(/\D/g, '').length >= 8;
 
   return (
@@ -201,7 +182,7 @@ export function AmbassadorScreen() {
             <AppText variant="caption" color="onHero">{`${kdShort(rewardOf(soon))} on the way — arrives ${day(soon.earns_on_any)}`}</AppText>
           </View>
         ) : null}
-        <AppText color="onHero">{offerLine(m)}</AppText>
+        {age.eligible ? <AppText color="onHero">{offerLine(m)}</AppText> : null}
       </View>
 
       {outcome ? <Notice tone={outcome.tone}>{outcome.text}</Notice> : null}
@@ -220,15 +201,15 @@ export function AmbassadorScreen() {
           </AppText>
           <AppText variant="caption" color="textSubtle">{COUPON_TERMS}</AppText>
         </View>
-      ) : (
+      ) : age.eligible ? (
         <Card>
           <AppText color="textMuted">Create a code and share it with a friend who wants to study at ICSA.</AppText>
         </Card>
-      )}
+      ) : null}
 
       <Card>
         {a?.blocked ? (
-          <AppText variant="bodyStrong" color="onWarningSoft">{a.blocked}</AppText>
+          <AppText variant={age.eligible ? 'bodyStrong' : 'body'} color={age.eligible ? 'onWarningSoft' : 'textMuted'}>{a.blocked}</AppText>
         ) : (
           <>
             <Label>{current ? 'GIVE A CODE TO ANOTHER FRIEND' : 'WHO IS THE CODE FOR?'}</Label>

@@ -133,4 +133,6 @@ export type Dashboard = {
   };
   due_soon: { kind: string; id: string; title: string; due_date: string | null; subject_name: string | null; days_until: number | null }[];
   streak: number;
+  /** Whether Home offers the Ambassador (AMS d9b15467: students aged 18 and over). */
+  ambassador?: { eligible: boolean; reason: string | null; message: string | null } | null;
 };

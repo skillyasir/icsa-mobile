@@ -8,9 +8,9 @@
 
 ## 1. Privacy policy — lines to add to clause 02 "The ICSA mobile app" (for Yasir's approval)
 
-Add after the "Attendance reminders (staff)" line:
+Add after the "Attendance reminders (staff)" line. **Publish once AMS `d9b15467` is live** (the voucher line names the age; the AMS chat's wording, 15 Nov 2026):
 
-> **Vouchers for a friend (students).** If you give a friend an ICSA voucher in the app, you enter your friend's name and WhatsApp number. ICSA keeps them with the voucher, so that only that number can use it, and to show you how your friend is getting on. You never see your friend's fee or payments. Only give a friend's number if they are happy to hear from ICSA. Sending the voucher opens WhatsApp on your phone; the message is sent by you, from your WhatsApp.
+> **Vouchers for a friend (students aged 18 and over).** If you give a friend an ICSA voucher in the app, you enter your friend's name and WhatsApp number. ICSA keeps them with the voucher: to check that your friend is new to ICSA, so that only that number can use it, and to show you how your friend is getting on. You never see your friend's fee or payments. Only give a friend's details if they are happy for you to share them with ICSA. Sending the voucher opens WhatsApp on your phone; the message is sent by you, from your WhatsApp.
 
 > **Staff using the app.** ICSA staff use the app as they use the ICSA website: to register a student (the same details as the registration form), record a payment, log a follow-up call, decide approvals, and give a coupon to someone interested in a course (their name and mobile number). These details are kept in the ICSA system as described in this policy.
 
@@ -68,8 +68,8 @@ No data is used for advertising or analytics, and none is sold.
 
 ---
 
-## One question for Yasir — the Ambassador and children
+## Decided — the Ambassador and children (Yasir, 15 Nov 2026)
 
-The app's Play **target audience includes children (6+)**, so Google's **Families policy** applies, and Yasir certified COPPA/GDPR compliance on the strength of the policy's Children paragraph (accounts made by staff with a parent's agreement). The Ambassador asks a student — who may be a child — for **another person's** name and WhatsApp number, with a reward. That is the part of the app most likely to draw a question from Google's review.
-
-Options: offer the Ambassador in the app **to adult students only (18+)**; or keep it for every student, as the website does, and rely on the policy lines above.
+- **The Ambassador is for students aged 18 and over**, enforced by the AMS (`services/ambassadorAge.js`, AMS `d9b15467`), on the website and in the app alike. **No date of birth on file → not offered** until the front desk adds one.
+- **Why:** the app's Play target audience includes children (6+), so Google's **Families policy** applies, and the Ambassador asks for another person's name and WhatsApp number, with a reward.
+- **The app never works out an age.** It shows the Ambassador only when the AMS says the student may use it, and shows the AMS's own words when not.

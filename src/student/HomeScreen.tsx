@@ -28,7 +28,7 @@ import { LoadFailed, Loading } from '@/components/States';
 import { useSession } from '@/session/SessionContext';
 import { useAppTheme } from '@/theme/useAppTheme';
 
-import { AMBASSADOR_API, homeCard, isAdult, refusedAsUnder18, type Mine } from './ambassador';
+import { AMBASSADOR_API, homeCard, homeOffers, type Mine } from './ambassador';
 
 // The student's Home (Phase 2 piece 1, mockup 01, 6 Nov 2026): today's class
 // and its Check in, then attended / progress / next fee, where to continue,
@@ -46,12 +46,11 @@ export function HomeScreen() {
   const live = !user?.preview;
   const ctx = useAmsGet<MyContext>(ATTENDANCE_API.context.path, live);
   const dash = useAmsGet<Dashboard>(ATTENDANCE_API.dashboard.path, live);
-  // The Ambassador card (Yasir, 15 Nov 2026): students 18 and over only — the
-  // profile's date of birth decides; the programme is not even asked otherwise.
-  const profile = useAmsGet<{ profile: { date_of_birth: string | null } }>(AMBASSADOR_API.profile.path, live);
-  const adult = isAdult(profile.data?.profile?.date_of_birth, kuwaitDay(new Date()) ?? '');
-  const amb = useAmsGet<Mine>(AMBASSADOR_API.me.path, live && adult);
-  const offered = adult && !refusedAsUnder18(amb.failure);
+  // The Ambassador card (Yasir, 15 Nov 2026): only when the AMS's dashboard
+  // offers it (students aged 18 and over — the AMS's rule); the programme is not
+  // even asked otherwise, and nothing shows while the dashboard loads.
+  const offered = homeOffers(dash.data);
+  const amb = useAmsGet<Mine>(AMBASSADOR_API.me.path, live && offered);
   const [openedAt] = useState(() => new Date().toISOString());
   const now = ctx.data?.now ?? openedAt;
   const first = (user?.full_name ?? '').trim().split(/\s+/)[0] ?? '';
@@ -64,7 +63,6 @@ export function HomeScreen() {
   const refresh = () => {
     ctx.refresh();
     dash.refresh();
-    profile.refresh();
     amb.refresh();
   };
 

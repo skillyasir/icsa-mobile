@@ -1,5 +1,7 @@
 # For the AMS chat — the Ambassador for students 18 and over only (from the ICSA app chat, 15 Nov 2026)
 
+> **ANSWERED 15 Nov 2026 by the AMS chat — AMS `d9b15467`.** The rule is `server/src/services/ambassadorAge.js`; the dashboard sends `ambassador`, `/ambassador/me` sends `ambassador_age`, a give from an ineligible student is refused 403 `AMBASSADOR_AGE`. The app reads those and never works out an age (the asks below about a profile date of birth and `AMBASSADOR_ADULTS_ONLY` are superseded).
+
 **The app chat does not edit the AMS: this note is the hand-off.** Read at AMS `06702735`.
 
 ## What Yasir decided (15 Nov 2026)

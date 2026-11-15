@@ -21,8 +21,6 @@ export const AMBASSADOR_API = {
   // link's preview, and the picture itself for the share sheet.
   card: { method: 'GET', path: '/coupons/:id/card' },
   image: { method: 'GET', path: '/coupons/:id/image' },
-  // The student's own profile: its date of birth decides who is offered the programme.
-  profile: { method: 'GET', path: '/auth/student/profile' },
 } as const;
 
 export type Status = 'issued' | 'shared' | 'used' | 'waiting' | 'cooling' | 'earned' | 'refunded' | 'expired' | 'void' | 'live' | 'off' | 'review';
@@ -53,6 +51,8 @@ export type Mine = {
   allowance: { issued_this_month: number; cap: number; blocked: string | null } | null;
   wallet: { balance: number; pending: number; lines: WalletLine[] } | null;
   codes: Code[];
+  /** The AMS's age rule for this student (AMS d9b15467): when not eligible, `allowance.blocked` carries its message too. */
+  ambassador_age?: { eligible: boolean; reason: string | null; message: string | null } | null;
 };
 
 /** "15 Dec 2026" from a timestamp or a day, in Kuwait. */
@@ -188,30 +188,18 @@ export function homeCard(m: Pick<Mine, 'rule' | 'wallet'> | null | undefined): {
 }
 
 // ── Adults only (Yasir, 15 Nov 2026) ────────────────────────────────────────
-// The Ambassador asks for another person's name and WhatsApp number, with a
-// reward, and Play's audience includes children (Families policy). So it is
-// for students aged 18 and over; a student with no date of birth on file is
-// not offered it until the front desk adds one. The AMS is to enforce it
-// (docs/12, code AMBASSADOR_ADULTS_ONLY); until then the app shows it only to
-// an adult, and once the AMS refuses, the app honours that too.
+// The Ambassador is for students aged 18 and over, and a student with no date
+// of birth on file is not offered it — the AMS's rule, in ONE place
+// (services/ambassadorAge.js, AMS d9b15467). The app never works out an age,
+// not even as a fallback: it reads the AMS's answer — the dashboard's
+// `ambassador` for Home, `ambassador_age` on /ambassador/me for the screen —
+// and shows the AMS's own words. (A test of its own, built that morning, was
+// taken out the same day at the AMS chat's request.)
 
-export const ADULT_AGE = 18;
-export const ADULTS_ONLY_CODE = 'AMBASSADOR_ADULTS_ONLY';
+export type Eligibility = { eligible: boolean; reason: string | null; message: string | null };
 
-/** 18 or over on `today` (Kuwait, 'YYYY-MM-DD'); no date, or a date that does not read, is not. A 29 Feb birthday comes of age on 1 Mar. */
-export function isAdult(dob: string | null | undefined, today: string): boolean {
-  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(dob ?? '');
-  if (!m || !/^\d{4}-\d{2}-\d{2}/.test(today)) return false;
-  const comesOfAge = `${Number(m[1]) + ADULT_AGE}-${m[2]}-${m[3]}`;
-  return comesOfAge <= today.slice(0, 10);
-}
+/** Home offers the programme only when the AMS says so; loading, or not said, is not. */
+export const homeOffers = (d: { ambassador?: Eligibility | null } | null | undefined): boolean => d?.ambassador?.eligible === true;
 
-/** Why the programme is not offered, in words for the screen (if it is ever reached). */
-export function notOfferedWords(dob: string | null | undefined): string {
-  return dob
-    ? 'The Ambassador programme is for students aged 18 and over.'
-    : 'The Ambassador programme is for students aged 18 and over. Ask the front desk to add your date of birth.';
-}
-
-/** The AMS's own refusal (once docs/12 is built): the programme is not offered. */
-export const refusedAsUnder18 = (f: { code?: string } | null | undefined): boolean => f?.code === ADULTS_ONLY_CODE;
+/** The screen: the AMS's answer, as the website reads it (no field — an older AMS — offers it). */
+export const ageOf = (m: Pick<Mine, 'ambassador_age'> | null | undefined): Eligibility => m?.ambassador_age ?? { eligible: true, reason: null, message: null };
