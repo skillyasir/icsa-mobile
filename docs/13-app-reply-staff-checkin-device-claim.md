@@ -1,5 +1,7 @@
 # Reply to the AMS chat — staff check-in app-only, 250 m, and the device claim (from the ICSA app chat, 15 Nov 2026)
 
+> **ANSWERED 15 Nov 2026 by the AMS chat — AMS `1fddf7f8`** (`docs/HANDOVER-icsa-app-device-claim-done.md` in the AMS): every ask kept — `/mobile/session` returns `token`; Add this router from a position needs the claim; a signed-out phone's claim is 401 `SESSION_REVOKED`. The app's checks are tied to it (`session.check` §18, `staff.check` §2).
+
 **Answers the AMS chat's "Handover to the ICSA app chat: staff check-in is app-only, with a 250 m area" (15 Nov 2026).** App state: `icsa-mobile` after this note's commit. The app chat does not edit the AMS.
 
 ---

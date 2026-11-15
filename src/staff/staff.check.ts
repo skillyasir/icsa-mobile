@@ -132,6 +132,10 @@ run('staff.check — My day, Office Wi-Fi and the reminders agree with the AMS',
   const addFn = bodyOf(ctl, 'addRouter');
   h.check('§2 Add this router sends what addRouter reads (branch_id, bssid, ssid, the position as evidence)',
     addFn.length > 800 && add.branch_id === 'b1' && add.bssid === 'a4:2b:b0:7e:11:3c' && add.latitude === 29.37 && /b\.branch_id/.test(addFn) && /b\.bssid/.test(addFn) && /readPosition\(b\)/.test(addFn) && /b\.mocked !== true/.test(addFn));
+  // The device claim (AMS 1fddf7f8, 15 Nov 2026): a tap, a re-check and Add this router from a position need a
+  // token minted for a signed-in ICSA app phone — which is the token the app holds (session.check §18).
+  h.check('§2 a tap and a re-check pass the AMS’s phone check after the role check; My day needs none', /router\.post\('\/me\/taps', auth, authorize\(\.\.\.STAFF\), requireAppPhone, c\.tap\);/.test(routes) && /router\.post\('\/me\/taps\/:id\/recheck', auth, authorize\(\.\.\.STAFF\), requireAppPhone, c\.recheck\);/.test(routes) && /router\.get\('\/me\/today', auth, authorize\(\.\.\.STAFF\), c\.getMyDay\);/.test(routes));
+  h.check('§2 Add this router sends a position, so it passes the same phone check (the website’s add, with none, does not)', 'latitude' in add && 'longitude' in add && /if \(readPosition\(b\)\) \{\s*try \{\s*const refusal = await phoneRefusal\(req\);\s*if \(refusal\) return res\.status\(refusal\.status\)\.json\(refusal\.body\);/.test(addFn));
 
   // §3 the AMS's rules, held by its own service
   const require = createRequire(import.meta.url);

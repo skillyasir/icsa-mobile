@@ -1,4 +1,6 @@
+import { readAmsFile } from '../../scripts/ams.ts';
 import { runAsync, type Harness } from '../../scripts/check-harness.ts';
+import { strip } from '../../scripts/strip.ts';
 
 import {
   MESSAGES,
@@ -20,14 +22,19 @@ import {
 
 type Call = { method: string; path: string; auth: string | null; body: Record<string, unknown> };
 type Fault = 'offline' | 'hang' | { status: number; json?: object; text?: string };
+type Device = { userId: string; current: string; prev: string | null; rotatedAt: number; revoked: string | null };
+
+// The AMS's own words (middleware/appDevice.js, AMS 1fddf7f8) — §18 holds the stand-in to them.
+const APP_ONLY_WORDS = 'Staff check in with the ICSA app only — not on the website.';
+const SIGNED_OUT_WORDS = 'This phone has been signed out. Please sign in again.';
 
 class FakeAms {
   clock = 1_000_000;
   calls: Call[] = [];
   faults = new Map<string, Fault>();
   private n = 0;
-  private access = new Map<string, { userId: string; expires: number; phone: boolean }>();
-  devices: { userId: string; current: string; prev: string | null; rotatedAt: number; revoked: string | null }[] = [];
+  private access = new Map<string, { userId: string; expires: number; device: Device | null }>();
+  devices: Device[] = [];
   users: Record<string, { id: string; full_name: string; email: string; role: string; branch_name: string; overlay_roles: string[]; student_code?: string }> = {
     'maria@example.com': { id: 'u-staff', full_name: 'Maria Santos', email: 'maria@example.com', role: 'teacher', branch_name: 'Kuwait City', overlay_roles: ['marketer'] },
     'STU-12611041': { id: 'u-stu', full_name: 'Ali Hassan', email: 'ali@example.com', role: 'student', branch_name: 'Mahboula', overlay_roles: [], student_code: 'STU-12611041' },
@@ -37,15 +44,15 @@ class FakeAms {
     this.n++;
     return `${prefix}${String(this.n).padStart(40 - prefix.length, '0')}xyz`;
   }
-  private issueAccess(userId: string, phone = false) {
+  private issueAccess(userId: string, device: Device | null = null) {
     const t = this.token('acc-');
-    this.access.set(t, { userId, expires: this.clock + 10 * 60_000 + 120_000, phone });
+    this.access.set(t, { userId, expires: this.clock + 10 * 60_000 + 120_000, device });
     return t;
   }
-  /** The device claim (docs/13): a token minted for a signed-in phone, never the login reply's. */
-  private minted(auth: string | null) {
+  /** The device claim (docs/13, AMS 1fddf7f8): the phone a token was minted for — never the login reply's. */
+  private phoneOf(auth: string | null) {
     const a = auth ? this.access.get(auth) : undefined;
-    return !!a && a.phone && a.expires > this.clock;
+    return a && a.expires > this.clock ? a.device : null;
   }
   /** When true, /mobile/session hands back a phone-minted access token too (the AMS change asked in docs/13). */
   bindReturnsToken = false;
@@ -79,8 +86,9 @@ class FakeAms {
       const uid = this.who(auth);
       if (!uid) return reply(401, { error: 'No token' });
       const rt = this.token('rt-');
-      this.devices.push({ userId: uid, current: rt, prev: null, rotatedAt: 0, revoked: null });
-      return reply(201, { device_id: 'd' + this.devices.length, refresh_token: rt, session_days: 30, ...(this.bindReturnsToken ? { token: this.issueAccess(uid, true), session } : {}) });
+      const dev: Device = { userId: uid, current: rt, prev: null, rotatedAt: 0, revoked: null };
+      this.devices.push(dev);
+      return reply(201, { device_id: 'd' + this.devices.length, refresh_token: rt, session_days: 30, ...(this.bindReturnsToken ? { token: this.issueAccess(uid, dev), session } : {}) });
     }
     if (path === '/mobile/session/refresh') {
       const t = String(body.refresh_token);
@@ -88,10 +96,10 @@ class FakeAms {
       const old = this.devices.find((d) => d.prev === t);
       const d = cur ?? old;
       if (!d) return reply(401, { code: 'SESSION_INVALID', error: 'Please sign in again.' });
-      if (d.revoked) return reply(401, { code: 'SESSION_REVOKED', error: 'This phone was signed out. Please sign in again.' });
+      if (d.revoked) return reply(401, { code: 'SESSION_REVOKED', error: SIGNED_OUT_WORDS });
       if (!cur && this.clock - d.rotatedAt > 120_000) {
         d.revoked = 'token_reuse';
-        return reply(401, { code: 'SESSION_REVOKED', error: 'This phone was signed out. Please sign in again.' });
+        return reply(401, { code: 'SESSION_REVOKED', error: SIGNED_OUT_WORDS });
       }
       const next = this.token('rt-');
       if (cur) {
@@ -99,7 +107,7 @@ class FakeAms {
         d.rotatedAt = this.clock;
       }
       d.current = next;
-      return reply(200, { token: this.issueAccess(d.userId, true), refresh_token: next, session });
+      return reply(200, { token: this.issueAccess(d.userId, d), refresh_token: next, session });
     }
     if (path === '/mobile/session/signout') {
       const t = String(body.refresh_token);
@@ -113,7 +121,11 @@ class FakeAms {
     }
     if (path === '/staff/tap') {
       if (!this.who(auth)) return reply(401, { error: 'Token expired' });
-      return this.minted(auth) ? reply(201, { ok: true }) : reply(403, { code: 'APP_ONLY', error: 'Staff check in with the ICSA app only — not on the website.' });
+      // As the AMS's phoneRefusal: no claim 403 APP_ONLY; a claim whose phone is signed out 401; else through.
+      const dev = this.phoneOf(auth);
+      if (!dev) return reply(403, { code: 'APP_ONLY', error: APP_ONLY_WORDS });
+      if (dev.revoked) return reply(401, { code: 'SESSION_REVOKED', error: SIGNED_OUT_WORDS });
+      return reply(201, { ok: true });
     }
     if (path === '/probe') {
       return this.who(auth) ? reply(200, { fine: true }) : reply(401, { error: 'Token expired' });
@@ -466,6 +478,23 @@ async function main(h: Harness) {
     ams.clock += 13 * 60_000;
     const tap = await client.request('POST', '/staff/tap', { kind: 'out' });
     h.check('§18 after a renewal the tap still carries the claim', tap.ok);
+  }
+  {
+    const { client, ams, ended } = setup();
+    ams.bindReturnsToken = true;
+    await client.signIn(staff);
+    ams.devices[0].revoked = 'manager';
+    const tap = await client.request('POST', '/staff/tap', { kind: 'in' });
+    h.check('§18 a phone a manager signed out loses its taps at once, though its token has minutes left: one refresh, refused, signed out in the AMS’s words — the tap never sent twice', !tap.ok && tap.failure.kind === 'signed_out' && tap.failure.message === SIGNED_OUT_WORDS && ended.length === 1 && ams.count('/staff/tap') === 1 && ams.count('/mobile/session/refresh') === 1);
+  }
+  {
+    // The stand-in is the AMS's answer (AMS 1fddf7f8, docs/HANDOVER-icsa-app-device-claim-done.md).
+    const dev = strip(readAmsFile('server/src/middleware/appDevice.js'));
+    const mob = strip(readAmsFile('server/src/controllers/mobileSessionController.js'));
+    h.check('§18 the AMS’s words are the stand-in’s: APP_ONLY and SESSION_REVOKED', dev.includes(`const APP_ONLY = { code: 'APP_ONLY', error: '${APP_ONLY_WORDS}' };`) && dev.includes(`const SIGNED_OUT = { code: 'SESSION_REVOKED', error: '${SIGNED_OUT_WORDS}' };`));
+    h.check('§18 the AMS’s phoneRefusal: no claim 403, a phone not live 401 — a 401 is what makes the app refresh once and sign out', /if \(!deviceId \|\| !UUID_RE\.test\(String\(deviceId\)\)\) return \{ status: 403, body: APP_ONLY \};/.test(dev) && /return \(await phoneLive\(db, req\.user\)\) \? null : \{ status: 401, body: SIGNED_OUT \};/.test(dev) && /revoked_at IS NULL AND expires_at > now\(\)/.test(dev));
+    h.check('§18 /mobile/session now answers the phone’s own token and session (the app keeps it, no swap)', /const access = generateToken\(req\.user, session, who\.studentId, d\.id\);/.test(mob) && /token: access,\s*session,/.test(mob));
+    h.check('§18 a refresh mints the token with the phone in it', /generateToken\(\s*\{ id: d\.user_id, email: d\.email, role: d\.role, branch_id: d\.branch_id \}, session, who\.studentId, d\.id\)/.test(mob));
   }
 
 }
