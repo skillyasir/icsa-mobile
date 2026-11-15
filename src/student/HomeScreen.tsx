@@ -28,6 +28,8 @@ import { LoadFailed, Loading } from '@/components/States';
 import { useSession } from '@/session/SessionContext';
 import { useAppTheme } from '@/theme/useAppTheme';
 
+import { AMBASSADOR_API, homeCard, type Mine } from './ambassador';
+
 // The student's Home (Phase 2 piece 1, mockup 01, 6 Nov 2026): today's class
 // and its Check in, then attended / progress / next fee, where to continue,
 // and what is due. Every figure is the AMS's own (my-context and the student
@@ -44,6 +46,8 @@ export function HomeScreen() {
   const live = !user?.preview;
   const ctx = useAmsGet<MyContext>(ATTENDANCE_API.context.path, live);
   const dash = useAmsGet<Dashboard>(ATTENDANCE_API.dashboard.path, live);
+  // The Ambassador card's offer and what was earned (Yasir, 15 Nov 2026).
+  const amb = useAmsGet<Mine>(AMBASSADOR_API.me.path, live);
   const [openedAt] = useState(() => new Date().toISOString());
   const now = ctx.data?.now ?? openedAt;
   const first = (user?.full_name ?? '').trim().split(/\s+/)[0] ?? '';
@@ -56,6 +60,7 @@ export function HomeScreen() {
   const refresh = () => {
     ctx.refresh();
     dash.refresh();
+    amb.refresh();
   };
 
   const d = dash.data;
@@ -106,6 +111,45 @@ export function HomeScreen() {
           />
           <Tile label={fee.label} value={d ? fee.value : '—'} sub={d ? fee.sub : ''} alert={!!d && fee.overdue} />
         </View>
+      ) : null}
+
+      {live ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`ICSA Ambassador. ${homeCard(amb.data).title}. ${homeCard(amb.data).sub}`}
+          accessibilityHint="Opens the Ambassador programme"
+          onPress={() => router.push('/ambassador')}
+          style={({ pressed }) => [styles.amb, { backgroundColor: t.colors.hero, borderRadius: t.radius.xl, opacity: pressed ? 0.9 : 1 }]}
+        >
+          <View style={styles.heroTop}>
+            <View style={styles.flex}>
+              <AppText variant="label" color="onHeroMuted">
+                ICSA AMBASSADOR
+              </AppText>
+              <AppText variant="headline" color="onHero">
+                {homeCard(amb.data).title}
+              </AppText>
+              <AppText variant="caption" color="onHeroMuted">
+                {homeCard(amb.data).sub}
+              </AppText>
+            </View>
+            {homeCard(amb.data).earned ? (
+              <View style={styles.ambRight}>
+                <AppText variant="title" color="onHero">
+                  {homeCard(amb.data).earned}
+                </AppText>
+                <AppText variant="caption" color="onHeroMuted">
+                  earned
+                </AppText>
+              </View>
+            ) : null}
+          </View>
+          <View style={[styles.ambButton, { backgroundColor: t.colors.surface, borderRadius: t.radius.md }]}>
+            <AppText variant="headline" color="primary">
+              Invite a friend
+            </AppText>
+          </View>
+        </Pressable>
       ) : null}
 
       {/* iPad: where to continue beside what is due (the approved design). */}
@@ -305,4 +349,7 @@ const styles = StyleSheet.create({
   fill: { height: '100%' },
   due: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   chip: { paddingHorizontal: 8, paddingVertical: 4 },
+  amb: { padding: 16, gap: 12 },
+  ambRight: { alignItems: 'flex-end' },
+  ambButton: { minHeight: 48, alignItems: 'center', justifyContent: 'center' },
 });
